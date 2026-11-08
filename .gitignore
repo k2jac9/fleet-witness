@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.env.*
+!.env.example
+runs/
+*.sqlite
+*.sqlite3
+*.db
+*.db-wal
+*.db-shm
+.worktrees/
+.fleet/
+.superpowers/
+node_modules/
+.DS_Store
