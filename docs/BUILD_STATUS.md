@@ -92,17 +92,16 @@ The owner confirmed that existing GCP credits are the intended funding; recheck
 eligibility and the current balance before billable provisioning. The previously
 authorized $100 GCP budget remains
 the project envelope; the larger reported credit total does not increase it.
-No project
-budget, infrastructure resources, VM, image upload, or
+No project budget, compute or storage resources, VM, image upload, or
 provider calls were created during this step. The $100 GCP budget and the
 owner-reported Adaption balance remain separate.
 
 After the quota is resolved, recheck the account's billing/credit state and the
 project's exact identity before linking. Configure a project-filtered budget in
 the account currency and establish a bounded VM run window before provisioning.
-Budget alerts do not impose a Compute Engine spending cap. Keep the recorded
-local worker startup failure and the remaining boot, confinement, IAM/IAP,
-security, and rollback checks as deployment gates.
+Budget alerts do not impose a Compute Engine spending cap. Preserve the earlier overlay-backed startup failure as historical evidence;
+complete the remaining GCP boot, confinement, IAM/IAP, security, and rollback
+checks as deployment gates.
 
 Receipts for project creation, the failed billing-link command, account/project
 inventory, and the unlinked project state are retained under
