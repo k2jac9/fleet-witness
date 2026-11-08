@@ -1,5 +1,40 @@
 # Build and deployment verification
 
+## GCP project creation and billing quota: 2026-11-08
+
+The owner authorized creation of a dedicated GCP project and continuation within
+the previously stated $100 GCP budget. The authorized CLI account is active.
+The newly created project is **`fleet-witness-261108-aa0c99`**, project number
+`353247593595`; its state is `ACTIVE`. It was created with
+`--no-enable-cloud-apis`. No default CLI project was changed.
+
+The only open billing account visible to the authorized operator is denominated
+in CAD. Linking it to the new project failed with Google Cloud's
+`FAILED_PRECONDITION: Cloud billing quota exceeded`. The API did not report the
+limit's value. The account currently lists five billing-enabled projects; their
+billing links were not changed. A fresh `billing projects describe` confirmed
+the Fleet Witness project has `billingEnabled: false` and no billing account;
+the enabled-API list was empty.
+
+Google's error points to the [billing quota increase request](https://support.google.com/code/contact/billing_quota_increase).
+The owner must submit or otherwise arrange that request, or provide another
+authorized open billing account. No request to Google was submitted by this
+task. Remaining credit value, expiry, and eligible services have not been
+verified. No project budget, infrastructure resources, VM, image upload, or
+provider calls were created during this step. The $100 GCP budget and the
+owner-reported Adaption balance remain separate.
+
+After the quota is resolved, recheck the account's billing/credit state and the
+project's exact identity before linking. Configure a project-filtered budget in
+the account currency and establish a bounded VM run window before provisioning.
+Budget alerts do not impose a Compute Engine spending cap. Keep the recorded
+local worker startup failure and the remaining boot, confinement, IAM/IAP,
+security, and rollback checks as deployment gates.
+
+Receipts for project creation, the failed billing-link command, account/project
+inventory, and the unlinked project state are retained under
+`/home/neo/Projects/fleet-witness-artifacts/gcp-project-20261108T090855Z-a3583d/`.
+
 ## Continued testing and deployment preparation: 2026-11-08
 
 This section supersedes the corresponding open image/browser checks in the
