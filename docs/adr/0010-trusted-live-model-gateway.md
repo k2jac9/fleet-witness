@@ -1,9 +1,9 @@
 # ADR-0010: Trusted live-model gateway and bounded pilot
 
-- Status: Proposed; not accepted or implemented
+- Status: Accepted design; implementation and live validation pending
 - Date: 2026-11-08
 - Supersedes: none
-- Extends, if accepted: ADR-0001 through ADR-0005, ADR-0007 and ADR-0008
+- Extends: ADR-0001 through ADR-0005, ADR-0007 and ADR-0008
 
 ## Context
 
@@ -19,9 +19,13 @@ policy, make arbitrary network calls, or publish. They also do not authorize
 worker-connected gateways or a public attack sensor. A separate design is
 needed for a controlled change without weakening those boundaries.
 
-## Proposed decision
+## Decision
 
-If this ADR is accepted and its validation gates are met, a trusted host-side
+The owner selected the controlled pilot and, on 2026-11-08, explicitly asked
+to proceed with the reviewed gateway, spend controls, security checks and
+calibration. This accepts the design direction; it does not waive the checks
+below or establish facts that have not been verified. Once the applicable
+pre-calibration gates are met, a trusted host-side
 gateway may submit explicitly authorized supervisor requests. It is separate
 from the isolated workers and the controller; no provider credential, network
 access or general host command facility is given to a worker. The gateway
@@ -75,7 +79,8 @@ cannot be counted as confirmatory data.
 - Distribute credentials to workers: rejected because it expands authority and
   makes enforcement of a single spend envelope unreliable.
 - Continue fake-only operation: retains the existing boundary but cannot
-  produce empirical model results; it remains the default until acceptance.
+  produce empirical model results; it remains the default until authorized
+  live activation passes its gates.
 - Public attack observation first: needs a separate, scoped research and
   isolation design and cannot establish this paired supervisor comparison.
 
@@ -90,9 +95,8 @@ viewer checks must continue to pass. The pilot does not create an autonomous
 coding fleet or identify external actors; any such capability needs a separate
 reviewed scope. A container is not a separate-kernel isolation guarantee.
 
-Until this ADR is accepted, it grants no live implementation or activation
-authority and leaves the accepted contracts unchanged. Acceptance alone,
-the GCP budget and OAuth setup do not activate provider calls. Every paid run,
+Acceptance alone, the GCP budget and OAuth setup do not activate provider calls.
+The earlier accepted contracts continue to apply. Every paid run,
 including calibration, requires deliberate live-mode selection and a valid
 operator authorization record specifying the provider, verified budget,
 request count and duration. Owner delegation of development is not evidence

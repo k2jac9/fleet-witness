@@ -1,5 +1,24 @@
 # Adaption access and bounded research plan
 
+## Controlled-pilot continuation: 2026-11-08
+
+The owner reported that the account displays 1,500 credits and that one credit
+equals $1. This is owner-provided information; the current balance and
+account-specific billing terms were not retrieved independently. A read-only
+authenticated model-list request succeeded and returned seven available hosted
+models; no inference request was made. The verified key is stored outside the
+repository in an owner-private host file.
+
+The owner authorized proceeding with the controlled pilot, and
+[ADR-0010](adr/0010-trusted-live-model-gateway.md) records the accepted design.
+An offline calibration fixture exercises a fixed one-credit reservation and
+provider-shaped responses but has no credential access or network transport.
+It is not a real model, a verified provider spending cap, or a live result.
+Provider billing and reasoning-token bounds, one globally shared live
+authorization, the production TLS path and independent activation review
+remain prerequisites for the first paid request. A local reservation alone
+cannot cap what a provider charges.
+
 Status checked **2026-11-08**. The implemented backend remains `scripted-demo`:
 the Python baseline needs no SDK, API key, provider account, or model credit.
 This guide records future integration requirements; it does not implement an
@@ -17,11 +36,10 @@ Adaption credit does not pay the separate [GCP bill](COSTS.md).
 
 The [hosted model table](https://docs.adaptionlabs.ai/inference-stacks/models/)
 quotes **credits per one million tokens**, with separate input, cached-input,
-and output rates. A conversion between those credits and the owner's
-dollar-denominated balance has not been verified. Do not interpret the example
-totals below as USD or divide $1,500 by them to promise a request count. Check
-the account's billing units, credit conversion, applicable rates, and access
-before authorizing a pilot.
+and output rates. The owner has since reported a one-credit-per-dollar
+conversion, but account-specific pricing and billing semantics have not been
+independently verified. Do not divide the reported balance by the example totals
+to promise a request count; verify applicable charges and bounds first.
 
 ## Confirmed interfaces; optional future setup
 
@@ -131,9 +149,10 @@ The future host-side gateway must provide:
    exported replays as model input. Keep paired facts identical. The trusted
    controller still owns authorization and transactional effects.
 
-This needs a provider-neutral adapter proposal, a new accepted ADR, tests, and
-owner review before implementation. Automatic coding-worker dispatch is another
-future capability; current workers run offline tests and the scripted demo.
+The provider-neutral proposal and ADR-0010 now define the design. A real
+provider transport, full spend enforcement, tests and independent activation
+review remain necessary. Automatic coding-worker dispatch is another future
+capability; current workers run offline tests and the scripted demo.
 
 ## Adaptive Data and AutoScientist are separate workflows
 

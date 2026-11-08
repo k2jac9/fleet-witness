@@ -1,5 +1,54 @@
 # Build and deployment verification
 
+## Live-gateway offline foundation: 2026-11-08
+
+Task `live-gateway` follows the owner's instruction to proceed with the
+controlled pilot. ADR-0010 now records the independently reviewed design as
+accepted, with implementation and activation still gated. The owner reported
+1,500 Adaption credits and 1 credit = $1; this is not an API-verified balance.
+An authenticated read-only model-list request returned seven hosted model IDs.
+The public model table captured separately lists `gemma-4-31b-it` at 0.09 input
+and 0.34 output credits per million tokens with 256,000 combined context tokens;
+account-specific pricing, extra charges and reasoning billing remain unverified.
+
+The new offline fixture implements a private SQLite ledger, a one-credit
+reservation, strict request construction, bounded response parsing and an
+inert transport. Its authorization and results are labeled
+`offline-calibration-fixture`; it has no live-provider network code, credential
+access, controller access or release authority. Tests cover separate-process
+reservation contention, restart and audit failures, erroneous usage, mutable
+configuration, contradictory response status, rejected-response provenance,
+duplicate JSON keys and fake response handling. Independent review found and
+reproduced several accounting and finality defects before their fixes.
+
+The current full local run passed 115 Python tests and five viewer tests;
+fleet validation and `git diff --check` returned 0. The focused fixture run
+passed 30 tests. Red/green logs and reviewer receipts are retained in
+`/home/neo/Projects/fleet-witness-artifacts/live-gateway-20261108/`. The public
+model table snapshot is
+`/home/neo/Projects/fleet-witness-artifacts/gcp-project-20261108T090855Z-a3583d/adaption-hosted-models-20261108.html`.
+These observations do not verify production transport, provider billing, TLS
+pinning, any paid call, a live replay or a model finding. A single shared
+production authorization, safe cross-chain TLS, account-specific worst-case
+charges, runtime security and applicable cloud/recovery acceptance remain open
+before calibration. A fresh GCP readback at 17:44 UTC reported the VM stopped;
+no new cloud or inference resource was created by this task.
+
+As a bounded TLS investigation, OpenSSL evaluated 16 published compromised
+certificate test chains offline, including cross-signed and rollover examples.
+The workstation's NSS 3.126 bundle accepted eight; NSS 3.131.1 rejected all 16
+before and after additionally removing an affected root, with issuer/trust
+errors. The offline tests did not check hostname or server purpose. A separate
+credential-free hostname check against Adaption succeeded
+using that candidate. Exact chain, bundle hashes, commands and outputs are
+retained in the same evidence packet. These are point-in-time checks on the
+tested chains; they do not prove comprehensive protection against every
+alternate chain, qualify a production transport or apply a system-wide fix.
+The raw OpenSSL transcript contains TLS session material, although no API key
+was sent on that connection; it is owner-only and must not be published.
+The original OpenSSL commands did not capture executable identity; a later
+current-environment identity is recorded separately as retrospective evidence.
+
 ## Controlled GCP first boot: 2026-11-08
 
 The owner requested another billing slot and authorized controlled experiments

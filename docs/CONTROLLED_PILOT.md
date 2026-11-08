@@ -116,8 +116,9 @@ passed thirty focused tests and eighty-five full Python tests; see the
 
 ## Activation still required
 
-The reviewed proposal's new ADR, exact provider transport and account model
-access, verified rate/unit conversion, operator spend record, usage reconciliation,
+ADR-0010 is an accepted design, with implementation and activation pending.
+The exact provider transport, independently verified account-specific rates and
+usage semantics, operator spend record, usage reconciliation,
 private runtime credential injection, egress policy, live evidence/provenance
 capture, live replay schema, randomized study runner, and real calibration remain
 unimplemented. Existing demo scenario names in IDs are unsuitable for blinded
