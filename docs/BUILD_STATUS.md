@@ -1,5 +1,51 @@
 # Build and deployment verification
 
+## Credit and local ext4 worker follow-up: 2026-11-08
+
+The owner provided ten available promotional-credit balances totaling
+CA$216.95 and confirmed their Credits page belongs to the open CAD billing
+account ending `0462E`. The values and GCP-wide usage scope are owner-supplied
+page data; they were not independently retrieved through the CLI. The $100 GCP
+project budget remains separate from the larger credit balance. The dedicated
+project is still not linked to billing; the quota error below remains open.
+
+Two disposable local NixOS VM checks at source
+`87156f5419aa4c02c96091bfcad4a5d8a5dd2936` used an ext4-backed store instead of
+the earlier overlay-backed test store. Both derivations exited 0, and the
+worker started without the earlier `Failed to clone /nix/store` error. The
+first task included a 75-second delay, completed the offline launcher, and
+restarted with an old workspace marker absent. This makes a filesystem-specific
+test-harness difference a supported explanation for the earlier failure; it
+does not establish that a GCP boot has succeeded.
+
+The second diagnostic used the same task-service restrictions, made probe
+failures fatal, and accepted direct-IP failures only when the route or address
+family was unavailable. It observed worker UID 1000, `NoNewPrivs=1`, no effective
+capabilities, denial of system and immutable-source writes and Nix daemon socket
+access, and unavailable routes to the selected external and IPv4/IPv6 metadata
+addresses. It read the actual memory, swap, and process cgroup limit files;
+observed container UID map `0 611647488 65536`; completed the offline task; and
+confirmed an old marker disappeared after restart. These are results from a
+diagnostic local VM, not an actual GCP metadata or isolation test. CPU-load and
+process-pressure enforcement, timeout/failure propagation, quarantine collector
+rejections, actual GCP/IAP access, and the remaining host acceptance checklist
+remain open.
+
+The initial probe's tab escaping was verified in the generated Nix store source;
+the earlier concern about its escaping was incorrect. Its direct-IP check accepted
+any socket error, so that check alone could not distinguish an unavailable route
+from a refused connection. The stricter rerun addresses that particular limit.
+Both source variants, logs, exit results, storage admission receipts, and the
+owner-provided credit summary are retained under
+`/home/neo/Projects/fleet-witness-artifacts/gcp-project-20261108T090855Z-a3583d/`.
+
+The owner also requested an inventory of older cloud projects for possible
+preservation and removal. Read-only project/asset/service metadata and the
+candidate summary are retained in that packet's `project-inventory/` directory.
+No source mirror, billing unlink, project deletion, secret/key-value read, or
+credential change was performed. Indexed asset results and matching repository
+names are not proof of complete backups or absent external consumers.
+
 ## GCP project creation and billing quota: 2026-11-08
 
 The owner authorized creation of a dedicated GCP project and continuation within
@@ -21,8 +67,19 @@ Google's error points to the [billing quota increase request](https://support.go
 The owner must submit or otherwise arrange that request, or provide another
 authorized open billing account. No request to Google was submitted by this
 task. Remaining credit value, expiry, and eligible services have not been
-verified. The owner confirmed that existing GCP credits are the intended funding;
-verify their balance and eligibility before billable provisioning. No project
+independently verified. The owner supplied a Credits-page listing with ten
+available balances totaling **$216.95**, with reported scope covering all Google
+Cloud Platform and Google Maps APIs. Eight balances of $14.17 each account for
+$113.36; the other available balances are $63.75 and $39.84. One used $0 balance
+is excluded. The earliest listed available credit expires January 3, 2027. The
+owner confirmed that the page belongs to the open billing account ending `0462E`;
+the CLI reports that account uses CAD. The reported total is therefore CA$216.95.
+This remains owner-supplied page data, not an independently fetched balance.
+The owner confirmed that existing GCP credits are the intended funding; recheck
+eligibility and the current balance before billable provisioning. The previously
+authorized $100 GCP budget remains
+the project envelope; the larger reported credit total does not increase it.
+No project
 budget, infrastructure resources, VM, image upload, or
 provider calls were created during this step. The $100 GCP budget and the
 owner-reported Adaption balance remain separate.
