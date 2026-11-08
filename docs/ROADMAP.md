@@ -1,12 +1,41 @@
 # Roadmap
 
-The working baseline is a zero-spend scripted mechanism demonstration, local replay viewer, and Git worktree task preparation. The pinned Nix offline check and hosted demo package build; the native GCP image evaluates. Full image construction and cloud/worker boot acceptance remain pending. The [handbook](../README.md#handbook), [GCP runbook](DEPLOY_GCP.md), and [verification record](BUILD_STATUS.md) let a fresh clone continue without the planning conversation.
+The current pilot has expanded receipt scenarios, an accepted gateway design,
+offline accounting and authorization fixtures, a 640-trial scripted campaign,
+a built and booted NixOS image, four exercised offline workers, and a separately
+hosted authenticated dashboard. The VM is stopped. The Python/Node stable,
+upcoming, previous and consumer matrix has executed. This is a scripted
+mechanism demonstration; live inference has not run. See [current gates](GATES.md)
+for individual acceptance states and [BUILD_STATUS.md](BUILD_STATUS.md) for
+source-bound evidence and preserved failures.
 
-1. **Review the current boundary.** Independently inspect the exact integrated diff and reproduce Python/browser tests, demo results, read-only serving, and fleet refusal cases. Record findings and actual commands. The owner decides integration.
-2. **Expand offline scenarios.** Cover narrow genuine receipts, issuer/claim/scope mismatch, and isolated paired worlds using existing interfaces. Preserve equal facts and distinguish decision validity, current authorization, and effects. `expanded-scenarios` owns only its regression tests and scenario document.
-3. **Propose a live-model adapter.** `adapter-proposal` writes a provider-neutral design with sealed truth, explicit personal budget, failure accounting, offline fake, and a mediated provider/tool gateway outside workers. Use a new ADR for accepted changes; do not revise prior decisions. No model call or credential access belongs to the default workflow.
-4. **Complete deployment and worker acceptance.** Use the committed lock and [native GCP image runbook](DEPLOY_GCP.md) on an x86_64 Linux KVM builder. Record image construction, first boot, IAP/OS Login, loopback viewer, and optional HTTPS results. Then verify identity, UID mapping, source immutability, Nix daemon and metadata denial, network policy, cgroup limits, timeout/failure propagation, output quarantine, and cleanup. A successful package build cannot establish containment. Follow [NixOS fleet validation](NIXOS_FLEET.md) and ADR-0008/0009; retain a known-good image and confirm teardown costs.
-5. **Write a reproducible research report.** After scenario and adapter proposals, document the question, observed synthetic results, hypotheses, prior-work provenance, AI assistance, limitations, and dual-use considerations. Use [official submission requirements](SUBMISSION.md). A future live-model study needs preregistered comparisons, model/prompt versions, trial counts, uncertainty estimates, and explicitly authorized spend.
-6. **Conduct independent final review.** `independent-review` checks code, evidence, report claims, and remaining deployment gaps after `research-report`. Its report is a recommendation; the owner retains merge, publication, and submission authority.
+1. **Integrate the reviewed continuation.** Publish all source branches, retain
+   baseline/rollback identities, reproduce required checks and obtain independent
+   review before integrating main. Scheduling status is not acceptance.
+2. **Resolve provider facts.** Verify account-specific balance, rates, all billed
+   reasoning bounds, per-request accounting and actual data-handling terms. Public
+   model tables and the owner-reported balance do not establish these facts.
+3. **Qualify the production gateway.** Continue ADR-0010: pin runtime and trust,
+   implement the bounded no-retry transport and one shared production authorization,
+   preserve controller authority and worker isolation, test failure/accounting
+   behavior and independently review the exact candidate. The current modules
+   remain offline fixtures.
+4. **Finish runtime and cloud recovery acceptance.** Migrate the durable Nix launch
+   path with current stable evidence and previous/preview lanes, qualify remaining
+   host/gateway and collector cases, rehearse cloud rollback and reconcile costs.
+   Preserve the existing image, lock, storage, receipts and consumer checks.
+5. **Run separately bounded calibration, then freeze the study.** Only after all
+   applicable ADR-0010 gates pass, execute and reconcile the authorized calibration.
+   A confirmatory 320-request study needs its own frozen model/prompt/schedule/
+   analysis/budget identities and live replay schema. Failed and unstarted calls
+   remain visible; do not extrapolate from scripted repetitions.
+6. **Finish the research artifact.** The [report draft](research-report.md)
+   describes observed synthetic results and limitations. The independent integration
+   review is delivered; official template/PDF, affiliation confirmation and an owner submission decision
+   remain distinct from code publication. The [submission guide](SUBMISSION.md)
+   links the official requirements.
 
-Future work also includes a separately authorized provider runner and coding-worker dispatch, persisted-key/resume design if needed, stronger independent attestation, and a possible Rust controller only after an ADR and equivalent behavioral tests. Use the [Adaption plan](ADAPTION.md) for a bounded pilot after account units and access are verified; the current manifest authorizes $0. The longer-term honeypot and geographic activity dashboard need separate sensor infrastructure, evidence provenance, uncertainty reporting, and the [security/policy scope](SECURITY_POLICY.md). None is necessary to run the baseline. External effects and hostile-process isolation require their own threat model and verification; no task status or signed receipt substitutes for that work.
+A public observation sensor, autonomous coding-worker dispatch, stronger
+attestation, persisted-key/resume support and any Rust controller remain separate
+future work. No current task authorizes third-party scanning, unsolicited fleet
+contact, broader provider spend or retirement of retained recovery assets.

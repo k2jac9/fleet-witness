@@ -1,0 +1,36 @@
+{
+    admin off
+    auto_https off
+    persist_config off
+    servers {
+        timeouts {
+            read_header 5s
+            read_body 5s
+            write 10s
+            idle 15s
+        }
+        max_header_size 16KB
+    }
+}
+:8080 {
+    root * /srv
+    header {
+        -Server
+        Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'"
+        X-Content-Type-Options nosniff
+        Referrer-Policy no-referrer
+        Cache-Control no-store
+        Strict-Transport-Security "max-age=31536000"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+    }
+    route {
+        basic_auth {
+            owner {env.DASHBOARD_PASSWORD_HASH}
+        }
+        @write not method GET HEAD
+        respond @write "Read-only dashboard" 405
+        @asset path / /index.html /styles.css /app.js /replay.json
+        file_server @asset
+        respond "Not found" 404
+    }
+}

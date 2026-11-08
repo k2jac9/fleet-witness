@@ -13,5 +13,8 @@ Accepted decisions are the development fleet's contract. Propose changes in a ne
 | [0007](0007-isolated-paired-trials.md) | Isolated counterfactual worlds for paired trials |
 | [0008](0008-ephemeral-nixos-workers.md) | Ephemeral NixOS development workers; deployment validation pending |
 | [0009](0009-gcp-deployment.md) | Native GCP image, private administration, optional HTTPS, and deployment lifecycle |
+| [0010](0010-trusted-live-model-gateway.md) | Trusted live-model gateway and bounded pilot; implementation and validation pending |
+
+| [0011](0011-managed-read-only-dashboard.md) | Authenticated managed static dashboard; deployment validation recorded separately |
 
 Use [the template](template.md) for a new proposal.
