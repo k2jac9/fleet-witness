@@ -1,5 +1,25 @@
 # Build and deployment verification
 
+## Offline single-use registry fixture: 2026-11-08
+
+Task `live-gateway` added an offline registry and fixture runner that compare
+synthetic account, source and canonical ledger bindings and atomically consume
+a claim with its audit event before running an inert fixture. An independent
+review identified a relative-path registry identity defect; the implementation
+now rejects relative, traversing and symlinked registry paths. The reviewer
+found no remaining material defects in the revised fixture. The full local run
+passed 131 Python tests and five viewer tests; focused red/green and full-suite
+logs are retained in the `live-gateway-20261108` evidence packet.
+
+The account and source values are unverified synthetic labels, and separate
+registry databases can contain the same authorization. Registry and ledger
+transactions are separate; a crash after consuming a claim can lose an unused
+fixture attempt. Owner-level processes can alter files. This is neither a
+hostile-process sandbox nor a production activation gate. Production still
+requires one pinned shared registry, verified bindings, the billing, trust and
+other ADR-0010 gates below, independent review and live validation. No model
+inference call was made in this task.
+
 ## Live-gateway offline foundation: 2026-11-08
 
 Task `live-gateway` follows the owner's instruction to proceed with the

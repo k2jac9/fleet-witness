@@ -33,6 +33,32 @@ No live activation from import, unit tests, CI, fixtures or workers. No retries,
 - [x] Add failing tests for fixture response usage, errors, output validation, schema/identity limits and atomic settlement; implement and retest.
 - [ ] Design and implement the single-use production authorization registry with canonical ledger, account and source binding; verify cross-process, restart and alternate-path refusal before any live transport.
 
+### Offline registry subtask
+
+**Owned paths:** `fleet_witness/calibration_registry.py`,
+`tests/test_calibration_registry.py`, this plan and `docs/BUILD_STATUS.md`.
+The same primary owner uses the isolated `fleet/controlled-pilot` worktree.
+`FixtureRegistry(path)` provides `claim(authorization_id, account_id,
+source_commit, ledger_path)`, `consume(authorization_id)` and
+`snapshot(authorization_id)`. Claims are immutable and unique in one private
+SQLite registry; changing the ledger, account or source cannot reuse a claim.
+Consumption and its audit event commit together exactly once across processes.
+`BoundFixtureRunner` checks the registry's account, source and canonical ledger
+against a `FixtureRunner`, validates the visible input, then consumes the claim
+before running that inert fixture. A crash after consumption is fail-closed;
+the fixture is not retried automatically. The two SQLite files are not one
+transaction, so the sequence deliberately prefers losing an unused fixture
+attempt over allowing a second one.
+This is a fixture, not the production global gate: a real entry point must pin
+one canonical registry and validate the actual account, source and ledger
+identities. No component may activate a network request yet.
+
+- [x] Write failing tests for immutable claims, alternate-path refusal,
+  concurrent consumption, crash/restart recovery, atomic audit failures and
+  private paths; run them and retain the failing result.
+- [x] Implement the minimum fixture registry, retest, and independently review
+  its cross-process and crash guarantees before reporting it complete.
+
 ## Task 2: Trusted transport and calibration orchestration
 
 **Files:** `fleet_witness/live_gateway.py`; `tests/test_live_gateway.py`; optionally an explicit trusted operator command under `scripts/`.
