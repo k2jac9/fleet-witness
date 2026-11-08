@@ -11,8 +11,9 @@ The newly created project is **`fleet-witness-261108-aa0c99`**, project number
 The only open billing account visible to the authorized operator is denominated
 in CAD. Linking it to the new project failed with Google Cloud's
 `FAILED_PRECONDITION: Cloud billing quota exceeded`. The API did not report the
-limit's value. The account currently lists five billing-enabled projects; their
-billing links were not changed. A fresh `billing projects describe` confirmed
+limit's value. The account currently lists five billing-enabled projects; no
+command in this task requested changes to their billing links. A fresh
+`billing projects describe` confirmed
 the Fleet Witness project has `billingEnabled: false` and no billing account;
 the enabled-API list was empty.
 
@@ -20,7 +21,9 @@ Google's error points to the [billing quota increase request](https://support.go
 The owner must submit or otherwise arrange that request, or provide another
 authorized open billing account. No request to Google was submitted by this
 task. Remaining credit value, expiry, and eligible services have not been
-verified. No project budget, infrastructure resources, VM, image upload, or
+verified. The owner confirmed that existing GCP credits are the intended funding;
+verify their balance and eligibility before billable provisioning. No project
+budget, infrastructure resources, VM, image upload, or
 provider calls were created during this step. The $100 GCP budget and the
 owner-reported Adaption balance remain separate.
 
