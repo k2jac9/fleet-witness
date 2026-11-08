@@ -21,12 +21,17 @@ does not establish that a GCP boot has succeeded.
 The second diagnostic used the same task-service restrictions, made probe
 failures fatal, and accepted direct-IP failures only when the route or address
 family was unavailable. It observed worker UID 1000, `NoNewPrivs=1`, no effective
-capabilities, denial of system and immutable-source writes and Nix daemon socket
-access, and unavailable routes to the selected external and IPv4/IPv6 metadata
-addresses. It read the actual memory, swap, and process cgroup limit files;
+capabilities, failed attempts to write system and immutable-source paths or connect
+to the Nix daemon socket, and unavailable routes to the selected external and
+IPv4/IPv6 metadata addresses. The write/socket probe did not record error codes
+or independently establish that the host socket existed; those results do not
+by themselves prove permission enforcement. It read the actual memory, swap,
+and process cgroup limit files;
 observed container UID map `0 611647488 65536`; completed the offline task; and
-confirmed an old marker disappeared after restart. These are results from a
-diagnostic local VM, not an actual GCP metadata or isolation test. CPU-load and
+confirmed an old marker disappeared after restart. Both runs logged failed
+unmounts for `/tmp` and several Nix state mounts during container shutdown;
+the reason and any residual host impact remain unverified. These results are
+from a diagnostic local VM, not an actual GCP metadata or isolation test. CPU-load and
 process-pressure enforcement, timeout/failure propagation, quarantine collector
 rejections, actual GCP/IAP access, and the remaining host acceptance checklist
 remain open.
@@ -35,7 +40,15 @@ The initial probe's tab escaping was verified in the generated Nix store source;
 the earlier concern about its escaping was incorrect. Its direct-IP check accepted
 any socket error, so that check alone could not distinguish an unavailable route
 from a refused connection. The stricter rerun addresses that particular limit.
-Both source variants, logs, exit results, storage admission receipts, and the
+A third local diagnostic exited 0 after confirming the host daemon socket existed:
+the constrained worker saw `EACCES` when opening the immutable source and
+connecting to that socket, and `EROFS` for writes under `/etc` and `/nix/store`.
+It also passed the bounded route, actual cgroup-limit, UID-map, offline-task, and
+restart-marker checks. Container shutdown still logged the unmount failures;
+the reason and residual host impact remain open. These tests have not exercised
+actual GCP metadata access, workload isolation on GCP, or rollback.
+
+All source variants, logs, exit results, storage admission receipts, and the
 owner-provided credit summary are retained under
 `/home/neo/Projects/fleet-witness-artifacts/gcp-project-20261108T090855Z-a3583d/`.
 
