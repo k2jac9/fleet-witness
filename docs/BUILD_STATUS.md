@@ -1,5 +1,44 @@
 # Build and deployment verification
 
+## Pilot image and billing continuation: 2026-11-08
+
+The previously recorded GCP image was built from `87156f5` and does not include
+the reviewed pilot gateway. A new native GCE image build completed locally from
+the clean `fleet/controlled-pilot` commit
+`857e716e48dfbc5db23892db744dce8ad4e49692`, with the existing flake lock and
+a 24 GiB workstation-storage admission. Fresh checks at that source passed:
+`python3 -m unittest discover -s tests -v` (72 tests),
+`node --test tests/viewer.test.mjs` (5 tests), and
+`python3 scripts/fleet.py validate` (4 tasks, $0 default external budget).
+
+The output is `/nix/store/a9ia8pmgc5dig8ij7hikvqrb57akwp90-google-compute-image`.
+Its archive `nixos-image-google-compute-26.05.20261105.c56a87d-x86_64-linux.raw.tar.gz`
+is 753,295,543 bytes, has SHA-256
+`afd93e9d579881a01b0f72bbbb057313cf919bdaa4c094b7f8e5ee85bb3d4027`, and
+contains one `disk.raw`. It is retained by the GC root
+`/home/neo/.local/state/fleet-witness/gcroots/candidate-gce-857e716-20261108`;
+the earlier image and its root remain retained. Build, test, and integrity
+receipts are in
+`/home/neo/Projects/fleet-witness-artifacts/candidate-image-20261108-hn3_fnu3/`.
+This image has not been booted on GCP and is not an accepted rollback image.
+
+Following the owner's request to free a billing link, billing was unlinked from
+`gen-lang-client-0339839502` and the separate preservation project
+`gcp-preservation-261108-ab1b` was linked to the account with owner-reported credits. The
+preservation bucket holds a partial, readback-verified Firestore snapshot and
+manifest for another project; it does not contain a complete project backup.
+That project alone has a CA$100 monthly gross-usage budget alert; this is not a
+spend cap and does not cover Fleet Witness. The Fleet Witness project remains
+unlinked and the billing quota blocker remains open. Do not disable billing on
+the preservation project or remove its recovery data to make room. Earlier
+statements below about no unlink or deletion describe their respective historical
+steps, not the current cross-project state.
+
+No cloud image resource, VM, live-model request, provider credit verification, or GCP boot
+acceptance occurred in this continuation. IAP/OS Login, real worker confinement,
+timeout and pressure tests, cleanup, remote execution, and cloud rollback remain
+required. The live provider adapter and study activation controls are not implemented.
+
 ## Credit and local ext4 worker follow-up: 2026-11-08
 
 The owner provided ten available promotional-credit balances totaling
