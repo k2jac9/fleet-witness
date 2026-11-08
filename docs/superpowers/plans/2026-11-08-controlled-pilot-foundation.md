@@ -39,29 +39,29 @@ external publication, task-status changes, or main-branch integration.
 
 ## Task 1: Offline gateway and durable budget accounting
 
-- [ ] Write `tests/test_gateway.py` before implementation. Cover exact input
+- [x] Write `tests/test_gateway.py` before implementation. Cover exact input
   allowlisting and metadata separation; strict output parsing; integer budget
   limits; concurrent reservations; duplicate IDs; settlement; missing/excess
   usage; timeout and crash; restart preservation; private ledger permissions;
   and atomic reservation/audit rollback using a real SQLite trigger.
-- [ ] Run `python -m unittest discover -s tests -p test_gateway.py -v` and retain
+- [x] Run `python -m unittest discover -s tests -p test_gateway.py -v` and retain
   the expected missing-module failure before any security-sensitive code.
-- [ ] Implement `BudgetLedger`, `ProviderReply`, `FakeProvider`, `Gateway`, and
+- [x] Implement `BudgetLedger`, `ProviderReply`, `FakeProvider`, `Gateway`, and
   `provider_input` in the single owned module. One ledger transaction owns every
   state/audit change. Provider execution occurs outside its transaction.
   Use nonnegative integer verified units, no implicit retries, and a shared
   single-dispatch limit. Hold ambiguous reservations and refuse more dispatch.
-- [ ] Run the focused suite and the complete Python/viewer suites. Correct
+- [x] Run the focused suite and the complete Python/viewer suites. Correct
   actual failures without weakening accounting or controller authority.
 
 ## Task 2: Reproducible handoff and independent review
 
-- [ ] Document interfaces, exact commits and test results, fake mode, the
+- [x] Document interfaces, exact commits and test results, fake mode, the
   verified image build, failed worker-boot diagnostics, current account-access
   blocker, and all unexecuted live/security/runtime gates.
-- [ ] Run fleet validation, link checks, `git diff --check`, and relevant full
+- [x] Run fleet validation, link checks, `git diff --check`, and relevant full
   offline smoke; retain logs under the existing continuation artifact packet.
-- [ ] Commit the candidate and obtain independent review of the whole branch.
+- [x] Commit the candidate and obtain independent review of the whole branch.
   Address material findings and retain the reviewed source identity.
 
 ## Completion boundary
@@ -73,3 +73,16 @@ $1,500 Adaption balance remain separate. Live activation needs verified units,
 reachable authorized accounts, the approved successor ADR, and applicable host
 acceptance. Public attack observation follows the controlled pilot as a separately
 reviewed scope.
+
+## Observed completion
+
+Implementation review at `bf06d99` has no remaining findings after the reproduced
+response-status correction. Seventeen focused tests, seventy-two full Python
+tests, five viewer tests, full offline smoke, fleet validation and whitespace
+checks pass. Python 3.11.17/3.14.8 and Node 24.22.1 installed consumer checks also
+pass; this is not the complete fresh upstream CI matrix. The documented fake
+example runs with one synthetic unit spent and no held reservation. The GCE
+image builds; local worker startup fails before confinement probes. GCP account,
+project and credit verification, provider/live activation, and owner integration
+remain outside this completion boundary. Full evidence is retained in the
+sibling continuation artifact packet.

@@ -22,7 +22,10 @@ The candidate branch `fleet/controlled-pilot` combines independently reviewed
 | Pilot foundation | 15 tests observed failing before implementation; malformed Unicode and reviewer-found status-finality/classification failures reproduced before correction; final focused suite 17 passed |
 | Combined local suites | `python -m unittest discover -s tests -v`: 72 passed; `node --test tests/viewer.test.mjs`: 5 passed |
 | Fleet validation | Four valid existing tasks and $0 default external budget; scheduling statuses were not changed |
-| Offline smoke for reviewed scenario source `3e0586b` | Exit 0, `stage=complete`, 55 Python tests, 5 viewer tests, expected 20-episode demo metrics |
+| Final offline smoke at `bf06d99` | Exit 0, `stage=complete`; 72 Python tests, 5 viewer tests, unchanged 20-episode scripted outcomes |
+| Installed-runtime compatibility | Full 72-test Python suite passes on exact Python 3.11.17 and 3.14.8 executables; 5 viewer tests pass on Node 24.22.1. These are observed installed versions, not verified newest upstream selections |
+| Independent foundation review at `bf06d99` | One medium response-finality/accounting finding reproduced and fixed; final review and targeted probes report no remaining findings |
+| Earlier offline smoke for reviewed scenario source `3e0586b` | Exit 0, `stage=complete`, 55 Python tests, 5 viewer tests, expected 20-episode demo metrics |
 | Chrome `155.0.8059.39` | Real HTTP replay, pairing, revocation, duplicate no-ops, keyboard focus, filtering, malformed-import recovery, and hostile text checks passed |
 | Browser visual inspection | Wide 1440 px and narrow 390 px screenshots inspected; narrow document has no horizontal overflow |
 | Browser console | One cosmetic CSP error: the empty `data:,` favicon is blocked by `img-src 'self'`; no JavaScript exception observed |
@@ -38,6 +41,27 @@ blob is `23b80b3059b0d01d4aa58777b9b5931b48b8f87c`. Code/test scope is
 and `docs/superpowers/plans/2026-11-08-controlled-pilot-foundation.md`.
 No accepted ADR, existing runtime/controller/viewer behavior, infrastructure
 configuration, or fleet scheduling state was modified.
+
+### Runtime adoption record and owned gaps
+
+Technical owner: Alejandro Castellanos; coordinator project: Fleet Witness.
+Authoritative published source: `k2jac9/fleet-witness`, main `87156f5`;
+reviewed candidate implementation: `bf06d99`, retained code blob above. Runner:
+local x86_64 Linux; assigned hosted runner and executed hosted jobs are not
+established. Refresh selections and this record before activation, with the
+next review due **2026-11-15** if no activation happens sooner.
+
+| Required role or field | Current evidence and open work |
+| --- | --- |
+| Operational baseline | No live service/runtime is established. The preserved published handoff and committed lock are the source baseline; its historical local tools are recorded below. |
+| Development candidate | Local Python 3.15.0 and Node 26.11.1 were exercised. Exact source-bound logs and executable identities are retained. Latest upstream stable freshness for these runtime families was not checked here. |
+| Latest/upcoming/previous CI | Owner: project technical owner. Current YAML covers only floating Python 3.11/3.13 and Node 24. Fresh exact stable, upcoming-preview, and newest previous-supported patch selections and isolated jobs remain an adoption gap; no upcoming runtime was exercised. |
+| Older supported consumers | Python 3.11+ and the documented Node 24 viewer path remain promised. Python 3.11.17 and Node 24.22.1 local checks passed; older support was not retired. Python 3.14.8 was also exercised without claiming it is the newest previous-line patch. |
+| Dependencies and artifacts | Standard-library runtime; unchanged exact flake lock. The image source/hash/path and new module blob are retained. No lock, runtime default, or workstation-wide pin was upgraded. |
+| Downstream compatibility | Existing CLI, controller, scripted schema 1.0 and viewer checks pass. New live replay and provider consumers do not exist yet. |
+| Promotion | Requires owner integration of the reviewed candidate, current runtime selections and meaningful compatibility checks, worker boot/confinement repair, cloud/account checks, and bounded activation. Passing local tests do not activate any service. |
+| Rollback | Published source/lock and the new candidate image are retained. A previously accepted live source/runtime/artifact set and tested cloud rollback are not established. Do not label this unbooted GCP candidate as known-good rollback. |
+| Observation/retirement | Production observation window, retirement date, and owner retirement decision are not established. No baseline, cache, receipt, image, or consumer reservation was deleted or released. |
 
 ### Retained image and failed boot diagnostics
 
@@ -96,8 +120,8 @@ printed or stored in the evidence packet. The reachable authorized SDK
 configuration and target project are required before credit/billing/resource
 inspection or provisioning can continue.
 
-Remain open: independent review of the full foundation candidate, owner
-integration, actual provider/gateway activation and new ADR, real calibration
+Remain open: owner integration, actual provider/gateway activation and new ADR,
+real calibration
 and study execution, current runtime-lane adoption, the store-mount boot failure,
 all worker confinement/lifecycle gates, GCP billing and credit verification,
 IAM/IAP/OS Login and cloud boot, optional DNS/TLS, and tested cloud rollback and

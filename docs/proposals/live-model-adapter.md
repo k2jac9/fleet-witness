@@ -222,7 +222,10 @@ remain acceptance authorities.
 
 A successor ADR must define the trusted gateway, authorization record, model
 input/output and spend ledger contracts, provider failure states, and versioned
-live replay before implementation tasks are dispatched. Replay v1 currently
+live replay before live-provider or worker-connected gateway tasks are dispatched.
+The owner-selected offline foundation can exercise inert proposals and synthetic
+accounting under the existing offline boundary; it supplies no provider transport,
+worker connection, credential authority, or acceptance of that future ADR. Replay v1 currently
 requires `mode="scripted-demo"`; live evidence needs a reviewed new schema and
 viewer compatibility, not relabeling v1 fixtures or presenting live results as
 scripted data. Preserve baseline and older consumer checks during migration.
