@@ -33,6 +33,14 @@ absence, source/image identities, expiry failure handling and bounded cloud cost
 - [x] Write HTTP checker first; show failure against unauthenticated server.
   Configure pinned Caddy and test auth, methods, assets and headers locally.
 - [x] Full Python/Node tests and independent review; fix findings before deploy.
-- [ ] Deploy reviewed digest with dedicated roleless identity, scale limits,
+- [x] Deploy reviewed digest with dedicated roleless identity, scale limits,
   separate owner password and scheduled deletion; verify external HTTPS.
-- [ ] Record results, exact identities, access instructions and limitations.
+- [x] Record results, exact identities, access instructions and limitations.
+
+
+Ruling: use 1 CPU rather than fractional CPU to keep bcrypt authentication within
+short timeouts. The project-wide CA$5 Cloud Run spend cap and 24-hour expiry are
+configured; actual total charges remain unverified. Independent review required
+and verified service-specific deletion IAM, etag binding and an audit-backed
+expiry rehearsal. Managed ingress normalization is recorded explicitly; no
+redirect is followed with credentials. No image changes followed publication.

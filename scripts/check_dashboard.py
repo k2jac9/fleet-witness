@@ -13,6 +13,15 @@ class NoRedirect(HTTPRedirectHandler):
     def redirect_request(self, *args, **kwargs):
         return None
 
+def private_response_denied(base, path, status, location, body):
+    if status == 404:
+        return True
+    if path == '//witness.sqlite3' and status in (401,403):
+        return True
+    # Google ingress canonicalizes these before Caddy; never follow a redirect.
+    return (path in ('/../witness.sqlite3','/%2e%2e/witness.sqlite3')
+            and status == 302 and location == base+'/witness.sqlite3' and body == b'')
+
 def check(base, password):
     target = urlsplit(base)
     if (target.username or target.password or target.query or target.fragment or target.path not in ('','/')
@@ -32,11 +41,13 @@ def check(base, password):
             status=response.status
             csp=response.headers.get('Content-Security-Policy','')
             challenge=response.headers.get('WWW-Authenticate','')
-        assert status == expected, (path,method,status,expected)
+            location=response.headers.get('Location')
+        assert (private_response_denied(base,path,status,location,body) if expected == 404
+                else status == expected), (path,method,status,expected)
         assert len(body)<=2*1024*1024, 'response too large'
-        if status == 401: assert challenge.startswith('Basic '), 'missing challenge'
+        if status == 401 and expected != 404: assert challenge.startswith('Basic '), 'missing challenge'
         if status == 200: assert "default-src 'none'" in csp and "frame-ancestors 'none'" in csp
-        results.append(dict(path=path,method=method,status=status,bytes=len(body),sha256=hashlib.sha256(body).hexdigest()))
+        results.append(dict(path=path,method=method,status=status,location=location,bytes=len(body),sha256=hashlib.sha256(body).hexdigest()))
         return body
     for path in ('/','/index.html','/styles.css','/app.js','/replay.json'):
         request(path,401)

@@ -1,5 +1,48 @@
 # Build and deployment verification
 
+## External dashboard deployed: 2026-11-08
+
+The owner-requested authenticated dashboard is live at
+https://fleet-dashboard-353247593595.us-central1.run.app . The service uses the
+reviewed source `39ba6cc35987541d673c25402bb2bf34759cb0ad` and immutable image
+`sha256:87b42722fd6f73995756f650690b11fcf97cb5528eb2043fe8b4bc654fa3957b`.
+Final revision is `fleet-dashboard-00001-f2c`; Cloud Run reported READY. All 35
+external HTTP checks passed, and the five successful asset bodies match the
+local image manifest. Missing/wrong credentials return 401 on all asset routes;
+authenticated private paths are denied. Google ingress returns an empty,
+same-origin canonical redirect for the two tested traversal forms and rejects
+the double-slash form; the checker records these without following redirects.
+Missing/invalid bcrypt configuration was also verified to prevent Caddy startup.
+The final local suite passed 142 Python tests and five Node tests.
+
+The final service policy permits platform invocation by allUsers, with every
+asset protected by Caddy Basic authentication. Dedicated runtime and expiry
+identities have no matching project-wide role bindings in the readback. The
+expiry identity has only the custom `run.services.delete` role on this service;
+the role's permission definition was independently read back. This is scoped
+configuration evidence, not an exhaustive IAM/security certification.
+
+An immediate Cloud Tasks deletion rehearsal succeeded: the audit event records
+the expiry principal delegated by the Cloud Tasks service agent, the exact
+DeleteService operation and granted permission; a subsequent readback found the
+service absent. The rehearsal task was absent before recreating the same reviewed
+image, and the deletion binding was restored and verified on the new service.
+The final task `expire-dashboard-20261109` was independently read back with a
+DELETE request bound to the final service etag and scheduled at
+**2026-11-09 18:06:36 UTC (13:06 Toronto)**. That future deletion has not happened.
+An update can invalidate the etag; replace/reverify the task after updates and
+use the manual deletion command if expiry fails. Registry/image/queue/IAM and
+old VM storage retention are separate from service deletion.
+
+The CA$5 cap covers eligible Cloud Run usage throughout this project, not just
+this service. The service inventory currently lists only this dashboard. Both
+spend-cap enforcement and instance maxima can have delays/transient overages;
+neither proves the total $100 portfolio ceiling or actual remaining credits.
+The NixOS VM remains stopped. No Adaption inference, public sensor, external fleet
+conversation or third-party scan was run. The recorded campaign is scripted.
+Independent reviewers checked source, credential routing, manifests, final IAM,
+HTTP receipts, expiry task and the deletion audit.
+
 ## External dashboard preparation and campaign: 2026-11-08
 
 Task `external-dashboard` implements ADR-0011 under the owner's explicit request

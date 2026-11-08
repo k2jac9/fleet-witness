@@ -503,7 +503,7 @@ service account has no project roles, and no worker/controller API exists.
 
 Deployment settings: `us-central1`, gen1, 1 CPU, 128 MiB, concurrency 1,
 request-based billing, min 0, service and revision max 1, no CPU boost, request
- timeout 10 seconds. A separate Cloud Tasks OAuth identity deletes the named
+timeout 10 seconds. A separate Cloud Tasks OAuth identity deletes the named
 service after the initial 24-hour window; no cleanup permissions go to the
 runtime account. Independently inspect the task and IAM bindings. Deletion is
 asynchronous and must be verified when due. Image/queue/IAM retention is separate.
@@ -524,3 +524,15 @@ gcloud run services delete fleet-dashboard --region=us-central1 \
 
 This withdraws the dashboard only. The reviewed image and four-file bundle remain
 available for a new bounded deployment. It does not roll back experiment data.
+
+
+Observed pilot URL: https://fleet-dashboard-353247593595.us-central1.run.app .
+Username: `owner`; password file (owner-private, not in Git):
+`/home/neo/.local/state/fleet-witness/secrets/dashboard-password-20261108`.
+Expiry task `expire-dashboard-20261109` in queue `fleet-dashboard` is scheduled
+for 2026-11-09 18:06:36 UTC. Its DELETE query pins the final service etag. After
+any service update, cancel/verify the previous task and replace it with a task
+bound to the new etag; otherwise expiry can fail. Do not reuse a service name
+while an old deletion task or retry remains pending. Check service absence when
+due; a delivered asynchronous DELETE alone is insufficient. The withdrawal
+command above is the manual fallback.

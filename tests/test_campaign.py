@@ -78,3 +78,12 @@ class DashboardTargetTests(unittest.TestCase):
         with patch.dict(os.environ, {'http_proxy':'http://proxy.invalid:8000','no_proxy':''}, clear=True), patch('urllib.request.HTTPHandler.http_open', side_effect=intercept):
             with self.assertRaises(RuntimeError): check('http://127.0.0.1:18766','fake-test-password')
         self.assertEqual(hosts,['127.0.0.1:18766'])
+
+    def test_ingress_normalization_accepts_only_empty_same_origin_private_target(self):
+        from scripts.check_dashboard import private_response_denied
+        base='https://dashboard.example'
+        self.assertTrue(private_response_denied(base,'/../witness.sqlite3',302,base+'/witness.sqlite3',b''))
+        self.assertTrue(private_response_denied(base,'//witness.sqlite3',401,None,b'denied'))
+        for location,body in [('https://evil.example/witness.sqlite3',b''),(base+'/',b''),(base+'/witness.sqlite3',b'private content')]:
+            self.assertFalse(private_response_denied(base,'/../witness.sqlite3',302,location,body))
+        self.assertFalse(private_response_denied(base,'/witness.sqlite3',200,None,b'private content'))
