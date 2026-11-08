@@ -1,6 +1,6 @@
 # Development task fleet
 
-This is the development coordination tool for Alejandro Castellanos's solo project. It is separate from the simulated worker/reviewer fleet evaluated by the demo. [ADR-0006](../docs/adr/0006-development-fleet.md) governs task ownership and [ADR-0008](../docs/adr/0008-ephemeral-nixos-workers.md) records the optional ephemeral NixOS worker target.
+This is the development coordination tool for the Fleet Witness team: Alejandro Castellanos (`k2jac9`, repository owner) and `IPBin` (teammate). [ADR-0012](../docs/adr/0012-human-team-membership.md) records the membership update. It is separate from the simulated worker/reviewer fleet evaluated by the demo. [ADR-0006](../docs/adr/0006-development-fleet.md), with its solo-entrant assumption superseded by ADR-0012, governs task ownership and [ADR-0008](../docs/adr/0008-ephemeral-nixos-workers.md) records the optional ephemeral NixOS worker target.
 
 From the repository root with Python 3.11+ and Git installed:
 

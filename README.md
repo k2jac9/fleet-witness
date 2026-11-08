@@ -2,7 +2,7 @@
 
 Evidence and accountability for AI agent fleets: a runnable local demonstration of how genuine evidence can still be insufficient to authorize an action. A deterministic supervisor proposes releases; a trusted controller checks receipt applicability and current policy before committing a local release and its audit event together.
 
-Alejandro Castellanos (`k2jac9`) is the sole human owner and entrant. AI agents assisted implementation and review as development tools. The simulated fleet under evaluation is a separate controlled system. See [AI assistance and provenance](docs/AI_ASSISTANCE.md) and [submission requirements and official sources](docs/SUBMISSION.md).
+The human team is Alejandro Castellanos (`k2jac9`, repository owner) and [`IPBin`](https://github.com/IPBin) (teammate). AI agents assisted implementation and review as development tools. The simulated fleet under evaluation is a separate controlled system. See [AI assistance and provenance](docs/AI_ASSISTANCE.md) and [submission requirements and official sources](docs/SUBMISSION.md).
 
 The current pilot includes a 32-seed scripted campaign, offline provider-accounting fixtures, four successfully exercised GCP workers, and an authenticated managed dashboard. Real-model calibration has not run. See the [current gate inventory](docs/GATES.md), [research report draft](docs/research-report.md), and [runtime adoption record](docs/RUNTIME_ADOPTION.md).
 
@@ -42,7 +42,7 @@ nix develop
 | Inspect services, collect output, recover, and clean up | [Operations](docs/OPERATIONS.md), [deployment lifecycle](docs/DEPLOY_GCP.md) |
 | Plan the $1,500 Adaption balance and separate hosting bill | [Adaption API and credit plan](docs/ADAPTION.md), [cost model](docs/COSTS.md) |
 | Apply cybersecurity and research policy | [Security and policy](docs/SECURITY_POLICY.md), [resource map](docs/RESOURCES.md) |
-| Prepare the solo research submission | [Roadmap](docs/ROADMAP.md), [submission guide](docs/SUBMISSION.md), [AI assistance](docs/AI_ASSISTANCE.md) |
+| Prepare the team research submission | [Roadmap](docs/ROADMAP.md), [submission guide](docs/SUBMISSION.md), [AI assistance](docs/AI_ASSISTANCE.md) |
 
 ## Interpret the demo
 
@@ -71,6 +71,7 @@ These traces demonstrate mechanisms. Differences between deterministic scripted 
 | [0009](docs/adr/0009-gcp-deployment.md) | Native GCP image, private administration, optional HTTPS, and deployment lifecycle |
 | [0010](docs/adr/0010-trusted-live-model-gateway.md) | Trusted live-model gateway design; paid activation remains gated |
 | [0011](docs/adr/0011-managed-read-only-dashboard.md) | Separate authenticated managed replay dashboard |
+| [0012](docs/adr/0012-human-team-membership.md) | Human team membership and retained task ownership |
 
 ## Develop through reviewed tasks
 

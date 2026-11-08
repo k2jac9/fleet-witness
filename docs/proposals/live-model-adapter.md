@@ -11,7 +11,8 @@ task. The default remains the offline `scripted-demo`.
 Use real model responses in controlled evidence-and-authority experiments on
 owner-controlled infrastructure. Preserve the distinction between a model's
 recommendation, decision-time correctness, current authorization, and committed
-local effects. Alejandro Castellanos remains the sole human entrant.
+local effects. The current human team is Alejandro Castellanos (`k2jac9`) and
+`IPBin`, as recorded in [ADR-0012](../adr/0012-human-team-membership.md).
 
 On 2026-11-08 the owner authorized a **$100 total GCP envelope** for development,
 testing, and deployment, requested credit verification and cybersecurity

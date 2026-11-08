@@ -1,10 +1,10 @@
-# Solo submission preparation
+# Team submission preparation
 
-Owner and sole human entrant: Alejandro Castellanos. Project: Fleet Witness. Proposed anchor: Multi-Agent Oversight and Control, with a testbed/infrastructure contribution.
+Human team: Alejandro Castellanos (`k2jac9`, repository owner) and `IPBin` (teammate). Project: Fleet Witness. Proposed anchor: Multi-Agent Oversight and Control, with a testbed/infrastructure contribution.
 
 ## Official requirements checked 2026-11-08
 
-The [official event guidelines](https://apartresearch.com/sprints/swarm-alignment-2026#guidelines) allow solo participation and AI assistance, with the entrant responsible for the report. They require a PDF in the official template, at most eight pages before references and appendices, a 150–250-word abstract, author names and affiliations, and a Limitations and Dual-Use / Ethical Considerations appendix. A public repository and a three-to-five-minute video are optional.
+The [official event guidelines](https://apartresearch.com/sprints/swarm-alignment-2026#guidelines) allow teams of one to five people and AI assistance, with the human entrants responsible for the report. They require a PDF in the official template, at most eight pages before references and appendices, a 150–250-word abstract, author names and affiliations, and a Limitations and Dual-Use / Ethical Considerations appendix. A public repository and a three-to-five-minute video are optional.
 
 The deadline shown is November 8, 2026 at 23:59 Anywhere on Earth, which is November 9 at 11:59 UTC / 06:59 Toronto time. Recheck the official page before submitting. Use its current template link; the template itself has not been inspected here.
 
@@ -19,6 +19,8 @@ Only work completed during the sprint is judged. Identify prior work in the READ
 This baseline cannot support a claim that a real model became safer, that a live swarm was detected, or that a compromised operating-system process was contained. Those need additional experiments. Separate actual test observations from hypotheses and future work in the report.
 
 ## Remaining submission work
+
+- Confirm IPBin's preferred author name and both members' affiliations and contributions. Include both teammates in the submission's team details; confirm the final author list and order together. Keep personal registration/contact details outside the public repository.
 
 - Choose and prerecord a precise research question and comparison.
 - Add live-model trials only after verifying access, defining a personal budget, and retaining the same controller boundary.

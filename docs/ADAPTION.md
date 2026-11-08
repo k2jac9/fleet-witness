@@ -27,8 +27,10 @@ production adapter and activation are still gated; see [current gates](GATES.md)
 
 ## Ownership, balance, and units
 
-Alejandro Castellanos is the sole human owner. He confirmed **$1,500 in available
-Adaption credit balance** for planning. This is an owner-provided account fact,
+Alejandro Castellanos (`k2jac9`) remains the account and repository owner;
+`IPBin` has joined the project as a teammate. Team membership does not establish
+additional credits, pooled accounts or credential access. Alejandro confirmed
+**$1,500 in available Adaption credit balance** for planning. This is an owner-provided account fact,
 not an API-verified balance or a new grant claim. The earlier four-person,
 four-times-$1,500 discussion does not apply. Public event offers may describe
 different grant amounts; they do not replace the owner's account statement.

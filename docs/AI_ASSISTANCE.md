@@ -1,8 +1,20 @@
 # Human ownership and AI assistance
 
-**Sole human entrant and project owner:** Alejandro Castellanos (`k2jac9`).
+## Human team
 
-AI assistants were used to research architectural options, draft ADRs, implement code, generate tests, review changes, and inspect the demo. They are development tools, not additional human entrants. The owner remains responsible for submission accuracy and final decisions.
+| Member | Project role | Publication details |
+| --- | --- | --- |
+| Alejandro Castellanos (`k2jac9`) | Repository owner and teammate | Affiliation to be confirmed |
+| [`IPBin`](https://github.com/IPBin) | Teammate, confirmed by the owner on 2026-11-08 | Preferred author name and affiliation to be confirmed |
+
+The project began as Alejandro's solo effort. The owner confirmed IPBin's team
+membership on 2026-11-08; [ADR-0012](adr/0012-human-team-membership.md) records that
+change. Earlier plans, reviews and accepted decisions retain their historical
+wording. Record each member's actual contributions before finalizing the report's
+author list, order and affiliations; membership does not retroactively attribute
+the earlier implementation or experiments to IPBin.
+
+AI assistants were used to research architectural options, draft ADRs, implement code, generate tests, review changes, and inspect the demo. They are development tools, not additional human entrants. The human team reviews submission accuracy and contribution attribution; Alejandro remains the repository owner and integration authority.
 
 The runtime's initial `scripted-demo` backend uses deterministic policies. Its traces are synthetic examples and its metrics are software verification outputs. They are not measurements of Adaption or any other language model. No model credits are consumed by the baseline.
 
