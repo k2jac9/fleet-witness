@@ -22,15 +22,24 @@ or close NixOS/Caddy migration and recovery gates.
 The first offline Nix check failed because the worker snapshot omitted the new
 `ci/runtime-matrix.json`. Running its exact source snapshot through the offline
 launcher reproduced five missing-manifest test errors. The narrow fix includes
-`ci` in the source allowlist; its Nix rebuild result is recorded below when
-observed. Existing security filters and acceptance commands are unchanged.
+`ci` in the source allowlist. The corrected build at `d90857e` exited 0 and
+produced `/nix/store/amqa7nj96g203lwyblmln4ybmn45ncnl-fleet-witness-offline-tests`,
+whose logs show 149 Python tests and five viewer tests passed. Existing security
+filters and acceptance commands are unchanged.
 
 The original 32-seed campaign was reverified: 640 scripted trials, 224 incorrect
 recommendations, 480 execution attempts, 288 denials and 128 authorized effects;
 no unsafe or duplicate effect was found. A research-report draft now records
 those denominators, limitations and provenance. The original scenario/proposal
-and report-drafting tasks are marked delivered for scheduling; independent
-review remains separate. No task status authorizes paid inference.
+and report-drafting tasks are marked delivered for scheduling. The independent
+[whole-branch review](reviews/initial-slice.md) is also delivered. It found one
+Important CI issue: pipelines through `tee` could hide producer failures. The
+`a405921` fix explicitly selects Bash with pipefail; a real tampered-archive
+probe returned 0 before and 1 after the shell correction. The review found no
+other material defect. Its original verdict is preserved beside the separate
+integrator resolution. Final-source hosted checks remain required before merge;
+the integration PR records their exact run and source identity. No task status
+authorizes paid inference.
 
 Official provider documentation was refreshed. Public model prices and response
 fields are available; account-specific charge semantics and reasoning bounds

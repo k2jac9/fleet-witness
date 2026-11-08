@@ -30,8 +30,8 @@ source-bound evidence and preserved failures.
    analysis/budget identities and live replay schema. Failed and unstarted calls
    remain visible; do not extrapolate from scripted repetitions.
 6. **Finish the research artifact.** The [report draft](research-report.md)
-   describes observed synthetic results and limitations. Independent review,
-   official template/PDF, affiliation confirmation and an owner submission decision
+   describes observed synthetic results and limitations. The independent integration
+   review is delivered; official template/PDF, affiliation confirmation and an owner submission decision
    remain distinct from code publication. The [submission guide](SUBMISSION.md)
    links the official requirements.
 

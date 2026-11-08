@@ -9,7 +9,7 @@ account fact. The accepted ADRs are unchanged.
 | --- | --- | --- |
 | Publish existing work | All four existing topic branches pushed, remote IDs matched; 142 Python and five viewer tests reproduced | Integrate the reviewed continuation after its required checks; preserve topic refs |
 | Python/Node compatibility | 11 exact artifact-pinned lanes passed hosted run 42515494887 at 7a3db75; stable, upcoming, previous and older consumer/baseline checks included | Keep results bound to final source and refresh upstream at weekly review |
-| Nix snapshot compatibility | New CI manifest needs inclusion in the worker snapshot; regression build retained | Pass the same offline Nix build after the narrow allowlist correction |
+| Nix snapshot compatibility | Corrected immutable worker snapshot built at d90857e: 149 Python and five viewer tests pass; original failure retained | Keep the final integration source checked; this is offline build evidence only |
 | Durable runtime migration | Exact retained cloud images/lock remain intact; Ubuntu runtime compatibility is now exercised | Reviewed NixOS/local launch-path update, relevant Caddy/NixOS lanes, security review and isolated recovery before promotion |
 | Dashboard | Exact static image deployed; prior 35 hosted HTTP checks and expiry deletion rehearsal passed | Scheduled deletion still needs observation on November 9; service deletion does not retire storage |
 | Cloud worker acceptance | Four workers completed; bounded isolation, collection and timeout probes recorded | Host proxy/gateway paths, remaining failure/collector races, cloud rollback and total costs remain open |
@@ -19,7 +19,7 @@ account fact. The accepted ADRs are unchanged.
 | Production authorization | Inert one-credit ledger and single-use registry fixtures pass tests | Verified account/source binding to one canonical shared registry and ledger, real deadline/credential boundary, reviewed operator activation record |
 | Calibration | Accepted design permits a separately bounded first request only after all applicable checks | All ADR-0010 pre-calibration evidence, one request, one-credit ceiling, 30 seconds, explicit live activation; preserve unresolved charges |
 | Confirmatory research | Scripted campaign reverified: 640 trials, 224 invalid recommendations, 128 authorized effects, zero unsafe/duplicate effects | Calibration reconciliation, frozen models/prompts/schedule/analysis/budget, new live replay schema and real trial collection |
-| Research report | Markdown mechanism-study draft with explicit denominators and limits | Independent review, official template/PDF, author affiliation confirmation and submission decision |
+| Research report | Markdown mechanism-study draft with explicit denominators and limits; independent integration review delivered | Official template/PDF, author affiliation confirmation and submission decision |
 
 ## Provider evidence required, without another budget approval
 
