@@ -109,6 +109,11 @@ Actual distro backports and affected configuration have not been audited, so
 version alone does not establish exposure. A reviewed runtime/lock migration,
 patch review, newer stable and previous-stable checks and isolated preview
 lanes remain open before live activation; no CI matrix is claimed here.
+As checked on 2026-11-08, the published previews include
+[Python 3.16.0a1](https://www.python.org/downloads/release/python-3160a1/)
+and [Node 27.0.0-alpha.0.0.0](https://nodejs.org/en/blog/release/v27.0.0-alpha.0.0.0).
+Neither preview was installed or tested. Record exact artifact digests and
+recheck upstream freshness when preparing their isolated CI lanes.
 
 Run transcripts, copies, firewall/IAM/budget/image/VM receipts and controlled
 findings are retained in
@@ -132,6 +137,14 @@ checks simulate interruption and post-commit exceptions; power-loss recovery and
 hostile host isolation were not demonstrated. Full transcripts and review are
 in the evidence packet above. The GCP VM image was built from
 `857e716` before this change and does not contain it.
+
+After commit `c9c93ec114cebca3d54267237b963dfa94ee5167`, the full 85-test Python
+suite also passed locally with the top-level test process using the exact
+Nix-store Python 3.13.17 executable reported by the cloud host. Some subprocess
+fixtures resolve `python` from the ambient PATH. The log's source binding
+comes from the execution context and checkout state rather than an embedded
+commit ID. This does not update the stopped VM or establish that the
+interpreter incorporates later security fixes.
 
 
 ## Pilot image and billing continuation: 2026-11-08
