@@ -19,8 +19,8 @@ The candidate branch `fleet/controlled-pilot` combines independently reviewed
 | Baseline reproduction at `87156f5` | 49 Python tests and 5 viewer tests passed |
 | Expanded scenario task | 6 new behavioral tests; full suite 55 Python tests; 5 viewer tests passed; independent review has no remaining findings |
 | Scenario sensitivity | Four disposable counterfactual faults caused assertion failures: first-receipt-only, prefix applicability, cross-trial deduplication, and unconditional decision correctness |
-| Pilot foundation | 15 tests written and observed failing before implementation; malformed Unicode failures also reproduced before correction |
-| Combined local suites | `python -m unittest discover -s tests -v`: 70 passed; `node --test tests/viewer.test.mjs`: 5 passed |
+| Pilot foundation | 15 tests observed failing before implementation; malformed Unicode and reviewer-found status-finality/classification failures reproduced before correction; final focused suite 17 passed |
+| Combined local suites | `python -m unittest discover -s tests -v`: 72 passed; `node --test tests/viewer.test.mjs`: 5 passed |
 | Fleet validation | Four valid existing tasks and $0 default external budget; scheduling statuses were not changed |
 | Offline smoke for reviewed scenario source `3e0586b` | Exit 0, `stage=complete`, 55 Python tests, 5 viewer tests, expected 20-episode demo metrics |
 | Chrome `155.0.8059.39` | Real HTTP replay, pairing, revocation, duplicate no-ops, keyboard focus, filtering, malformed-import recovery, and hostile text checks passed |
@@ -31,7 +31,7 @@ The candidate branch `fleet/controlled-pilot` combines independently reviewed
 | Hosted CI and runtime matrix | Not verified in this continuation; current workflow still uses Python 3.11/3.13 and Node 24 without exact runtime patch pins; latest-stable/upcoming/previous adoption remains open |
 
 Local tools: Python `3.15.0`, Node `26.11.1`, Nix `2.35.2`. The tested gateway
-blob is `a3c16a13f1f951b6ef8bbcc69c9441ff81179069`. Code/test scope is
+blob is `23b80b3059b0d01d4aa58777b9b5931b48b8f87c`. Code/test scope is
 `tests/test_expanded_scenarios.py`, `fleet_witness/gateway.py`, and
 `tests/test_gateway.py`; documentation scope is `docs/scenarios.md`,
 `docs/proposals/live-model-adapter.md`, `docs/CONTROLLED_PILOT.md`, this record,

@@ -170,7 +170,7 @@ class BudgetLedger:
             self._audit(connection, request_id, 'unresolved', {'reservation_retained': True})
 
     def settle(self, request_id: str, actual_units, outcome: str):
-        if outcome not in ('completed', 'invalid_output'):
+        if outcome not in ('completed', 'invalid_output', 'provider_error'):
             raise ValueError('unknown terminal outcome')
         invalid_usage = type(actual_units) is not int or not 0 <= actual_units <= MAX_UNITS
         accounting_error = False
@@ -269,8 +269,12 @@ class Gateway:
         if not isinstance(reply, ProviderReply):
             self.ledger.uncertain(request_id)
             return {**base, 'status': 'accounting_error'}
+        if reply.status not in ('completed', 'incomplete', 'failed', 'cancelled'):
+            self.ledger.uncertain(request_id)
+            return {**base, 'status': 'provider_error'}
         proposal = _proposal(reply)
-        outcome = 'completed' if proposal else 'invalid_output'
+        outcome = ('provider_error' if reply.status in ('failed', 'cancelled')
+                   else 'completed' if proposal else 'invalid_output')
         try:
             self.ledger.settle(request_id, reply.usage_units, outcome)
         except BudgetError:

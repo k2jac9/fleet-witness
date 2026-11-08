@@ -159,6 +159,32 @@ class GatewayTests(unittest.TestCase):
                 self.assertIsNone(result['recommendation'])
                 self.assertEqual(ledger.snapshot()['spent_units'], 2)
 
+    def test_terminal_provider_failures_are_accounted_separately_from_invalid_model_output(self):
+        for status in ('failed', 'cancelled'):
+            with self.subTest(status=status):
+                ledger = BudgetLedger(self.database.with_name(status + '.sqlite3'), 10)
+                result = Gateway(ledger, FakeProvider([self.reply(status=status)])).run('failed', self.facts, 'raw', 3)
+                self.assertEqual(result['status'], 'provider_error')
+                self.assertIsNone(result['recommendation'])
+                self.assertEqual(ledger.snapshot()['spent_units'], 2)
+                self.assertEqual(ledger.snapshot()['held_units'], 0)
+                self.assertEqual(ledger.snapshot()['requests']['failed']['outcome'], 'provider_error')
+                ledger.reserve('new-request', 1)
+
+    def test_nonterminal_or_unknown_status_keeps_full_hold_even_with_reported_zero_usage(self):
+        for status in ('in_progress', 'queued', 'unknown', None):
+            with self.subTest(status=status):
+                ledger = BudgetLedger(self.database.with_name(str(status) + '.sqlite3'), 10)
+                result = Gateway(ledger, FakeProvider([self.reply(units=0, status=status)])).run('pending', self.facts, 'raw', 7)
+                self.assertEqual(result['status'], 'provider_error')
+                self.assertIsNone(result['recommendation'])
+                self.assertEqual(ledger.snapshot()['spent_units'], 0)
+                self.assertEqual(ledger.snapshot()['held_units'], 7)
+                self.assertTrue(ledger.snapshot()['halted'])
+                self.assertEqual(ledger.snapshot()['requests']['pending']['status'], 'unresolved')
+                with self.assertRaises(BudgetError):
+                    ledger.reserve('another', 1)
+
     def test_ledger_limit_cannot_be_silently_changed_after_restart(self):
         self.ledger.reserve('held', 4)
         with self.assertRaises(ValueError):

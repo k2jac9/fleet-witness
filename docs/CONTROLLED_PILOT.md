@@ -44,7 +44,8 @@ The existing `demo` and `serve` CLI paths remain unchanged.
 | Result | Ledger consequence |
 | --- | --- |
 | Valid or invalid output with verified synthetic usage within reservation | Settle actual units; release unused reservation; record outcome |
-| Provider exception/timeout | Hold full reservation, record unresolved status, halt new dispatch |
+| Terminal provider failure/cancellation with verified final usage | Settle actual units under a distinct `provider_error` outcome; never invent a model recommendation |
+| Nonterminal/unknown provider status, exception, or timeout | Hold full reservation, record unresolved status, halt new dispatch |
 | Crash after dispatch | Keep dispatched status and full reservation; block another dispatch after restart |
 | Missing, malformed, or excessive usage | Record accounting error and halt; retain the reservation or the larger known liability |
 | Reused request identity | Refuse before another provider invocation |
@@ -96,8 +97,10 @@ git diff --check
 
 The initial fifteen tests failed before implementation. Subsequent malformed
 Unicode cases exposed two actual output-handling failures; both were reproduced
-before correction. The focused suite then passed fifteen tests, with seventy
-Python tests and five viewer tests passing across the candidate. The
+before correction. The focused suite then passed fifteen tests. Independent review found response
+status-finality and failure-classification errors; new tests reproduced both
+before correction. The final focused suite passes seventeen tests, with
+seventy-two Python tests and five viewer tests passing across the candidate. The
 [build record](BUILD_STATUS.md) binds those observations to source and artifacts.
 
 ## Activation still required
