@@ -12,7 +12,7 @@ One dependency-free Python 3.11+ application, a SQLite database, and a read-only
 
 The local effect is a release row in SQLite. External artifact publication, operating-system confinement of compromised agents, live Adaption calls, independent cryptographic notarization, and global fleet attribution are outside this first slice.
 
-For the development fleet, ADR-0008 adds an optional ephemeral NixOS worker environment with user namespaces and constrained task services. It is separate from the simulated fleet under evaluation. Nix configuration can be supplied here, but Nix evaluation, boot, and containment checks require a Nix-capable host and are explicitly pending.
+For the development fleet, ADR-0008 adds an optional ephemeral NixOS worker environment with user namespaces and constrained task services. It is separate from the simulated fleet under evaluation. ADR-0009 adds a native GCP host and a packaged scripted viewer. Nix evaluation and the offline/demo builds have been exercised; full image construction, cloud boot, and runtime confinement checks remain pending. The [verification record](BUILD_STATUS.md) distinguishes those evidence levels.
 
 ## Components
 
@@ -84,3 +84,51 @@ python scripts/fleet.py plan
 ## Acceptance
 
 Run the full tests, generate the demo in a fresh directory, inspect the replay metrics, open the dashboard, select a failing decision, inspect its receipt and blocked action, and replay the event sequence. Validate the development fleet manifest and prepare one isolated task worktree. No credit or cloud deployment is required.
+
+## Deployment and development boundaries
+
+```mermaid
+flowchart TD
+  O[Trusted operator] -->|IAP and OS Login| H[GCP NixOS host]
+  R[Reviewed source and lock] --> B[KVM image builder]
+  B --> I[Private custom image]
+  I --> H
+  H --> W[Ephemeral offline workers]
+  W --> Q[Bounded output quarantine]
+  Q --> O
+  H --> V[Loopback scripted viewer]
+  P[Optional public HTTPS] --> C[Caddy]
+  C --> V
+```
+
+The [GCP configuration](../nix/hosts/gcp.nix) imports the pinned native image
+module, enables OS Login and the guest firewall, and retains its exact flake
+source at `/etc/fleet-witness/source`. The deployment runbook creates a custom
+VPC with IAP-only SSH ingress and no attached workload service account. Host
+egress permits dependency fetching and required GCE guest services; it does not
+grant worker networking. Private worker and task namespaces must deny external
+and metadata access, with actual enforcement checked on the deployed host.
+
+The [demo module](../nix/demo.nix) serves four public assets from an immutable
+package as an unprivileged systemd service. It receives no worker inputs or
+outputs. A nullable `publicHostName` enables Caddy only when the operator chooses
+a domain and configures DNS and cloud ingress. The viewer presents synthetic
+experiment evidence; it is not telemetry from the development workers or a
+global swarm sensor.
+
+The four named workers execute the same offline verification task. Their
+reports are untrusted artifacts, not instructions or merge authority. The
+operator collects bounded files before ephemerality destroys them. The task
+DAG prepares Git branches/worktrees separately and does not automatically ship
+them into containers. Connecting these capabilities requires reviewed dispatch
+and output-transfer designs.
+
+A future Adaption adapter and host-side budget gateway are described in
+[ADAPTION.md](ADAPTION.md), with the owner-provided $1,500 balance kept separate
+from cloud costs. Keys, rate/accounting authority, sealed evaluation truth, and
+the controller remain outside worker authority. Public honeypots and a
+geographic activity dashboard require separate infrastructure, research scope,
+and validation in [SECURITY_POLICY.md](SECURITY_POLICY.md).
+
+For executable steps, see [development](DEVELOPMENT.md), [testing](TESTING.md),
+[GCP deployment](DEPLOY_GCP.md), and [operations](OPERATIONS.md).

@@ -14,4 +14,7 @@ runs/
 .fleet/
 .superpowers/
 node_modules/
+/.direnv/
+/result
+/result-*
 .DS_Store

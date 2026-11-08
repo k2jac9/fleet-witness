@@ -9,3 +9,13 @@ The runtime's initial `scripted-demo` backend uses deterministic policies. Its t
 The repository was created on 2026-11-08. Earlier conceptual research informed the design; the initial implementation is new work for this repository. No source from the earlier `swarms` planning repository is copied as implemented runtime code. Imported third-party code, datasets, or pre-sprint work must be identified here and in any final report before inclusion.
 
 This disclosure is a project practice. Check the current event rules and submission template for the exact required declarations.
+
+The 2026-11-08 deployment handoff also used AI assistance to implement the native
+NixOS/GCP configuration and packaged demo, write development and operating guides,
+check primary platform documentation and cost arithmetic, and independently
+review the integrated change. Verification included a fresh clone, local tests,
+Nix evaluation/package builds, and real HTTP checks. Full image construction,
+cloud boot, worker containment, live models, and submission remain separate
+unexecuted steps as recorded in [BUILD_STATUS.md](BUILD_STATUS.md). The
+`dreamsofcode-io/nixos-vps` repository informed platform comparisons; no source
+from it was copied into this handoff.

@@ -2,6 +2,8 @@
 
 Fleet Witness is Alejandro Castellanos's solo submission. AI development agents are tools, not additional human entrants. Read `docs/architecture.md`, the accepted ADRs in `docs/adr/`, and your assigned task before editing.
 
+For a fresh checkout, follow `docs/DEVELOPMENT.md` and `docs/TESTING.md`. Infrastructure changes must also preserve `docs/DEPLOY_GCP.md`, `docs/OPERATIONS.md`, and `docs/SECURITY_POLICY.md`; update `docs/BUILD_STATUS.md` with observed evidence and explicit unexecuted checks. The repository includes deployment instructions, not blanket authorization to create paid resources or use credentials.
+
 ## Architectural contract
 
 - Authentic evidence, applicable evidence, and current authorization are three different checks.
@@ -24,4 +26,4 @@ Fleet Witness is Alejandro Castellanos's solo submission. AI development agents 
 
 ## Commands
 
-The intended baseline is Python 3.11+ with no runtime dependencies. The canonical verification command is `python -m unittest discover -s tests -v`. See README for implemented commands.
+The intended baseline is Python 3.11+ with no runtime dependencies. The canonical verification command is `python -m unittest discover -s tests -v`; viewer logic uses `node --test tests/viewer.test.mjs`. Use the committed Nix lock for optional builds. See README and the testing guide for implemented commands and separate boot/cloud acceptance.
