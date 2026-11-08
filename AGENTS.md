@@ -1,6 +1,6 @@
 # Building Fleet Witness
 
-Fleet Witness is Alejandro Castellanos's solo submission. AI development agents are tools, not additional human entrants. Read `docs/architecture.md`, the accepted ADRs in `docs/adr/`, and your assigned task before editing.
+Fleet Witness is a team project by Alejandro Castellanos (`k2jac9`, repository owner) and `IPBin` (teammate). [ADR-0012](docs/adr/0012-human-team-membership.md) records the current human team. AI development agents are tools, not additional human entrants. Read `docs/architecture.md`, the accepted ADRs in `docs/adr/`, and your assigned task before editing.
 
 For a fresh checkout, follow `docs/DEVELOPMENT.md` and `docs/TESTING.md`. Infrastructure changes must also preserve `docs/DEPLOY_GCP.md`, `docs/OPERATIONS.md`, and `docs/SECURITY_POLICY.md`; update `docs/BUILD_STATUS.md` with observed evidence and explicit unexecuted checks. The repository includes deployment instructions, not blanket authorization to create paid resources or use credentials.
 

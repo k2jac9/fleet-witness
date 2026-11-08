@@ -1,6 +1,7 @@
 # Contributing to Fleet Witness
 
-Alejandro Castellanos (`k2jac9`) is the sole human owner and entrant. AI agents
+The human team is Alejandro Castellanos (`k2jac9`, repository owner) and `IPBin`
+(teammate), as recorded in [ADR-0012](docs/adr/0012-human-team-membership.md). AI agents
 are development tools; disclose assistance and provenance as described in
 [AI_ASSISTANCE](docs/AI_ASSISTANCE.md). Begin with [AGENTS.md](AGENTS.md),
 [architecture](docs/architecture.md), and the relevant [accepted ADRs](docs/adr/README.md).

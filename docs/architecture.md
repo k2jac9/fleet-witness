@@ -2,7 +2,7 @@
 
 ## Purpose and ownership
 
-Evidence and accountability for AI agent fleets. Alejandro Castellanos is the sole human entrant and project owner. Development agents help implement and review the system; the evaluated fleet is a separate controlled simulation. The original four-person resource discussion is not this submission's budget or authorship model.
+Evidence and accountability for AI agent fleets. The human team is Alejandro Castellanos (`k2jac9`, repository owner) and `IPBin` (teammate), as recorded in [ADR-0012](adr/0012-human-team-membership.md). Development agents help implement and review the system; the evaluated fleet is a separate controlled simulation. The original four-person resource discussion does not establish this team's budget or available credits.
 
 The initial demo asks: can a fleet persuade a supervisor to authorize a release using a genuine receipt that proves too little? A trusted controller independently checks whether an effect is permitted. This demonstrates mechanisms and produces inspectable traces; it is not a measurement of real LLM behavior.
 
@@ -33,7 +33,7 @@ The supervisor receives an explicitly constructed input containing the artifact 
 
 ## Global constraints
 
-- Product name: Fleet Witness. Repository: k2jac9/fleet-witness. Solo human owner: Alejandro Castellanos.
+- Product name: Fleet Witness. Repository: k2jac9/fleet-witness. Repository owner: Alejandro Castellanos (`k2jac9`); teammate: `IPBin`.
 - Python 3.11+ standard library only at runtime and for the baseline tests; browser assets use no CDN, telemetry, or build step.
 - Default model backend is `scripted-demo`; default external spend is zero.
 - Supervisor proposals never directly create effects. Missing policy denies execution.

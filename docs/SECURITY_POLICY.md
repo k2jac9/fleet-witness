@@ -1,7 +1,7 @@
 # Security boundaries and research policy
 
-This is the operating and research scope for Fleet Witness, a solo project
-owned by Alejandro Castellanos. It is not a security certification, a live
+This is the operating and research scope for Fleet Witness, a team project by
+Alejandro Castellanos (`k2jac9`, repository owner) and `IPBin` (teammate). It is not a security certification, a live
 incident-attribution service, or authorization to test someone else's systems.
 The [architecture](architecture.md) and accepted [ADR-0002](adr/0002-evidence-and-authority.md)
 and [ADR-0008](adr/0008-ephemeral-nixos-workers.md) remain authoritative.

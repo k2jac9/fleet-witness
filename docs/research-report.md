@@ -1,8 +1,9 @@
 # Fleet Witness: separating authentic evidence from action authority
 
-Alejandro Castellanos (`k2jac9`), sole human author. Affiliation to be confirmed
-by the author before submission. Draft dated 2026-11-08; no event submission has
-been made. This report describes a scripted mechanism study.
+Human team: Alejandro Castellanos (`k2jac9`) and `IPBin`. IPBin's preferred
+publication name, both affiliations, contributions and the final author list/order
+are to be confirmed by the team before submission. Draft dated 2026-11-08; no
+event submission has been made. This report describes a scripted mechanism study.
 
 ## Abstract
 
@@ -178,9 +179,10 @@ rules, abuse containment and review.
 
 AI development tools assisted architecture, implementation, tests, documentation
 and independent code review. They are not additional human entrants. The human
-author remains responsible for claims, affiliations and the final submission.
+team remains responsible for claims, contribution attribution, affiliations and
+the final submission.
 This Markdown draft still needs the official report template, PDF/layout checks
-and author review; it is not a submitted or accepted paper [2].
+and team review; it is not a submitted or accepted paper [2].
 
 ## References
 

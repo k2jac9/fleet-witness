@@ -32,9 +32,9 @@
       "status": "done",
       "depends_on": ["adapter-proposal", "expanded-scenarios"],
       "owned_paths": ["docs/research-report.md"],
-      "adrs": ["docs/adr/0001-local-evaluation-slice.md", "docs/adr/0004-paired-evaluation.md", "docs/adr/0006-development-fleet.md", "docs/adr/0007-isolated-paired-trials.md", "docs/adr/0008-ephemeral-nixos-workers.md"],
+      "adrs": ["docs/adr/0001-local-evaluation-slice.md", "docs/adr/0004-paired-evaluation.md", "docs/adr/0006-development-fleet.md", "docs/adr/0007-isolated-paired-trials.md", "docs/adr/0008-ephemeral-nixos-workers.md", "docs/adr/0012-human-team-membership.md"],
       "acceptance": [["python", "-m", "unittest", "discover", "-s", "tests", "-v"], ["git", "diff", "--check"]],
-      "brief": "Draft a report using the current official requirements linked in docs/SUBMISSION.md. Distinguish tested mechanisms, synthetic illustrations, hypotheses, and unbooted Nix configuration. Include solo authorship, AI assistance, prior-work provenance, limitations, and dual-use analysis. Do not submit or publish. Report exact commits, reproducible commands/results, and remaining evidence gaps."
+      "brief": "Draft a report using the current official requirements linked in docs/SUBMISSION.md. Distinguish tested mechanisms, synthetic illustrations, hypotheses, and unbooted Nix configuration. Include the documented human team and confirmed author/contribution details, AI assistance, prior-work provenance, limitations, and dual-use analysis. Do not submit or publish. Report exact commits, reproducible commands/results, and remaining evidence gaps."
     },
     {
       "id": "independent-review",
