@@ -1,5 +1,13 @@
 # Controlled pilot foundation
 
+Current continuation: ADR-0010 is accepted, GCP boot and all four offline workers
+have been exercised, and the separate authenticated dashboard is deployed.
+The following sections describe the original fake gateway. The later
+`live_gateway` and `calibration_registry` modules are also explicitly offline
+fixtures; their names do not establish a production provider integration.
+See [current gates](GATES.md) and [build evidence](BUILD_STATUS.md) for the
+current state. No live inference or calibration is claimed.
+
 The owner selected both controlled experiments and later public attack
 observation, beginning with the controlled pilot in the
 [reviewed proposal](proposals/live-model-adapter.md). This task implements the
@@ -126,7 +134,7 @@ live trials; the new runner must generate opaque shared trajectory IDs and keep
 oracle labels outside visible inputs.
 
 The $100 GCP authorization and owner-reported $1,500 Adaption balance remain
-separate. Neither is a balance verified by this fake ledger. Reachable GCP
-authorization/project and worker boot acceptance are also open. Public attack
+separate. Neither is a balance verified by this fake ledger. The GCP project and first worker execution are established; remaining host,
+recovery, runtime-migration and cost acceptance stay open. Public attack
 observation follows the controlled pilot under a separately approved scope; the
 current [security policy](SECURITY_POLICY.md) remains applicable.

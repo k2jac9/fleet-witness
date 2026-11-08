@@ -8,7 +8,10 @@ external spend. Begin with a reviewed commit and an isolated task worktree;
 
 ## Fresh clone and prerequisites
 
-Use Linux/POSIX, Python 3.11+, Git, and Node 24. The viewer server uses POSIX
+Use Linux/POSIX, Git, and the current stable Python/Node candidates in
+[the runtime matrix](../ci/runtime-matrix.json). Python 3.11+ and Node 24 remain
+supported consumers. The optional Nix environment below retains its older lock
+pending a separately verified migration. The viewer server uses POSIX
 file-descriptor APIs; native Windows serving is unsupported. Python runtime and
 tests use the standard library; browser assets need no npm install or build step.
 Git is required for the full Python suite, even if only testing the application.

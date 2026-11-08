@@ -22,8 +22,8 @@ cannot cap what a provider charges.
 Status checked **2026-11-08**. The implemented backend remains `scripted-demo`:
 the Python baseline needs no SDK, API key, provider account, or model credit.
 This guide records future integration requirements; it does not implement an
-adapter, spending gateway, or automatic coding fleet. The `adapter-proposal`
-task in [the task manifest](../fleet/tasks.json) remains outstanding.
+adapter, spending gateway, or automatic coding fleet. The `adapter-proposal` task is delivered and ADR-0010 accepts the design. The
+production adapter and activation are still gated; see [current gates](GATES.md).
 
 ## Ownership, balance, and units
 

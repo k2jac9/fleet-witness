@@ -4,9 +4,11 @@ Evidence and accountability for AI agent fleets: a runnable local demonstration 
 
 Alejandro Castellanos (`k2jac9`) is the sole human owner and entrant. AI agents assisted implementation and review as development tools. The simulated fleet under evaluation is a separate controlled system. See [AI assistance and provenance](docs/AI_ASSISTANCE.md) and [submission requirements and official sources](docs/SUBMISSION.md).
 
+The current pilot includes a 32-seed scripted campaign, offline provider-accounting fixtures, four successfully exercised GCP workers, and an authenticated managed dashboard. Real-model calibration has not run. See the [current gate inventory](docs/GATES.md), [research report draft](docs/research-report.md), and [runtime adoption record](docs/RUNTIME_ADOPTION.md).
+
 ## Clone, test, and run
 
-Use Python 3.11+, Git, and Node 24 on Linux/POSIX. The runtime and Python tests use only the standard library; Node runs the viewer-logic tests. No model account, package installation, cloud service, or external spend is needed. The repository contains the code, pinned Nix environment, architecture decisions, and operating instructions needed to continue from a fresh clone.
+Use current stable Python and Node versions from [the runtime matrix](ci/runtime-matrix.json), plus Git, on Linux/POSIX. Python 3.11+ and Node 24 remain supported consumers. The runtime and Python tests use only the standard library; Node runs the viewer-logic tests. No model account, package installation, cloud service, or external spend is needed. The repository contains the code, pinned Nix environment, architecture decisions, and operating instructions needed to continue from a fresh clone.
 
 ```sh
 git clone https://github.com/k2jac9/fleet-witness.git
@@ -67,13 +69,16 @@ These traces demonstrate mechanisms. Differences between deterministic scripted 
 | [0007](docs/adr/0007-isolated-paired-trials.md) | Independent counterfactual trial state |
 | [0008](docs/adr/0008-ephemeral-nixos-workers.md) | Optional ephemeral NixOS workers; boot validation pending |
 | [0009](docs/adr/0009-gcp-deployment.md) | Native GCP image, private administration, optional HTTPS, and deployment lifecycle |
+| [0010](docs/adr/0010-trusted-live-model-gateway.md) | Trusted live-model gateway design; paid activation remains gated |
+| [0011](docs/adr/0011-managed-read-only-dashboard.md) | Separate authenticated managed replay dashboard |
 
 ## Develop through reviewed tasks
 
 ```sh
 python scripts/fleet.py validate
 python scripts/fleet.py plan
-python scripts/fleet.py prepare adapter-proposal
+# Prepare only a task reported ready by the plan:
+# python scripts/fleet.py prepare TASK_ID
 ```
 
 The implemented tool validates a local task DAG, computes readiness, and prepares a dedicated branch/worktree plus ignored task brief. It rejects blocked tasks, unsafe paths, overlapping ready-task ownership, and existing task artifacts. It does not run acceptance commands, models, or containers. Manual `done` status is scheduling metadata; review the exact commit and real test evidence before integration. See the [fleet guide](fleet/README.md).
@@ -94,12 +99,12 @@ nix build .#nixosConfigurations.fleet-gcp.config.system.build.googleComputeImage
 
 Follow [DEPLOY_GCP.md](docs/DEPLOY_GCP.md) for prerequisites, private image upload, IAM, IAP/OS Login, VM creation, access, optional DNS/HTTPS, verification, updates, rollback, and teardown. The default host serves the read-only replay on loopback, keeps workers offline, and has no attached workload service account in the documented provisioning command. Public HTTPS is an explicit configuration option. Provider keys never belong in a flake, image, or worker.
 
-**Observed:** Python and viewer tests pass; the pinned offline check and demo package build; the GCP image derivation evaluates. **Still pending:** full image construction on KVM, first GCP boot, OS Login/IAP access, HTTPS issuance, and on-host confinement checks. [BUILD_STATUS.md](docs/BUILD_STATUS.md) records these separately. Scenario outcomes are reproducible; generated timestamps and fresh synthetic signatures make replay bytes vary between builds.
+**Observed:** Native image construction, GCP boot, IAP/OS Login, all four offline workers and a separate authenticated Cloud Run dashboard have executed. The NixOS VM is stopped. Remaining confinement, recovery, runtime-migration and cost gates stay open. [BUILD_STATUS.md](docs/BUILD_STATUS.md) records these separately. Scenario outcomes are reproducible; generated timestamps and fresh synthetic signatures make replay bytes vary between builds.
 
 ## Current limits and next work
 
 See [the build verification record](docs/BUILD_STATUS.md) for observed test results and pending host/browser acceptance.
 
-The baseline uses synthetic evidence, in-process HMAC signing, SQLite, and a scripted supervisor. It does not measure real model performance, detect a live swarm, provide independent notarization, or establish containment of compromised operating-system processes. Containers share a kernel; their configured restrictions need host validation. GCP deployment configuration and instructions are implemented, but no running cloud installation is claimed. A paid model runner, credentials gateway, unattended merge path, public honeypot, and global fleet map remain roadmap work.
+The baseline uses synthetic evidence, in-process HMAC signing, SQLite, and a scripted supervisor. It does not measure real model performance, detect a live swarm, provide independent notarization, or establish containment of compromised operating-system processes. Containers share a kernel; bounded passing probes do not close all host acceptance. The authenticated dashboard serves synthetic assets and has a scheduled expiry. A production provider transport/authorization boundary, paid calibration, unattended coding dispatch, public honeypot, and global fleet map remain gated work.
 
 The [roadmap](docs/ROADMAP.md) prioritizes independent review, expanded scenarios, a bounded adapter proposal, and a reproducible research report. [Submission preparation](docs/SUBMISSION.md) links the current official rules and tracks remaining report work; repository preparation is not event submission. Original code is available under the [MIT license](LICENSE).

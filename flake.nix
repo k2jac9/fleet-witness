@@ -51,7 +51,7 @@
             && !(lib.hasPrefix "." base)
             && base != "__pycache__"
             && !(lib.hasSuffix ".pyc" base)
-            && (builtins.elem top [ "fleet_witness" "tests" "nix" "fleet" "scripts" "docs" ]
+            && (builtins.elem top [ "fleet_witness" "tests" "nix" "fleet" "scripts" "docs" "ci" ]
               || builtins.elem relative [ "AGENTS.md" "README.md" ]);
       };
     in {

@@ -1,5 +1,48 @@
 # Build and deployment verification
 
+## Publication and gate closure: 2026-11-08
+
+The owner requested publication of all current work and continuation through the
+remaining gates. All four existing topic branches were pushed without rewriting
+history; remote SHAs matched the retained starting refs. The current pilot at
+`63431b1` reproduced 142 Python tests and five viewer tests. A bounded secret
+pattern scan of 63 unpublished tracked blobs found no potential matches. Private
+artifacts and operational credentials were not added to Git.
+
+At `7a3db75bfc779d973d6f00659cf451cf33cab4e0`, the expanded local suite passed
+149 Python tests. Hosted workflow
+[42515494887](https://github.com/k2jac9/fleet-witness/actions/runs/42515494887)
+completed successfully: seven Python lanes and four Node lanes, including exact
+stable, upcoming, previous-supported and additional consumer/baseline versions.
+Each runtime archive is SHA-256 pinned and verified before use; actual executable,
+source, lock, runner and matrix identities are retained in workflow artifacts.
+See [runtime adoption](RUNTIME_ADOPTION.md); this does not promote the cloud image
+or close NixOS/Caddy migration and recovery gates.
+
+The first offline Nix check failed because the worker snapshot omitted the new
+`ci/runtime-matrix.json`. Running its exact source snapshot through the offline
+launcher reproduced five missing-manifest test errors. The narrow fix includes
+`ci` in the source allowlist; its Nix rebuild result is recorded below when
+observed. Existing security filters and acceptance commands are unchanged.
+
+The original 32-seed campaign was reverified: 640 scripted trials, 224 incorrect
+recommendations, 480 execution attempts, 288 denials and 128 authorized effects;
+no unsafe or duplicate effect was found. A research-report draft now records
+those denominators, limitations and provenance. The original scenario/proposal
+and report-drafting tasks are marked delivered for scheduling; independent
+review remains separate. No task status authorizes paid inference.
+
+Official provider documentation was refreshed. Public model prices and response
+fields are available; account-specific charge semantics and reasoning bounds
+remain unverified. The terms/privacy pages yielded only titles in this retrieval.
+The connected Adaption tools do not expose inference billing. No inference,
+credential read, cloud deployment, VM start, resource deletion or external
+message was performed in this continuation. [GATES.md](GATES.md) records concrete
+remaining evidence and implementation requirements without changing accepted ADRs.
+
+Receipts: `/home/neo/Projects/fleet-witness-artifacts/gate-closure-20261108T192726Z/`.
+Historical records below are retained verbatim.
+
 ## External dashboard deployed: 2026-11-08
 
 The owner-requested authenticated dashboard is live at
