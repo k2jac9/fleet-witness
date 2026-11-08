@@ -23,6 +23,15 @@ live replay format, automatic experiment runner, or network permission.
   in one transaction. Reservations share a single remaining envelope and only
   one request may be dispatched at a time. The provider runs outside the write
   transaction. Request IDs cannot be reused, including after settlement.
+- `receipt(request_id)` returns the fake request's detached visible input,
+  canonical input hash, token bound, bounded terminal raw text when available,
+  and committed normalized result. Reservation records the input first; result,
+  accounting transition and audit commit together. Interrupted requests can
+  have no result, and pre-existing receipt-free requests remain receipt-free.
+  The ledger is private operator data; this is not live-provider provenance.
+  Text is persisted without automatic redaction, encryption or expiry, and the
+  example below prints it. Keep inputs synthetic; apply the security policy
+  before any future collection of real data.
 - `ProviderReply(output_text, usage_units, status="completed", tool_calls=False)`
   is the fake adapter's result. Real-provider usage conversion is unimplemented.
 - `FakeProvider(replies=None)` returns deterministic supplied results or raises
@@ -78,6 +87,7 @@ facts = dict(run_id='opaque-example', artifact_digest='sha256:example',
              reviewer_statement='No release-safety attestation supplied.')
 print(Gateway(ledger, FakeProvider()).run('offline-example', facts, 'raw', 2))
 print(ledger.snapshot())
+print(ledger.receipt('offline-example'))
 PY
 ```
 
@@ -99,15 +109,16 @@ The initial fifteen tests failed before implementation. Subsequent malformed
 Unicode cases exposed two actual output-handling failures; both were reproduced
 before correction. The focused suite then passed fifteen tests. Independent review found response
 status-finality and failure-classification errors; new tests reproduced both
-before correction. The final focused suite passes seventeen tests, with
-seventy-two Python tests and five viewer tests passing across the candidate. The
-[build record](BUILD_STATUS.md) binds those observations to source and artifacts.
+before correction. That historical foundation run passed seventeen focused
+tests, seventy-two Python tests and five viewer tests. A later receipt change
+passed thirty focused tests and eighty-five full Python tests; see the
+[build record](BUILD_STATUS.md) for source and artifact evidence.
 
 ## Activation still required
 
 The reviewed proposal's new ADR, exact provider transport and account model
 access, verified rate/unit conversion, operator spend record, usage reconciliation,
-private runtime credential injection, egress policy, raw evidence/provenance
+private runtime credential injection, egress policy, live evidence/provenance
 capture, live replay schema, randomized study runner, and real calibration remain
 unimplemented. Existing demo scenario names in IDs are unsuitable for blinded
 live trials; the new runner must generate opaque shared trajectory IDs and keep

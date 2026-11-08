@@ -8,6 +8,7 @@ these checks do not isolate a hostile process with access to that host.
 """
 from contextlib import closing, contextmanager
 from dataclasses import dataclass
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -94,6 +95,10 @@ class BudgetLedger:
                     outcome TEXT);
                 CREATE TABLE IF NOT EXISTS audit (seq INTEGER PRIMARY KEY AUTOINCREMENT,
                     request_id TEXT, kind TEXT NOT NULL, details TEXT NOT NULL);
+                CREATE TABLE IF NOT EXISTS gateway_receipts (
+                    request_id TEXT PRIMARY KEY, mode TEXT NOT NULL,
+                    input_json TEXT NOT NULL, input_sha256 TEXT NOT NULL,
+                    max_output_tokens INTEGER NOT NULL, raw_output TEXT, result_json TEXT);
             ''')
         with self._transaction() as connection:
             budget = connection.execute('SELECT limit_units FROM budget WHERE id=1').fetchone()
@@ -135,9 +140,31 @@ class BudgetLedger:
             connection.execute('BEGIN')
             return self._state(connection)
 
+    def receipt(self, request_id: str):
+        """Return a detached fake receipt, or None for absent and legacy requests."""
+        _text(request_id, 256)
+        with closing(self._connect()) as connection:
+            row = connection.execute('SELECT * FROM gateway_receipts WHERE request_id=?', (request_id,)).fetchone()
+        if row is None:
+            return None
+        return {'request_id': row['request_id'], 'mode': row['mode'],
+                'model_input': json.loads(row['input_json']), 'input_sha256': row['input_sha256'],
+                'max_output_tokens': row['max_output_tokens'], 'raw_output': row['raw_output'],
+                'result': json.loads(row['result_json']) if row['result_json'] is not None else None}
+
     def reserve(self, request_id: str, units: int):
+        self._reserve(request_id, units)
+
+    def _reserve(self, request_id: str, units: int, *, model_input=None, max_output_tokens=None):
         _text(request_id, 256)
         _units(units)
+        input_json = None
+        if model_input is not None:
+            input_json = json.dumps(model_input, ensure_ascii=True, sort_keys=True, separators=(',', ':'))
+            if len(input_json.encode('utf-8')) > MAX_BYTES:
+                raise ValueError('receipt input exceeds byte limit')
+            if type(max_output_tokens) is not int or not 1 <= max_output_tokens <= 4096:
+                raise ValueError('invalid maximum output token count')
         with self._transaction() as connection:
             state = self._state(connection)
             if request_id in state['requests']:
@@ -147,6 +174,10 @@ class BudgetLedger:
             if units > state['available_units']:
                 raise BudgetError('shared budget exhausted')
             connection.execute('INSERT INTO requests VALUES(?,?,NULL,?,NULL)', (request_id, units, 'reserved'))
+            if input_json is not None:
+                connection.execute('INSERT INTO gateway_receipts VALUES(?,?,?,?,?,NULL,NULL)',
+                                   (request_id, 'offline-fake', input_json,
+                                    hashlib.sha256(input_json.encode('utf-8')).hexdigest(), max_output_tokens))
             self._audit(connection, request_id, 'reserved', {'units': units})
 
     def dispatch(self, request_id: str):
@@ -160,16 +191,48 @@ class BudgetLedger:
             connection.execute("UPDATE requests SET status='dispatched' WHERE id=?", (request_id,))
             self._audit(connection, request_id, 'dispatched', {})
 
-    def uncertain(self, request_id: str):
+    @staticmethod
+    def _record_result(connection, request_id, result, raw_output, expected_status):
+        row = connection.execute('SELECT result_json FROM gateway_receipts WHERE request_id=?', (request_id,)).fetchone()
+        if result is None:
+            if row is not None:
+                raise sqlite3.IntegrityError('receipted request requires an outcome')
+            return  # Legacy direct-ledger request.
+        if row is None or row['result_json'] is not None:
+            raise sqlite3.IntegrityError('gateway receipt missing or already finalized')
+        if (not isinstance(result, dict)
+                or set(result) != {'mode', 'request_id', 'status', 'recommendation', 'reason'}
+                or result['mode'] != 'offline-fake' or result['request_id'] != request_id
+                or result['status'] != expected_status):
+            raise ValueError('invalid receipt outcome identity or status')
+        if expected_status == 'completed':
+            if result['recommendation'] not in ('approve', 'deny'):
+                raise ValueError('invalid receipt recommendation')
+            _text(result['reason'], 2048)
+        elif result['recommendation'] is not None or result['reason'] is not None:
+            raise ValueError('non-completed outcome cannot carry a recommendation')
+        if raw_output is not None:
+            if not isinstance(raw_output, str) or len(raw_output.encode('utf-8')) > MAX_BYTES:
+                raise ValueError('invalid raw receipt output')
+        updated = connection.execute('UPDATE gateway_receipts SET result_json=?,raw_output=? WHERE request_id=?',
+                                     (json.dumps(result, ensure_ascii=True, separators=(',', ':')),
+                                      raw_output, request_id))
+        if updated.rowcount != 1:
+            raise sqlite3.IntegrityError('gateway receipt missing during outcome transition')
+
+    def uncertain(self, request_id: str, *, result=None, outcome='provider_error'):
+        if outcome not in ('provider_error', 'accounting_error'):
+            raise ValueError('invalid unresolved outcome')
         with self._transaction() as connection:
             request = connection.execute('SELECT status FROM requests WHERE id=?', (request_id,)).fetchone()
             if request is None or request['status'] != 'dispatched':
                 raise ValueError('only a dispatched request can become unresolved')
-            connection.execute("UPDATE requests SET status='unresolved',outcome='provider_error' WHERE id=?", (request_id,))
+            connection.execute("UPDATE requests SET status='unresolved',outcome=? WHERE id=?", (outcome, request_id))
             connection.execute('UPDATE budget SET halted=1 WHERE id=1')
+            self._record_result(connection, request_id, result, None, outcome)
             self._audit(connection, request_id, 'unresolved', {'reservation_retained': True})
 
-    def settle(self, request_id: str, actual_units, outcome: str):
+    def settle(self, request_id: str, actual_units, outcome: str, *, result=None, raw_output=None):
         if outcome not in ('completed', 'invalid_output', 'provider_error'):
             raise ValueError('unknown terminal outcome')
         invalid_usage = type(actual_units) is not int or not 0 <= actual_units <= MAX_UNITS
@@ -183,10 +246,14 @@ class BudgetLedger:
                 connection.execute("UPDATE requests SET status='unresolved',actual_units=?,outcome='accounting_error' WHERE id=?",
                                    (None if invalid_usage else actual_units, request_id))
                 connection.execute('UPDATE budget SET halted=1 WHERE id=1')
+                if result is not None:
+                    result = {**result, 'status': 'accounting_error', 'recommendation': None, 'reason': None}
+                self._record_result(connection, request_id, result, raw_output, 'accounting_error')
                 self._audit(connection, request_id, 'accounting_error', {'known_units': None if invalid_usage else actual_units})
             else:
                 connection.execute("UPDATE requests SET status='settled',actual_units=?,outcome=? WHERE id=?",
                                    (actual_units, outcome, request_id))
+                self._record_result(connection, request_id, result, raw_output, outcome)
                 self._audit(connection, request_id, 'settled', {'units': actual_units, 'outcome': outcome})
         if accounting_error:
             raise BudgetError('usage is missing, invalid, or exceeds its reservation; dispatch halted')
@@ -244,6 +311,15 @@ def _proposal(reply):
         return None
 
 
+def _bounded_raw_output(reply):
+    if not isinstance(reply.output_text, str):
+        return None
+    try:
+        return reply.output_text if len(reply.output_text.encode('utf-8')) <= MAX_BYTES else None
+    except UnicodeError:
+        return None
+
+
 class Gateway:
     def __init__(self, ledger: BudgetLedger, provider: FakeProvider):
         if not isinstance(provider, FakeProvider) or provider.mode != 'offline-fake':
@@ -258,25 +334,30 @@ class Gateway:
         payload = provider_input(facts, presentation)
         if type(max_output_tokens) is not int or not 1 <= max_output_tokens <= 4096:
             raise ValueError('invalid maximum output token count')
-        self.ledger.reserve(request_id, reserve_units)
+        self.ledger._reserve(request_id, reserve_units, model_input=payload, max_output_tokens=max_output_tokens)
         self.ledger.dispatch(request_id)
         base = {'mode': 'offline-fake', 'request_id': request_id, 'recommendation': None, 'reason': None}
         try:
             reply = self.provider.generate(payload, max_output_tokens)
         except Exception:
-            self.ledger.uncertain(request_id)
-            return {**base, 'status': 'provider_error'}
+            result = {**base, 'status': 'provider_error'}
+            self.ledger.uncertain(request_id, result=result)
+            return result
         if not isinstance(reply, ProviderReply):
-            self.ledger.uncertain(request_id)
-            return {**base, 'status': 'accounting_error'}
+            result = {**base, 'status': 'accounting_error'}
+            self.ledger.uncertain(request_id, result=result, outcome='accounting_error')
+            return result
         if reply.status not in ('completed', 'incomplete', 'failed', 'cancelled'):
-            self.ledger.uncertain(request_id)
-            return {**base, 'status': 'provider_error'}
+            result = {**base, 'status': 'provider_error'}
+            self.ledger.uncertain(request_id, result=result)
+            return result
         proposal = _proposal(reply)
         outcome = ('provider_error' if reply.status in ('failed', 'cancelled')
                    else 'completed' if proposal else 'invalid_output')
+        result = {**base, 'status': outcome, **(proposal or {})}
         try:
-            self.ledger.settle(request_id, reply.usage_units, outcome)
+            self.ledger.settle(request_id, reply.usage_units, outcome, result=result,
+                               raw_output=_bounded_raw_output(reply))
         except BudgetError:
             return {**base, 'status': 'accounting_error'}
-        return {**base, 'status': outcome, **(proposal or {})}
+        return result

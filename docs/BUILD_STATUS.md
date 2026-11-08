@@ -19,6 +19,10 @@ rule. The image staging bucket has uniform bucket-level access and enforced
 public access prevention. Project IAM, firewall and bucket readbacks and the
 independent pre-boot review are retained in the evidence packet below. These
 point-in-time observations do not establish all inherited effective policies.
+The later instance network-interface effective-firewall readback returned one
+explicit rule: IAP source range TCP 22 on the VM's tag; no firewall policy
+objects appeared in that response. This is a point-in-time API observation,
+not an external reachability test or a complete audit of every security policy.
 
 The locally built `857e716e48dfbc5db23892db744dce8ad4e49692` image archive was
 uploaded and its exact Cloud Storage generation read back with matching SHA-256
@@ -31,7 +35,10 @@ with a 50 GiB auto-delete balanced disk sourced from that image, no attached
 service account, OS Login metadata, IAP-only SSH and a two-hour automatic STOP
 limit. The host has the ADR-0009 ephemeral public IPv4 for egress; the custom
 network's recorded ingress permits only IAP TCP 22 to its assigned tag. STOP
-does not remove the disk, image, or staging object.
+does not remove the disk, image, or staging object. After the diagnostics, the
+operator stopped this VM and its instance readback reported `TERMINATED`.
+The retained resources can still accrue storage charges; exact current charges
+and remaining credits were not independently retrieved.
 
 IAP/OS Login and administrative sudo succeeded. The guest firewall service was
 active, the viewer listened on `127.0.0.1:8765`, the index returned HTTP 200,
@@ -61,13 +68,70 @@ unavailable routes to the tested external IP and both metadata addresses.
 The host socket existed, and the worker errors were EACCES for source/socket,
 EROFS for system/store writes and ENETUNREACH for the direct-IP routes. The
 actual host cgroup files matched one CPU, 1 GiB memory, zero swap and 256 tasks.
-Host proxy/gateway paths, resource pressure, timeout/failure propagation,
-collector rejection, cloud rollback and cost/cleanup remain unproven. This
-bounded diagnostic does not establish full cloud isolation acceptance.
+
+A separate bounded pressure diagnostic observed process-limit rejection,
+memory cgroup OOM-kill and CPU throttling. Its service result was `oom-kill`
+and the diagnostic exited 1, so it is retained as a failure with partial
+observations, not an all-pass result. A shortened five-second diagnostic
+reported `timeout` with status 15, and an explicit exit 42 reported
+`exit-code` with status 42. A separate same-unit diagnostic injected a failing unittest into a
+fresh source copy and invoked the unchanged offline launcher. The launcher
+recorded `stage=python-tests` and exit 1; systemd reported `exit-code` and status
+1, and the diagnostic produced neither viewer nor demo logs. Its baseline and
+failure evidence were quarantined and copied with matching hashes. The first
+copy command failed on an unsupported `gcloud scp` flag; its failure and the
+successful corrected retry are retained. The runbook collector reproduced a positive
+control and rejected a symlink, FIFO, directory, hardlink and oversized file
+in the tested ordering; an earlier fixture setup failed with `EOVERFLOW` and
+is retained. Baselines were quarantined and hash-verified. A separate test of
+the actual ten-minute setting reported a 600-second elapsed time, systemd
+`Result=timeout` and `ExecMainStatus=15`; the diagnostic worker stopped. A
+duplicate launch was rejected by the stopped-worker guard, but both wrappers
+briefly wrote to the same log. The interleaved transcript, including the later
+systemd journal, is retained; the duplicate failure and
+original final exit 0 are preserved separately.
+
+Host proxy/gateway paths, other failure paths, collector races and
+other orderings, cloud rollback and cost/cleanup remain unproven. These bounded
+diagnostics do not establish full cloud isolation acceptance. Google's
+[spend-cap documentation](https://docs.cloud.google.com/billing/docs/how-to/budgets-spend-caps)
+lists only certain API-based services; Compute Engine is not on that list,
+and ongoing persistent resources continue accruing charges. The existing
+alert and VM stop timer do not constitute an enforceable total spending cap.
+
+The host diagnostic interpreter reported Python 3.13.17. Upstream's later
+[Python 3.13.18 security release](https://www.python.org/downloads/release/python-31318/)
+includes a certificate-trust change and other fixes. The local full suite used
+Python 3.15.0 and Node 26.11.1; upstream lists
+[Python 3.15.2 and 3.14.10](https://www.python.org/getit/source/) and
+[Node 26.13.0 and 24.22.2](https://nodejs.org/en/download) as newer releases.
+Actual distro backports and affected configuration have not been audited, so
+version alone does not establish exposure. A reviewed runtime/lock migration,
+patch review, newer stable and previous-stable checks and isolated preview
+lanes remain open before live activation; no CI matrix is claimed here.
 
 Run transcripts, copies, firewall/IAM/budget/image/VM receipts and controlled
 findings are retained in
 `/home/neo/Projects/fleet-witness-artifacts/gcp-project-20261108T090855Z-a3583d/`.
+
+## Offline receipt persistence: 2026-11-08
+
+Task `offline-receipts` adds an inert fake-gateway receipt to the private SQLite
+ledger. The validated visible input is saved with its reservation; an outcome,
+its budget transition and audit event commit together. Missing receipts,
+mismatched outcomes and failed writes prevent settlement, preserving the prior
+hold. Existing receipt-free ledger rows remain compatible. This does not
+introduce a real provider, worker network access or controller authority.
+
+The first behavioral tests failed against the prior implementation; focused
+regressions also exposed missing-receipt and missing-result cases before their
+fixes. The final local terminal run passed 85 Python tests, five viewer tests,
+fleet validation and `git diff --check`. An independent reviewer inspected the
+gateway and migration and reported no remaining material code finding. Crash
+checks simulate interruption and post-commit exceptions; power-loss recovery and
+hostile host isolation were not demonstrated. Full transcripts and review are
+in the evidence packet above. The GCP VM image was built from
+`857e716` before this change and does not contain it.
 
 
 ## Pilot image and billing continuation: 2026-11-08

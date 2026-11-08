@@ -1,5 +1,7 @@
 """Offline gateway boundaries use real SQLite accounting and an inert provider."""
 import concurrent.futures
+from contextlib import closing
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -192,7 +194,7 @@ class GatewayTests(unittest.TestCase):
         self.assertEqual(BudgetLedger(self.database, 10).snapshot()['held_units'], 4)
 
     def test_reservation_and_audit_are_atomic(self):
-        with sqlite3.connect(self.database) as connection:
+        with closing(sqlite3.connect(self.database)) as connection, connection:
             connection.execute("CREATE TRIGGER reject_audit BEFORE INSERT ON audit BEGIN SELECT RAISE(ABORT, 'audit unavailable'); END")
         with self.assertRaises(sqlite3.IntegrityError):
             self.ledger.reserve('must-roll-back', 4)
@@ -218,9 +220,184 @@ class GatewayTests(unittest.TestCase):
         result = Gateway(self.ledger, FakeProvider([self.reply()])).run('proposal', self.facts, 'raw', 3)
         self.assertEqual(result['mode'], 'offline-fake')
         self.assertEqual(result['recommendation'], 'approve')
-        with sqlite3.connect(self.database) as connection:
+        with closing(sqlite3.connect(self.database)) as connection, connection:
             tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
         self.assertNotIn('releases', tables)
+
+    def test_receipt_persists_snapshot_and_result_across_restart(self):
+        provider = FakeProvider([self.reply()])
+        result = Gateway(self.ledger, provider).run('durable', self.facts, 'raw', 3, 128)
+        self.facts['reviewer_statement'] = 'mutated after dispatch'
+        reopened = BudgetLedger(self.database, 10)
+        receipt = reopened.receipt('durable')
+        self.assertEqual(receipt['mode'], 'offline-fake')
+        self.assertEqual(receipt['model_input'], provider.calls[0]['input'])
+        canonical = json.dumps(receipt['model_input'], ensure_ascii=True, sort_keys=True, separators=(',', ':'))
+        self.assertEqual(receipt['input_sha256'], hashlib.sha256(canonical.encode('utf-8')).hexdigest())
+        self.assertEqual(receipt['max_output_tokens'], 128)
+        self.assertEqual(receipt['raw_output'], self.reply().output_text)
+        self.assertEqual(receipt['result'], result)
+        receipt['model_input']['facts']['reviewer_statement'] = 'local mutation'
+        self.assertNotEqual(reopened.receipt('durable')['model_input']['facts']['reviewer_statement'], 'local mutation')
+        self.assertIsNone(reopened.receipt('missing'))
+
+    def test_crash_after_settlement_preserves_receipt_and_refuses_retry(self):
+        original = self.ledger.settle
+        def settle_then_crash(*args, **kwargs):
+            original(*args, **kwargs)
+            raise RuntimeError('simulated caller crash')
+        self.ledger.settle = settle_then_crash
+        with self.assertRaisesRegex(RuntimeError, 'simulated caller crash'):
+            Gateway(self.ledger, FakeProvider([self.reply()])).run('crash-after-settle', self.facts, 'raw', 3)
+        reopened = BudgetLedger(self.database, 10)
+        self.assertEqual(reopened.receipt('crash-after-settle')['result']['recommendation'], 'approve')
+        self.assertEqual(reopened.snapshot()['spent_units'], 2)
+        with self.assertRaises(ValueError):
+            Gateway(reopened, FakeProvider([self.reply()])).run('crash-after-settle', self.facts, 'raw', 3)
+
+    def test_receipt_write_failure_rolls_back_settlement_and_retains_hold(self):
+        with closing(sqlite3.connect(self.database)) as connection, connection:
+            connection.execute("CREATE TRIGGER reject_receipt_update BEFORE UPDATE ON gateway_receipts BEGIN SELECT RAISE(ABORT, 'receipt unavailable'); END")
+        with self.assertRaises(sqlite3.IntegrityError):
+            Gateway(self.ledger, FakeProvider([self.reply()])).run('receipt-failure', self.facts, 'raw', 3)
+        reopened = BudgetLedger(self.database, 10)
+        self.assertEqual(reopened.snapshot()['requests']['receipt-failure']['status'], 'dispatched')
+        self.assertEqual(reopened.snapshot()['held_units'], 3)
+        self.assertIsNone(reopened.receipt('receipt-failure')['result'])
+        with self.assertRaises(BudgetError):
+            reopened.reserve('after-failure', 1)
+
+    def test_missing_receipt_cannot_settle_and_lose_evidence(self):
+        provider = FakeProvider([self.reply()])
+        original = provider.generate
+        def lose_receipt(payload, max_output_tokens):
+            with closing(sqlite3.connect(self.database)) as connection, connection:
+                connection.execute("DELETE FROM gateway_receipts WHERE request_id='missing-receipt'")
+            return original(payload, max_output_tokens)
+        provider.generate = lose_receipt
+        with self.assertRaises(sqlite3.IntegrityError):
+            Gateway(self.ledger, provider).run('missing-receipt', self.facts, 'raw', 3)
+        state = BudgetLedger(self.database, 10).snapshot()
+        self.assertEqual(state['requests']['missing-receipt']['status'], 'dispatched')
+        self.assertEqual(state['held_units'], 3)
+
+    def test_receipted_request_cannot_transition_without_its_result(self):
+        for transition in ('settle', 'uncertain'):
+            with self.subTest(transition=transition):
+                ledger = BudgetLedger(self.database.with_name(transition + '.sqlite3'), 10)
+                with self.assertRaises(KeyboardInterrupt):
+                    Gateway(ledger, FakeProvider([KeyboardInterrupt()])).run('pending', self.facts, 'raw', 3)
+                with self.assertRaises(sqlite3.IntegrityError):
+                    if transition == 'settle':
+                        ledger.settle('pending', 1, 'completed')
+                    else:
+                        ledger.uncertain('pending')
+                self.assertEqual(ledger.snapshot()['requests']['pending']['status'], 'dispatched')
+                self.assertEqual(ledger.snapshot()['held_units'], 3)
+                self.assertIsNone(ledger.receipt('pending')['result'])
+
+    def test_accounting_error_receipt_has_no_recommendation(self):
+        result = Gateway(self.ledger, FakeProvider([self.reply(units=7)])).run('overrun', self.facts, 'raw', 3)
+        receipt = BudgetLedger(self.database, 10).receipt('overrun')
+        self.assertEqual(receipt['result'], result)
+        self.assertEqual(result['status'], 'accounting_error')
+        self.assertIsNone(result['recommendation'])
+        self.assertEqual(self.ledger.snapshot()['held_units'], 7)
+
+    def test_receipt_result_must_match_request_identity_and_mode(self):
+        with self.assertRaises(KeyboardInterrupt):
+            Gateway(self.ledger, FakeProvider([KeyboardInterrupt()])).run('pending', self.facts, 'raw', 3)
+        for invalid in [
+            {'mode': 'offline-fake', 'request_id': 'other', 'status': 'completed', 'recommendation': 'approve', 'reason': 'x'},
+            {'mode': 'live-model', 'request_id': 'pending', 'status': 'completed', 'recommendation': 'approve', 'reason': 'x'},
+            {'mode': 'offline-fake', 'request_id': 'pending', 'status': 'completed', 'recommendation': 'approve', 'reason': 'x', 'extra': 'bad'},
+        ]:
+            with self.subTest(invalid=invalid), self.assertRaises((ValueError, sqlite3.IntegrityError)):
+                self.ledger.settle('pending', 1, 'completed', result=invalid)
+            self.assertEqual(self.ledger.snapshot()['requests']['pending']['status'], 'dispatched')
+            self.assertIsNone(self.ledger.receipt('pending')['result'])
+
+    def test_reservation_receipt_failure_does_not_call_provider(self):
+        with closing(sqlite3.connect(self.database)) as connection, connection:
+            connection.execute("CREATE TRIGGER reject_receipt_insert BEFORE INSERT ON gateway_receipts BEGIN SELECT RAISE(ABORT, 'receipt unavailable'); END")
+        provider = FakeProvider([self.reply()])
+        with self.assertRaises(sqlite3.IntegrityError):
+            Gateway(self.ledger, provider).run('reservation-failure', self.facts, 'raw', 3)
+        self.assertEqual(provider.calls, [])
+        self.assertEqual(self.ledger.snapshot()['requests'], {})
+        self.assertIsNone(self.ledger.receipt('reservation-failure'))
+
+    def test_audit_failure_rolls_back_unresolved_and_accounting_error(self):
+        for name, reply in [('uncertain', TimeoutError('private')), ('overrun', self.reply(units=7))]:
+            with self.subTest(name=name):
+                ledger = BudgetLedger(self.database.with_name(name + '-audit.sqlite3'), 10)
+                with closing(sqlite3.connect(ledger.database)) as connection, connection:
+                    connection.execute("CREATE TRIGGER reject_outcome_audit BEFORE INSERT ON audit WHEN NEW.kind IN ('unresolved','accounting_error') BEGIN SELECT RAISE(ABORT, 'audit unavailable'); END")
+                with self.assertRaises(sqlite3.IntegrityError):
+                    Gateway(ledger, FakeProvider([reply])).run(name, self.facts, 'raw', 3)
+                state = ledger.snapshot()
+                self.assertEqual(state['requests'][name]['status'], 'dispatched')
+                self.assertEqual(state['held_units'], 3)
+                self.assertIsNone(ledger.receipt(name)['result'])
+
+    def test_invalid_and_oversized_raw_outputs_are_not_persisted(self):
+        for index, raw in enumerate([chr(0xD800), 'x' * 32769]):
+            with self.subTest(index=index):
+                ledger = BudgetLedger(self.database.with_name(f'unsafe-{index}.sqlite3'), 10)
+                result = Gateway(ledger, FakeProvider([self.reply(raw)])).run('unsafe', self.facts, 'raw', 3)
+                receipt = BudgetLedger(ledger.database, 10).receipt('unsafe')
+                self.assertEqual(result['status'], 'invalid_output')
+                self.assertEqual(receipt['result'], result)
+                self.assertIsNone(receipt['raw_output'])
+                self.assertEqual(ledger.snapshot()['spent_units'], 2)
+
+    def test_unresolved_error_receipt_does_not_include_exception_message(self):
+        result = Gateway(self.ledger, FakeProvider([TimeoutError('secret exception text')])).run('err', self.facts, 'raw', 3)
+        reopened = BudgetLedger(self.database, 10)
+        receipt = reopened.receipt('err')
+        self.assertEqual(receipt['result'], result)
+        self.assertIsNone(receipt['raw_output'])
+        self.assertNotIn('secret exception text', json.dumps(receipt))
+        self.assertEqual(reopened.snapshot()['held_units'], 3)
+        self.assertTrue(reopened.snapshot()['halted'])
+
+    def test_empty_output_and_wrong_reply_type_have_distinct_receipts(self):
+        empty = Gateway(self.ledger, FakeProvider([ProviderReply('', 1)])).run('empty', self.facts, 'raw', 2)
+        self.assertEqual(empty['status'], 'invalid_output')
+        self.assertEqual(self.ledger.receipt('empty')['raw_output'], '')
+        wrong = Gateway(self.ledger, FakeProvider([None])).run('wrong-type', self.facts, 'raw', 2)
+        self.assertEqual(wrong['status'], 'accounting_error')
+        self.assertEqual(self.ledger.receipt('wrong-type')['result'], wrong)
+        self.assertIsNone(self.ledger.receipt('wrong-type')['raw_output'])
+        self.assertEqual(self.ledger.snapshot()['requests']['wrong-type']['outcome'], 'accounting_error')
+
+    def test_legacy_unresolved_request_survives_receipt_schema_migration(self):
+        legacy = self.database.with_name('legacy.sqlite3')
+        with closing(sqlite3.connect(legacy)) as connection, connection:
+            connection.executescript("""
+                CREATE TABLE budget (id INTEGER PRIMARY KEY CHECK(id=1), limit_units INTEGER NOT NULL, halted INTEGER NOT NULL CHECK(halted IN (0,1)));
+                CREATE TABLE requests (id TEXT PRIMARY KEY, reserved_units INTEGER NOT NULL, actual_units INTEGER, status TEXT NOT NULL CHECK(status IN ('reserved','dispatched','settled','unresolved')), outcome TEXT);
+                CREATE TABLE audit (seq INTEGER PRIMARY KEY AUTOINCREMENT, request_id TEXT, kind TEXT NOT NULL, details TEXT NOT NULL);
+                INSERT INTO budget VALUES(1,10,1);
+                INSERT INTO requests VALUES('old',4,NULL,'unresolved','provider_error');
+                INSERT INTO requests VALUES('reserved',2,NULL,'reserved',NULL);
+                INSERT INTO requests VALUES('dispatched',1,NULL,'dispatched',NULL);
+                INSERT INTO requests VALUES('settled',3,2,'settled','completed');
+                INSERT INTO audit(request_id,kind,details) VALUES('old','unresolved','{}');
+            """)
+        os.chmod(legacy, 0o600)
+        reopened = BudgetLedger(legacy, 10)
+        self.assertEqual(reopened.snapshot()['held_units'], 7)
+        self.assertEqual(reopened.snapshot()['spent_units'], 2)
+        self.assertTrue(reopened.snapshot()['halted'])
+        self.assertEqual(reopened.snapshot()['requests']['old']['status'], 'unresolved')
+        for request_id in ('old', 'reserved', 'dispatched', 'settled'):
+            self.assertIsNone(reopened.receipt(request_id))
+        with closing(sqlite3.connect(legacy)) as connection:
+            self.assertEqual(connection.execute('SELECT request_id, kind, details FROM audit').fetchall(),
+                             [('old', 'unresolved', '{}')])
+        with self.assertRaises(BudgetError):
+            reopened.reserve('new', 1)
 
 
 if __name__ == '__main__':
