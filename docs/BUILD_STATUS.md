@@ -1,5 +1,75 @@
 # Build and deployment verification
 
+## Controlled GCP first boot: 2026-11-08
+
+The owner requested another billing slot and authorized controlled experiments
+within the $100 envelope. Billing was unlinked from `ai-humane-society-20261004`
+after a bounded resource inventory; the project remains active but its GCP
+services and external consumers may be affected. Fleet Witness project
+`fleet-witness-261108-aa0c99` was then linked to the account. The CA$100 monthly
+gross-usage budget alert now covers both Fleet Witness and Preservation; it does
+not stop spending, enforce a lifetime limit, or verify credit eligibility.
+Earlier billing statements below describe their historical capture times.
+
+The project enabled Compute Engine, Cloud Storage and IAP. The automatically
+created default Compute service account's project-wide Editor binding was
+removed. Newly created default public SSH, RDP and ICMP firewall rules were
+disabled, and a dedicated custom network and subnet received an IAP-only TCP 22
+rule. The image staging bucket has uniform bucket-level access and enforced
+public access prevention. Project IAM, firewall and bucket readbacks and the
+independent pre-boot review are retained in the evidence packet below. These
+point-in-time observations do not establish all inherited effective policies.
+
+The locally built `857e716e48dfbc5db23892db744dce8ad4e49692` image archive was
+uploaded and its exact Cloud Storage generation read back with matching SHA-256
+`afd93e9d579881a01b0f72bbbb057313cf919bdaa4c094b7f8e5ee85bb3d4027`. Private
+Compute image `fleet-witness-857e716e48df`, ID `5206272927315391845`, reached
+READY. The create command source URI is an operator record: the cloud image
+readback does not retain `rawDisk.source`, so that association was not
+independently returned by the image API. VM `fleet-pilot-261108` ran in `us-central1-a` as an `e2-standard-4`,
+with a 50 GiB auto-delete balanced disk sourced from that image, no attached
+service account, OS Login metadata, IAP-only SSH and a two-hour automatic STOP
+limit. The host has the ADR-0009 ephemeral public IPv4 for egress; the custom
+network's recorded ingress permits only IAP TCP 22 to its assigned tag. STOP
+does not remove the disk, image, or staging object.
+
+IAP/OS Login and administrative sudo succeeded. The guest firewall service was
+active, the viewer listened on `127.0.0.1:8765`, the index returned HTTP 200,
+and an unlisted SQLite path returned 404. The actual instance did not report a
+Shielded VM configuration; UEFI, vTPM, integrity monitoring and Secure Boot have
+not been qualified. No public viewer or external sensor was enabled.
+
+The four offline workers each returned inner `Result=success`,
+`ExecMainStatus=0`, a complete report, 72 passing Python tests and five passing
+viewer tests. Their bounded, allowlisted outputs were frozen and collected to
+quarantine before each worker stopped; all 16 files were copied back over IAP
+and matched the terminal-recorded SHA-256 values. All four produced the same
+20-episode scripted demo and are not independent live-model experiments.
+
+Adaption's official Codex plugin 0.2.0 was installed from pinned revision
+`25f6446cda5c1dcf2a95d4b18ed06ceea05e1312`; the CLI login command reported success and lists the MCP server with OAuth.
+This already-running session has no plugin tools, the runtime gateway has no
+real provider implementation, and no paid model request or external attack
+observation has occurred. The first same-unit isolation diagnostic stopped before
+setup because this systemd version cannot execute `systemctl -M ... cat`; its
+baseline quarantine was exported and retained. A reviewed retry read the unit
+inside the ephemeral container and overrode only its command, comparing the
+listed service restrictions before and after. The constrained UID 1000 task
+reported no effective capabilities, `NoNewPrivs`, a private UID map, denied
+source/system writes and Nix socket access, working private loopback, and
+unavailable routes to the tested external IP and both metadata addresses.
+The host socket existed, and the worker errors were EACCES for source/socket,
+EROFS for system/store writes and ENETUNREACH for the direct-IP routes. The
+actual host cgroup files matched one CPU, 1 GiB memory, zero swap and 256 tasks.
+Host proxy/gateway paths, resource pressure, timeout/failure propagation,
+collector rejection, cloud rollback and cost/cleanup remain unproven. This
+bounded diagnostic does not establish full cloud isolation acceptance.
+
+Run transcripts, copies, firewall/IAM/budget/image/VM receipts and controlled
+findings are retained in
+`/home/neo/Projects/fleet-witness-artifacts/gcp-project-20261108T090855Z-a3583d/`.
+
+
 ## Pilot image and billing continuation: 2026-11-08
 
 The previously recorded GCP image was built from `87156f5` and does not include
