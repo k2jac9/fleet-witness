@@ -11,5 +11,6 @@ Accepted decisions are the development fleet's contract. Propose changes in a ne
 | [0005](0005-replay-and-viewer.md) | Versioned replay and read-only viewer |
 | [0006](0006-development-fleet.md) | ADR-governed development fleet for a solo entrant |
 | [0007](0007-isolated-paired-trials.md) | Isolated counterfactual worlds for paired trials |
+| [0008](0008-ephemeral-nixos-workers.md) | Ephemeral NixOS development workers; deployment validation pending |
 
 Use [the template](template.md) for a new proposal.

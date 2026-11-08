@@ -1,0 +1,256 @@
+# Optional ephemeral NixOS workers
+
+**Status: configuration and shell behavior reviewed; Nix evaluation, build, boot,
+and isolation checks have not been run.** This environment has no `nix`,
+`nixos-container`, or `systemd-nspawn`. Do not interpret the Python tests as
+container validation. Follow ADR-0008 and complete the host checks below before
+using this configuration.
+
+This runs the repository's offline Python tests, optional Node viewer tests,
+and the deterministic `scripted-demo`. It does not dispatch coding agents,
+connect a provider, or spend model credit. The owner still reviews changes and
+controls integration. A mediated tool/provider gateway needs a later ADR.
+
+## What is configured
+
+The flake pins nixpkgs to
+[`c56a87d8e41ce69bd2af57eb35dcc117a9dfca33`](https://github.com/NixOS/nixpkgs/tree/c56a87d8e41ce69bd2af57eb35dcc117a9dfca33),
+verified against the official `nixos-26.05` ref. It exports
+`nixosModules.fleet`, Linux development shells, and
+`checks.x86_64-linux.offline-tests`. No guessed lock hash is supplied.
+
+Each declared worker gets an independently started container, an ephemeral
+root, a private UID range, and a private network. There are no custom host bind
+mounts, network addresses, forwarding rules, NAT settings, or credentials.
+The task runs as UID/GID 1000 inside its container with no capabilities or new
+privileges, a read-only system, hidden home directories, and writable `/work`.
+The service's separate network namespace permits loopback for HTTP unit tests.
+
+| Configured budget | Limit |
+| --- | --- |
+| Aggregate CPU | 100% of one CPU |
+| Aggregate memory | 1 GiB, no swap |
+| Aggregate tasks | 256 |
+| `/work` tmpfs | 512 MiB |
+| Task startup/run timeout | 10 minutes |
+| Container startup allowance | 12 minutes |
+| Container active lifetime after readiness | 15 minutes |
+
+These are initial limits, not measured resource requirements. The boot-attached
+oneshot can delay container readiness, so the explicit 12-minute host startup
+allowance covers its ten-minute task budget plus startup overhead. The
+15-minute active lifetime begins only after readiness: this is not a
+15-minute wall-clock cap from launch. Startup and active budgets can add
+(up to approximately 27 minutes before shutdown handling). Automatic restarts,
+including the upstream forced reboot exit status, are disabled so a failed run
+does not silently receive a fresh budget.
+
+Only the reviewed `fleet_witness`, `tests`, `nix`, `fleet`, `scripts`, and
+`docs` trees plus `AGENTS.md` and `README.md` enter the immutable source snapshot.
+Dotfiles, symlinks, Python caches, Git metadata, and top-level run outputs are
+excluded. The filter is not a secret scanner: inspect these inputs before
+building and never put credentials in them. A copy is made in `/work/task`;
+existing workspaces are refused. Tests stop on failure, and the runner's exit
+code propagates to systemd. Results remain in `/work/task/results` until
+container teardown. A killed or full-disk task may have no complete report.
+Treat every task-written file, including `report.txt`, as untrusted evidence.
+
+## Pinned implementation assumptions
+
+The actual [container module at the pin](https://github.com/NixOS/nixpkgs/blob/c56a87d8e41ce69bd2af57eb35dcc117a9dfca33/nixos/modules/virtualisation/nixos-containers.nix)
+was inspected. Its launcher uses `--keep-unit`, so CPU, memory, task, and
+lifetime limits belong to the host's `container@NAME.service`. Its standard
+mounts expose the host Nix store/database/daemon socket read-only and
+per-container profiles/gcroots writable. Read-only mounting of a socket does
+not make requests through it read-only. The task service therefore masks all
+of `/nix/var/nix`; disabling the container's Nix daemon alone is insufficient.
+Its UID remapping uses idmapped Nix mounts when `privateUsers = "pick"`.
+
+The same launcher uses `--notify-ready=yes` with a host `Type=notify` service.
+The [systemd v260.5 manager](https://github.com/systemd/systemd/blob/v260.5/src/core/manager.c)
+sends system-manager readiness only after its boot jobs drain. The worker
+oneshot is attached to `multi-user.target`, so the upstream one-minute
+container startup default could terminate a legitimate task still within its
+ten-minute budget. The configured 12-minute startup timeout addresses this
+source-established interaction; it has not yet been validated by booting.
+
+The automatic UID range makes writable host-output mounts error-prone. This
+module adds none: collect bounded files before stopping the container instead.
+Ephemeral roots do not erase host journal records or standard host Nix
+profile/gcroot state. All containers share the host kernel. Use a disposable
+NixOS VM as the fleet host for potentially hostile code. This is a configuration
+for an unprivileged task service, not a claim that container root is safe to
+grant to an agent.
+
+## Prepare and evaluate on a disposable NixOS host
+
+Enable flakes on that host and use a reviewed checkout. Add and commit the new
+files before a Git-backed flake evaluation: Nix does not include untracked
+files. Fetching/building host dependencies can require network access; worker
+execution is offline. The commands here require trusted operator authority.
+Never expose `sudo`, `nixos-container run`, `machinectl`, or systemd
+administration as worker tools.
+
+```sh
+nix flake lock
+# Inspect and commit the real lock before deployment.
+git diff -- flake.lock
+git add flake.lock
+git commit -m "Lock verified NixOS worker dependencies"
+nix flake show
+nix build .#checks.x86_64-linux.offline-tests
+nix develop --command python -m unittest discover -s tests -v
+```
+
+Import `fleet.nixosModules.fleet` from your host flake. For example, add
+`inputs.fleet.url = "path:/absolute/path/to/fleet-witness"` and
+`inputs.nixpkgs.follows = "fleet/nixpkgs"` to that host flake. This keeps the
+host launcher on the reviewed revision; each container also explicitly selects
+the pinned nixpkgs path. Include `fleet` in the host outputs arguments and
+add this module to the
+host's `nixosSystem.modules` list:
+
+```nix
+{ ... }: {
+  imports = [ fleet.nixosModules.fleet ];
+  services.fleetWitnessFleet = {
+    enable = true;
+    workers = [ "w-runtime" "w-viewer" ];
+  };
+}
+```
+
+That snippet must be inside the host outputs' scope where `fleet` is bound.
+Worker names must be unique and match `[a-z][a-z0-9-]{0,10}`. The fleet is
+disabled by default and declares no workers by default. Explicitly enabling
+it still sets every container's `autoStart = false`.
+
+```sh
+# In the host configuration checkout; replace fleet-host with its output name.
+nix eval .#nixosConfigurations.fleet-host.config.system.build.toplevel.drvPath
+nix build .#nixosConfigurations.fleet-host.config.system.build.toplevel
+sudo nixos-rebuild test --flake .#fleet-host
+sudo systemctl start container@w-runtime.service
+sudo systemctl show container@w-runtime.service \
+  -p ActiveState -p Result -p CPUQuotaPerSecUSec -p MemoryMax \
+  -p MemorySwapMax -p TasksMax -p TimeoutStartUSec -p RuntimeMaxUSec -p ControlGroup
+sudo systemctl -M w-runtime show fleet-task.service \
+  -p ActiveState -p SubState -p Result -p ExecMainCode -p ExecMainStatus
+sudo journalctl -M w-runtime -u fleet-task.service --no-pager
+```
+
+Wait for the inner service to leave `activating`. Success should show
+`active/exited`, `Result=success`, and `ExecMainStatus=0`; check all three.
+A running outer container does not establish task success. Inspect the actual
+host cgroup's `cpu.max`, `memory.max`, `memory.swap.max`, and `pids.max`, not
+only unit configuration. Upstream `--keep-unit` places the container beneath
+that host unit. The tmpfs still exists after the task finishes.
+
+## Collect before stopping
+
+Collect only after the task has completed or failed, and before the 15-minute
+host active lifetime expires, measured from container readiness. Record host and inner systemd status independently.
+Freeze the container to stop output mutation during collection. If freezing
+or any validation fails, stop and investigate; do not fall back to recursive
+copying. Run the following as the trusted operator in a shell with Python 3
+available on the host. It copies at most four regular, singly linked files,
+1 MiB each, into a fresh quarantine directory. It follows no worker-controlled
+symlinks, executes no output, and extracts no archives.
+
+```sh
+set -eu
+quarantine=$(mktemp -d "${TMPDIR:-/tmp}/fleet-quarantine.XXXXXXXX")
+sudo systemctl show container@w-runtime.service > "$quarantine/host-status.txt"
+sudo systemctl -M w-runtime show fleet-task.service > "$quarantine/task-status.txt"
+leader=$(sudo machinectl show w-runtime -p Leader --value)
+sudo systemctl freeze container@w-runtime.service
+trap 'sudo systemctl thaw container@w-runtime.service' EXIT
+sudo python3 - "$leader" "$quarantine" <<'PY'
+import os
+from pathlib import Path
+import stat
+import sys
+
+leader, destination = sys.argv[1:]
+if not leader.isdecimal() or int(leader) <= 1:
+    raise SystemExit('invalid machine leader PID')
+# /proc/PID/root is a trusted kernel link; all subsequent components are not.
+fd = os.open(f'/proc/{leader}/root', os.O_RDONLY | os.O_DIRECTORY)
+try:
+    for component in ('work', 'task', 'results'):
+        child = os.open(component, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+                        dir_fd=fd)
+        os.close(fd)
+        fd = child
+    for name in ('report.txt', 'tests.log', 'viewer.log', 'demo.log'):
+        try:
+            item = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK,
+                           dir_fd=fd)
+        except FileNotFoundError:
+            continue
+        with os.fdopen(item, 'rb') as stream:
+            metadata = os.fstat(stream.fileno())
+            if not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
+                raise SystemExit(f'refused non-regular or linked file: {name}')
+            if metadata.st_size > 1024 * 1024:
+                raise SystemExit(f'refused oversized file: {name}')
+            data = stream.read(1024 * 1024 + 1)
+            if len(data) > 1024 * 1024:
+                raise SystemExit(f'refused oversized file: {name}')
+        with (Path(destination) / name).open('xb') as output:
+            output.write(data)
+finally:
+    os.close(fd)
+PY
+sudo systemctl thaw container@w-runtime.service
+trap - EXIT
+printf '%s\n' "$quarantine"
+sudo systemctl stop container@w-runtime.service
+```
+
+A missing report is not success. Review logs as untrusted plain text and
+compare them with systemd status and independent reproduction. Do not accept
+worker-authored assertions automatically. The collector intentionally omits
+the database, replay assets, arbitrary patches, and directories. Any future
+patch collection needs an explicit filename/size allowlist and human review;
+never automatically apply a patch. Stop/expiry destroys uncollected output.
+
+## Required boot acceptance checks (not yet executed)
+
+On the disposable host, record the pin, kernel, systemd version, lock, and
+actual results for these checks:
+
+1. Evaluate disabled/default and enabled fleets; evaluate duplicate, underscore,
+   slash, and overlong names and require clear failure. Build the test
+   derivation and the host/container system closure.
+2. Start a worker and inspect its task PID from `systemctl -M w-runtime show
+   fleet-task -p MainPID`; while active, inspect that process's UID mapping,
+   capabilities, mount and network namespaces. Container UID 1000 must map
+   outside the host's normal UID range.
+3. In a temporary diagnostic version of the **same task service**, run probes
+   as `worker`: modifying its immutable source and opening
+   `/nix/var/nix/daemon-socket/socket` must fail. Writing `/work` must succeed;
+   writing system paths must fail. Confirm loopback HTTP tests pass and access
+   to an external IP fails. A root `nixos-container run` probe is not equivalent
+   to the constrained service and cannot prove these properties.
+4. Confirm aggregate cgroup limits and tmpfs size. In a disposable diagnostic
+   configuration, run controlled CPU/memory/process-limit probes. Inject a
+   failing test/demo and an over-time task; inspect nonzero/timeout systemd
+   results. Also run a successful task lasting over 60 seconds (for example,
+   a 75-second delay followed by the normal offline task in the same service).
+   Require host startup to complete, inner `Result=success`/`ExecMainStatus=0`,
+   and collectable outputs; this catches the former one-minute startup limit.
+   Inspect the host `TimeoutStartUSec` as 12 minutes and distinguish it from
+   inner `TimeoutStartSec` at ten minutes. Verify the outer 15-minute
+   `RuntimeMaxSec` starts after readiness, not at launch; startup and active
+   budgets are additive.
+5. Collect before teardown. Confirm oversized, symlink, FIFO, and directory
+   outputs are refused by collection. Confirm lifetime expiry does not restart
+   the container, and uncollected output disappears on stop. Start it again:
+   the old `/work/task` must be absent before the new task creates it, and a
+   fresh successful run must not reuse old results.
+
+Until these checks pass, the configured confinement remains unverified.
+References: [systemd service timeout semantics](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html),
+[resource controls](https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html),
+and [execution namespaces](https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html).

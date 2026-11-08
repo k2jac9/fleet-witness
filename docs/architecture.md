@@ -1,4 +1,4 @@
-# Stratum Witness: first runnable slice
+# Fleet Witness: first runnable slice
 
 ## Purpose and ownership
 
@@ -11,6 +11,8 @@ The initial demo asks: can a fleet persuade a supervisor to authorize a release 
 One dependency-free Python 3.11+ application, a SQLite database, and a read-only HTML/CSS/JavaScript dashboard. No package installation, model credit, public sensor, or cloud account is needed to run the baseline. Python is a time-bounded implementation choice for the evaluation slice. A Rust controller is a future option requiring an ADR and equivalent behavioral tests.
 
 The local effect is a release row in SQLite. External artifact publication, operating-system confinement of compromised agents, live Adaption calls, independent cryptographic notarization, and global fleet attribution are outside this first slice.
+
+For the development fleet, ADR-0008 adds an optional ephemeral NixOS worker environment with user namespaces and constrained task services. It is separate from the simulated fleet under evaluation. Nix configuration can be supplied here, but Nix evaluation, boot, and containment checks require a Nix-capable host and are explicitly pending.
 
 ## Components
 
@@ -27,11 +29,11 @@ flowchart TD
   X --> U[Read-only dashboard]
 ```
 
-The supervisor receives an explicitly constructed input containing the artifact identity, decision-time policy, and evidence. It does not receive the scenario answer or signing key. The evaluator uses sealed scenario truth and independently derives expected decision and effect outcomes; it does not call the controller's policy decision helper to score it.
+The supervisor receives an explicitly constructed input containing the artifact identity, decision-time policy, and evidence. It does not receive the scenario answer or signing key. The evaluator uses sealed scenario truth to independently score recommendations without calling the controller's policy decision helper. Execution authorization and effect fields report observed, committed controller outcomes.
 
 ## Global constraints
 
-- Product name: Stratum Witness. Repository: k2jac9/stratum-witness. Solo human owner: Alejandro Castellanos.
+- Product name: Fleet Witness. Repository: k2jac9/fleet-witness. Solo human owner: Alejandro Castellanos.
 - Python 3.11+ standard library only at runtime and for the baseline tests; browser assets use no CDN, telemetry, or build step.
 - Default model backend is `scripted-demo`; default external spend is zero.
 - Supervisor proposals never directly create effects. Missing policy denies execution.
@@ -54,7 +56,7 @@ Each paired presentation runs in a separate logical `trial_id` namespace, with t
 
 ## Replay contract v1
 
-`replay.json` is a standalone JSON object with `schema_version: "1.0"`, `project: "Stratum Witness"`, `mode: "scripted-demo"`, `seed`, `generated_at`, `summary`, and `episodes`.
+`replay.json` is a standalone JSON object with `schema_version: "1.0"`, `project: "Fleet Witness"`, `mode: "scripted-demo"`, `seed`, `generated_at`, `summary`, and `episodes`.
 
 Each episode contains `id`, `pair_id`, `scenario`, `title`, `worker_policy`, `reviewer_policy`, `presentation`, `artifact_digest`, `supervisor_input`, `decision`, `evaluation`, `attempts`, `events`, and `receipts`.
 
@@ -70,8 +72,8 @@ Export is for local review and intentionally includes evaluator results. It is n
 ## CLI contract
 
 ```sh
-python -m stratum_witness demo --output runs/demo --seed 42
-python -m stratum_witness serve --directory runs/demo --port 8765
+python -m fleet_witness demo --output runs/demo --seed 42
+python -m fleet_witness serve --directory runs/demo --port 8765
 python -m unittest discover -s tests -v
 python scripts/fleet.py validate
 python scripts/fleet.py plan

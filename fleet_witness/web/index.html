@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Inspect scripted agent recommendations, evidence receipts, and trusted-controller outcomes.">
+  <title>Fleet Witness · Evidence replay</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#workspace">Skip to evidence replay</a>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="Fleet Witness home"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>FLEET <strong>WITNESS</strong></span></a>
+    <div class="topbar-right"><span class="status-dot" aria-hidden="true"></span><span>Local evidence console</span><span class="version">v1.0</span></div>
+  </header>
+  <main>
+    <section class="intro" aria-labelledby="page-title">
+      <div class="intro-copy"><div class="intro-label"><span class="eyebrow">RECOMMENDATION → AUTHORIZATION → EFFECT</span><span class="scripted">Scripted demo</span></div><h1 id="page-title">Follow the evidence.<br><span>Inspect the authority.</span></h1><p>One receipt can be authentic and still prove too little. Trace what the agents proposed, what the evidence supports, and what the controller allowed.</p></div>
+      <div class="run-card"><div class="run-heading"><span class="run-icon" aria-hidden="true">↳</span><span class="eyebrow">REPLAY SOURCE</span></div><strong id="source-name">Waiting for replay</strong><p id="run-meta">Schema 1.0 · read-only inspection</p><label class="import-button" for="import-file">Import replay JSON <span aria-hidden="true">↗</span></label><input id="import-file" type="file" accept=".json,application/json" aria-describedby="import-help"><small id="import-help">Local JSON only · maximum 2 MiB</small></div>
+    </section>
+    <div id="load-error" class="error-banner" role="alert" hidden></div>
+    <p id="loading" class="loading" role="status">Loading replay evidence…</p>
+    <noscript><p class="error-banner">JavaScript is required to inspect replay data. This viewer loads no external scripts.</p></noscript>
+    <section class="metrics" id="metrics" aria-label="Complete replay metrics across both presentations" hidden></section>
+    <p class="scope-note">Deterministic scripted supervisor · paired presentations reuse the same evidence and trajectory · illustrative outcomes, not measured model performance.</p>
+    <section class="workspace" id="workspace" aria-label="Evidence replay workspace" hidden>
+      <aside class="scenario-panel" aria-labelledby="scenario-heading">
+        <div class="panel-heading"><h2 id="scenario-heading">Scenario trials</h2><span id="scenario-count" class="muted"></span></div>
+        <div class="filters"><label for="search" class="eyebrow">SEARCH EVIDENCE</label><input id="search" type="search" placeholder="Title, role, issuer, run…" autocomplete="off"><div class="filter-row"><div><label for="validity-filter">Decision</label><select id="validity-filter"><option value="all">All decisions</option><option value="invalid">Incorrect</option><option value="valid">Correct</option></select></div><div><label for="scenario-filter">Scenario</label><select id="scenario-filter"><option value="all">All scenarios</option></select></div></div></div>
+        <div class="scenario-list" id="scenario-list" aria-label="Select a scenario trial"></div>
+        <p id="no-results" class="empty-state" hidden>No trials match these filters. Try another presentation or clear your search.</p>
+        <div class="panel-footnote"><span class="small-dot" aria-hidden="true"></span>Each trial is an isolated local simulation.</div>
+      </aside>
+      <div class="detail-column"><div class="presentation-bar"><span class="eyebrow">EVIDENCE PRESENTATION</span><div class="presentation-control" role="group" aria-label="Paired evidence presentation"><button type="button" data-presentation="raw" aria-pressed="true">Raw</button><button type="button" data-presentation="scope_explicit" aria-pressed="false">Scope explicit</button></div></div>
+      <article id="episode-detail" class="episode-detail" aria-labelledby="episode-title" hidden>
+        <header class="episode-header"><div><span id="episode-scenario" class="eyebrow"></span><h2 id="episode-title"></h2><p id="episode-id" class="mono muted"></p></div></header>
+        <div class="roles"><span class="role-label">AGENT ROLES</span><span id="worker-role" class="role"></span><span class="role-arrow" aria-hidden="true">→</span><span id="reviewer-role" class="role"></span><span class="role-arrow" aria-hidden="true">→</span><span class="role">Scripted supervisor</span></div>
+        <div class="outcomes"><section class="outcome-card decision-card" aria-labelledby="decision-label"><span class="eyebrow" id="decision-label">01 / RECOMMENDATION CORRECTNESS</span><h3 id="decision-status" class="outcome-value"></h3><p id="recommendation" class="recommendation"></p><p id="decision-reason" class="muted"></p></section><section class="outcome-card" aria-labelledby="effect-label"><span class="eyebrow" id="effect-label">02 / CONTROLLER &amp; EFFECT</span><h3 id="effect-status" class="outcome-value"></h3><p id="effect-description" class="muted"></p><div id="attempt-list"></div></section></div>
+        <div class="evidence-grid"><section class="evidence-panel" aria-labelledby="evidence-heading"><div class="section-heading"><h3 id="evidence-heading">Evidence inspection</h3><span class="small-cap">RECEIPTS &amp; CLAIMS</span></div><blockquote><span class="eyebrow">REVIEWER STATEMENT</span><p id="reviewer-statement"></p></blockquote><div class="artifact"><span class="eyebrow">TARGET ARTIFACT</span><p id="artifact-digest" class="mono"></p></div><div id="receipt-list"></div><p id="no-receipts" class="muted" hidden>No receipts in this episode.</p><div class="scope-explanation"><strong>Authentic ≠ authorized</strong><p>A genuine build receipt attests to a build. It cannot establish <code>release_safe</code> for the exact artifact and run, or grant current release permission. The controller must check each condition independently.</p></div><details class="source-details"><summary>Supervisor input &amp; reason</summary><p id="supervisor-reason"></p><pre id="supervisor-input" tabindex="0" aria-label="Complete supervisor input"></pre></details></section>
+        <section class="timeline-panel" aria-labelledby="timeline-heading"><div class="section-heading"><h3 id="timeline-heading">Event replay</h3><span id="event-progress" class="mono"></span></div><div class="replay-controls" role="group" aria-label="Step through events"><button id="event-reset" type="button">Reset</button><button id="event-prev" type="button" aria-label="Previous event">← Previous</button><button id="event-next" type="button" aria-label="Next event">Next →</button></div><div id="event-list" class="event-list" aria-label="Ordered replay events"></div><div class="event-inspector" aria-live="polite" aria-atomic="true"><span class="eyebrow">SELECTED EVENT</span><h4 id="event-kind"></h4><span id="event-actor" class="badge neutral"></span><p id="event-message"></p><details open><summary>Event details</summary><pre id="event-details" tabindex="0" aria-label="Selected event details"></pre></details></div><p class="timeline-note">Stepping reveals recorded events. It does not execute a release or rerun an agent.</p></section></div>
+      </article>
+      </div>
+    </section>
+    <footer><span>Fleet Witness</span><span>Alejandro Castellanos · solo human entrant</span><span>Local replay · no external publication</span></footer>
+  </main>
+</body>
+</html>

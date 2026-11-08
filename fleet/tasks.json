@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "owner": "k2jac9",
+  "default_budget_usd": 0,
+  "tasks": [
+    {
+      "id": "adapter-proposal",
+      "title": "Propose a bounded live-model adapter and mediated gateway",
+      "role": "architecture proposer",
+      "status": "todo",
+      "depends_on": [],
+      "owned_paths": ["docs/proposals/live-model-adapter.md"],
+      "adrs": ["docs/adr/0001-local-evaluation-slice.md", "docs/adr/0002-evidence-and-authority.md", "docs/adr/0006-development-fleet.md", "docs/adr/0008-ephemeral-nixos-workers.md"],
+      "acceptance": [["python", "scripts/fleet.py", "validate"], ["git", "diff", "--check"]],
+      "brief": "Write a proposal only. Specify provider-neutral input/output boundaries, explicit personal spend authorization, an offline fake, failure accounting, and a mediated provider/tool gateway outside ephemeral workers. Explain how to preserve sealed truth and controller authority. Do not call a model, inspect credentials, or revise an accepted ADR. Report the exact commit, paths, commands/results, unresolved decisions, and limitations."
+    },
+    {
+      "id": "expanded-scenarios",
+      "title": "Expand receipt applicability and paired-trial regression scenarios",
+      "role": "scenario implementer",
+      "status": "todo",
+      "depends_on": [],
+      "owned_paths": ["tests/test_expanded_scenarios.py", "docs/scenarios.md"],
+      "adrs": ["docs/adr/0002-evidence-and-authority.md", "docs/adr/0003-transactional-effects.md", "docs/adr/0004-paired-evaluation.md", "docs/adr/0006-development-fleet.md", "docs/adr/0007-isolated-paired-trials.md", "docs/adr/0008-ephemeral-nixos-workers.md"],
+      "acceptance": [["python", "-m", "unittest", "discover", "-s", "tests", "-v"]],
+      "brief": "Add offline regression scenarios through existing public interfaces, covering narrowly scoped genuine evidence, wrong issuer/claim/scope, and trial independence. Keep identical facts across paired presentations. Confine changes to owned files; report any runtime changes needed as follow-up proposals. Do not claim empirical model effects. Report the exact commit, paths, commands/results, and limitations."
+    },
+    {
+      "id": "research-report",
+      "title": "Draft the research report with reproducible observed results",
+      "role": "research writer",
+      "status": "todo",
+      "depends_on": ["adapter-proposal", "expanded-scenarios"],
+      "owned_paths": ["docs/research-report.md"],
+      "adrs": ["docs/adr/0001-local-evaluation-slice.md", "docs/adr/0004-paired-evaluation.md", "docs/adr/0006-development-fleet.md", "docs/adr/0007-isolated-paired-trials.md", "docs/adr/0008-ephemeral-nixos-workers.md"],
+      "acceptance": [["python", "-m", "unittest", "discover", "-s", "tests", "-v"], ["git", "diff", "--check"]],
+      "brief": "Draft a report using the current official requirements linked in docs/SUBMISSION.md. Distinguish tested mechanisms, synthetic illustrations, hypotheses, and unbooted Nix configuration. Include solo authorship, AI assistance, prior-work provenance, limitations, and dual-use analysis. Do not submit or publish. Report exact commits, reproducible commands/results, and remaining evidence gaps."
+    },
+    {
+      "id": "independent-review",
+      "title": "Independently review architecture, evidence, and delivery claims",
+      "role": "independent reviewer",
+      "status": "todo",
+      "depends_on": ["research-report"],
+      "owned_paths": ["docs/reviews/initial-slice.md"],
+      "adrs": ["docs/adr/0001-local-evaluation-slice.md", "docs/adr/0002-evidence-and-authority.md", "docs/adr/0003-transactional-effects.md", "docs/adr/0004-paired-evaluation.md", "docs/adr/0005-replay-and-viewer.md", "docs/adr/0006-development-fleet.md", "docs/adr/0007-isolated-paired-trials.md", "docs/adr/0008-ephemeral-nixos-workers.md"],
+      "acceptance": [["python", "-m", "unittest", "discover", "-s", "tests", "-v"], ["node", "--test", "tests/viewer.test.mjs"], ["python", "scripts/fleet.py", "validate"]],
+      "brief": "Review the exact integrated commits independently. Inspect controller invariants, paired evidence, replay text rendering, read-only serving, fleet refusal behavior, and unverified Nix deployment claims. Run commands explicitly and record failures without omission. Write findings with severity, affected paths, evidence, and recommendations; do not modify implementation, merge, spend, publish, or grant access."
+    }
+  ]
+}

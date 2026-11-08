@@ -1,6 +1,6 @@
 # Solo submission preparation
 
-Owner and sole human entrant: Alejandro Castellanos. Project: Stratum Witness. Proposed anchor: Multi-Agent Oversight and Control, with a testbed/infrastructure contribution.
+Owner and sole human entrant: Alejandro Castellanos. Project: Fleet Witness. Proposed anchor: Multi-Agent Oversight and Control, with a testbed/infrastructure contribution.
 
 ## Official requirements checked 2026-11-08
 

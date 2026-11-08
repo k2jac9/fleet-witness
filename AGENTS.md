@@ -1,6 +1,6 @@
-# Building Stratum Witness
+# Building Fleet Witness
 
-Stratum Witness is Alejandro Castellanos's solo submission. AI development agents are tools, not additional human entrants. Read `docs/architecture.md`, the accepted ADRs in `docs/adr/`, and your assigned task before editing.
+Fleet Witness is Alejandro Castellanos's solo submission. AI development agents are tools, not additional human entrants. Read `docs/architecture.md`, the accepted ADRs in `docs/adr/`, and your assigned task before editing.
 
 ## Architectural contract
 

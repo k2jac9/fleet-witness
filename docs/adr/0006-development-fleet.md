@@ -5,7 +5,7 @@
 
 ## Context
 
-The owner wants AI agents to build Stratum Witness while preserving a coherent architecture and solo human authorship.
+The owner wants AI agents to build Fleet Witness while preserving a coherent architecture and solo human authorship.
 
 ## Decision
 
