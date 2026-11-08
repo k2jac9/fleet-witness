@@ -1,5 +1,116 @@
 # Build and deployment verification
 
+## Continued testing and deployment preparation: 2026-11-08
+
+This section supersedes the corresponding open image/browser checks in the
+earlier handoff. It also records an actual worker-boot failure. **No running GCP
+deployment, enforced worker confinement, live model trial, or verified credit
+balance is claimed.** No GCP resource or paid model request was created.
+
+The candidate branch `fleet/controlled-pilot` combines independently reviewed
+`expanded-scenarios` and `adapter-proposal` changes with the new
+[offline pilot foundation](CONTROLLED_PILOT.md). Main remains at
+`87156f5419aa4c02c96091bfcad4a5d8a5dd2936`; owner integration is separate.
+
+### Source and observed checks
+
+| Check | Observation |
+| --- | --- |
+| Baseline reproduction at `87156f5` | 49 Python tests and 5 viewer tests passed |
+| Expanded scenario task | 6 new behavioral tests; full suite 55 Python tests; 5 viewer tests passed; independent review has no remaining findings |
+| Scenario sensitivity | Four disposable counterfactual faults caused assertion failures: first-receipt-only, prefix applicability, cross-trial deduplication, and unconditional decision correctness |
+| Pilot foundation | 15 tests written and observed failing before implementation; malformed Unicode failures also reproduced before correction |
+| Combined local suites | `python -m unittest discover -s tests -v`: 70 passed; `node --test tests/viewer.test.mjs`: 5 passed |
+| Fleet validation | Four valid existing tasks and $0 default external budget; scheduling statuses were not changed |
+| Offline smoke for reviewed scenario source `3e0586b` | Exit 0, `stage=complete`, 55 Python tests, 5 viewer tests, expected 20-episode demo metrics |
+| Chrome `155.0.8059.39` | Real HTTP replay, pairing, revocation, duplicate no-ops, keyboard focus, filtering, malformed-import recovery, and hostile text checks passed |
+| Browser visual inspection | Wide 1440 px and narrow 390 px screenshots inspected; narrow document has no horizontal overflow |
+| Browser console | One cosmetic CSP error: the empty `data:,` favicon is blocked by `img-src 'self'`; no JavaScript exception observed |
+| Native GCE image | Full `googleComputeImage` derivation builds successfully under storage admission, using source `87156f5` and the unchanged committed lock |
+| Local VM diagnostic | Host and loopback viewer boot; worker startup **fails** at nspawn's idmapped store mount before any task confinement probe executes |
+| Hosted CI and runtime matrix | Not verified in this continuation; current workflow still uses Python 3.11/3.13 and Node 24 without exact runtime patch pins; latest-stable/upcoming/previous adoption remains open |
+
+Local tools: Python `3.15.0`, Node `26.11.1`, Nix `2.35.2`. The tested gateway
+blob is `a3c16a13f1f951b6ef8bbcc69c9441ff81179069`. Code/test scope is
+`tests/test_expanded_scenarios.py`, `fleet_witness/gateway.py`, and
+`tests/test_gateway.py`; documentation scope is `docs/scenarios.md`,
+`docs/proposals/live-model-adapter.md`, `docs/CONTROLLED_PILOT.md`, this record,
+and `docs/superpowers/plans/2026-11-08-controlled-pilot-foundation.md`.
+No accepted ADR, existing runtime/controller/viewer behavior, infrastructure
+configuration, or fleet scheduling state was modified.
+
+### Retained image and failed boot diagnostics
+
+The image was built with:
+
+```sh
+nix build .#nixosConfigurations.fleet-gcp.config.system.build.googleComputeImage \
+  --no-link --print-out-paths --max-jobs 2 --cores 4 --print-build-logs
+```
+
+- Source: `87156f5419aa4c02c96091bfcad4a5d8a5dd2936`, nixpkgs
+  `c56a87d8e41ce69bd2af57eb35dcc117a9dfca33`.
+- Output: `/nix/store/5zrlb0pqic3yf136ld99grha1l6xz09d-google-compute-image`.
+- Archive: `nixos-image-google-compute-26.05.20261105.c56a87d-x86_64-linux.raw.tar.gz`.
+- SHA-256: `3d77707677d2037f4bacf5e85a10d23a1fb3794564f5d0977f54e2e804cfc58d`.
+- Archive listing: one `disk.raw`, 5,286,920,192 bytes. The retained compressed
+  output occupies approximately 719 MiB. A project-specific GC root retains this
+  **candidate**, not an accepted live rollback image.
+
+Separate disposable NixOS VM diagnostics import the pinned fleet/demo modules,
+retain the worker's private users/network and service restrictions, and replace
+only the task command with bounded probes plus a 75-second delay and the offline
+launcher. They are test variants, not the GCE image or cloud acceptance.
+
+The first attempt failed test-driver lint on an unused import before boot. After
+that correction, worker startup repeatedly failed with
+`Failed to clone /nix/store: Invalid argument`. Explicit writable-store and
+disk-backed-store diagnostic variants also failed. The final guest reports an
+overlay-backed `/nix/store`; the exact idmapped-mount incompatibility remains
+unresolved. All attempts are retained. No worker UID/capability/network/metadata,
+cgroup enforcement, successful long-running task, timeout, output-collection, or
+ephemeral cleanup acceptance can be inferred from these failed starts. Controls
+were not relaxed to obtain a passing result.
+
+Storage preflight and actual admission covered a 24 GiB image allowance and a
+12 GiB diagnostic-test allowance on the real Nix build paths. Initial refusals
+from a nonexistent output directory and a tmpfs UUID lookup were retained; the
+manifests were corrected to existing output and the actual disk-backed build
+directory. No policy, floor, existing reservation, or retention rule was changed.
+
+### Accounts, credits, and next gates
+
+The owner authorized a $100 GCP envelope and reaffirmed a $1,500 Adaption credit
+balance, then selected the controlled pilot before public attack observation.
+The Adaption balance is owner-reported; conversion to provider billing units and
+live spend allocation remain unverified. The implemented ledger uses synthetic
+units and accepts only an inert fake provider.
+
+A project-scoped Google Cloud CLI `592.0.0` was recovered from official archives;
+the documented alias checksum and equality of the decompressed versioned/alias
+payloads were verified before execution. Existing workstation SDK configuration
+was accessed through the CLI only. `gcloud auth list` returned `[]`, and the
+active `default` configuration at `/home/neo/.config/gcloud` has no account or
+project. Application-default credentials are absent. No account token was
+printed or stored in the evidence packet. The reachable authorized SDK
+configuration and target project are required before credit/billing/resource
+inspection or provisioning can continue.
+
+Remain open: independent review of the full foundation candidate, owner
+integration, actual provider/gateway activation and new ADR, real calibration
+and study execution, current runtime-lane adoption, the store-mount boot failure,
+all worker confinement/lifecycle gates, GCP billing and credit verification,
+IAM/IAP/OS Login and cloud boot, optional DNS/TLS, and tested cloud rollback and
+teardown. Budget alerts are not an enforced Compute Engine cost cap.
+
+Full receipts, logs, screenshots, diagnostic source variants, and independent
+reviews live under
+`/home/neo/Projects/fleet-witness-artifacts/continuation-20261108-vBYyNBOq/`.
+The image GC root is
+`/home/neo/.local/state/fleet-witness/gcroots/candidate-gce-87156f5-20261108`.
+Failed browser-harness expectations and an initial missing-parent smoke launch
+were retained alongside their corrected successful runs.
+
 ## Fresh-clone and GCP handoff: 2026-11-08
 
 The repository now includes a generated `flake.lock`, the native
