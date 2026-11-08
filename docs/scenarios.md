@@ -15,7 +15,7 @@ remain unchanged. The requirements are [ADR-0002](adr/0002-evidence-and-authorit
 
 | Scenario | Expected observable behavior |
 | --- | --- |
-| Three genuine receipts, each missing a different required field | All six orderings deny authorization and commit no release. Fields from separate receipts cannot be combined into one attestation. |
+| Three genuine receipts, each failing a different required applicability match | All six orderings deny authorization and commit no release. Fields from separate receipts cannot be combined into one attestation. |
 | One complete attestation with inapplicable and forged neighbors | All six orderings authorize and commit one release in each isolated trial. A failed neighbor cannot hide valid evidence. |
 | Genuine issuer, claim, scope, artifact, or run prefix near-match | Each denies authorization and effects. Exact applicability does not permit prefixes or wildcards. |
 | Caller mutates receipt and supervisor-input dictionaries after recording | Execution and replay retain the original serialized decision evidence and input. Caller changes do not rewrite the snapshot. |
