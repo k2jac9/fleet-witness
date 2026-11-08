@@ -2,45 +2,76 @@ name: Offline checks
 on:
   push:
   pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 8 * * 0'
 permissions:
   contents: read
 jobs:
-  python:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.11', '3.13']
+  select:
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.select.outputs.matrix }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
-      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Run offline verification
-        env:
-          GIT_CONFIG_GLOBAL: /dev/null
-          GIT_CONFIG_SYSTEM: /dev/null
-          GIT_CONFIG_NOSYSTEM: '1'
-          GIT_CONFIG_COUNT: '0'
+      - id: select
         run: |
-          python -m unittest discover -s tests -v
-          python scripts/fleet.py validate
-          python scripts/fleet.py plan
-          python -m fleet_witness demo --output runs/ci --seed 42
-  viewer:
-    runs-on: ubuntu-latest
+          python3 scripts/ci_runtime.py freshness
+          echo "matrix=$(python3 scripts/ci_runtime.py matrix)" >> "$GITHUB_OUTPUT"
+  runtime:
+    needs: select
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.select.outputs.matrix) }}
+    name: ${{ matrix.family }} / ${{ matrix.role }} / ${{ matrix.version }}
+    env:
+      FW_LANE: ${{ matrix.id }}
+      FW_FAMILY: ${{ matrix.family }}
+      FW_URL: ${{ matrix.url }}
+      GIT_CONFIG_GLOBAL: /dev/null
+      GIT_CONFIG_SYSTEM: /dev/null
+      GIT_CONFIG_NOSYSTEM: '1'
+      GIT_CONFIG_COUNT: '0'
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+      - name: Download and verify the exact runtime artifact
+        run: |
+          mkdir -p ci-results
+          curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --max-time 180 "$FW_URL" -o "$RUNNER_TEMP/runtime-archive"
+          python3 scripts/ci_runtime.py verify-archive --lane "$FW_LANE" --archive "$RUNNER_TEMP/runtime-archive" | tee ci-results/archive-sha256.txt
+          mkdir "$RUNNER_TEMP/fleet-runtime"
+          if [ "$FW_FAMILY" = python ]; then
+            tar -xf "$RUNNER_TEMP/runtime-archive" -C "$RUNNER_TEMP/fleet-runtime"
+            test -e "$RUNNER_TEMP/fleet-runtime/bin/python" || ln -s python3 "$RUNNER_TEMP/fleet-runtime/bin/python"
+            echo "PYTHONHOME=$RUNNER_TEMP/fleet-runtime" >> "$GITHUB_ENV"
+            echo "LD_LIBRARY_PATH=$RUNNER_TEMP/fleet-runtime/lib" >> "$GITHUB_ENV"
+          else
+            tar -xf "$RUNNER_TEMP/runtime-archive" --strip-components=1 -C "$RUNNER_TEMP/fleet-runtime"
+          fi
+          echo "$RUNNER_TEMP/fleet-runtime/bin" >> "$GITHUB_PATH"
+      - name: Record the actual runtime and source
+        run: python3 scripts/ci_runtime.py identity --lane "$FW_LANE" > ci-results/identity.json
+      - name: Verify Python behavior
+        if: matrix.family == 'python'
+        run: |
+          python -m unittest discover -s tests -v 2>&1 | tee ci-results/python.log
+          python scripts/fleet.py validate | tee ci-results/fleet-validation.log
+          python scripts/fleet.py plan | tee ci-results/fleet-plan.log
+          python -m fleet_witness demo --output runs/ci --seed 42 | tee ci-results/demo.log
+      - name: Verify viewer behavior
+        if: matrix.family == 'node'
+        run: node --test tests/viewer.test.mjs 2>&1 | tee ci-results/viewer.log
+      - name: Retain evidence, including failed attempts
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          node-version: '24'
-      - name: Run viewer verification
-        env:
-          GIT_CONFIG_GLOBAL: /dev/null
-          GIT_CONFIG_SYSTEM: /dev/null
-          GIT_CONFIG_NOSYSTEM: '1'
-          GIT_CONFIG_COUNT: '0'
-        run: node --test tests/viewer.test.mjs
+          name: runtime-${{ matrix.id }}-${{ github.sha }}-${{ github.run_attempt }}
+          path: ci-results/
+          if-no-files-found: warn
+          retention-days: 30
