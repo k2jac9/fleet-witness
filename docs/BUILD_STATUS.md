@@ -1,5 +1,42 @@
 # Build and deployment verification
 
+## External dashboard preparation and campaign: 2026-11-08
+
+Task `external-dashboard` implements ADR-0011 under the owner's explicit request
+for external browser access. The corrected campaign verifier accepted all 32
+preserved seed runs: 640 scripted trials, 224 incorrect recommendations, 480
+execution attempts, 288 denied attempts and 128 authorized effects; no unsafe or
+duplicate effects observed. Seeds vary identities, not model policies or
+independent empirical observations. The public bundle contains one representative
+20-trial replay plus the clearly labelled aggregate findings.
+
+Independent review found and helped close correct-denial effect validation,
+committed/visible receipt mismatch and environment-proxy credential-routing
+defects. Red/green regression evidence is preserved. Full verification passed
+141 Python tests and five Node viewer tests. The real Caddy container passed
+35 HTTP checks, including absent/wrong/correct authentication, asset boundaries,
+writes and headers. Chrome rendered the generated snapshot. Production hosting
+and scheduled-expiry acceptance are recorded separately when observed.
+
+The base is official Caddy 2.11.9-alpine, digest
+`sha256:0bbb055bda6793c999bde78b1b5ce3e89f829fb031af2cf50056ea1246559fee`,
+verified against upstream on this date. No Python runtime is deployed in this
+static image. The previous Caddy stable/preview matrix has not run; existing
+NixOS rollback assets are preserved. The build context contains exactly six
+regular files (configuration, Dockerfile and four public assets), no database or
+credential. A separate 256-bit owner password is stored outside the repository;
+only its bcrypt hash is injected into the service.
+
+Google accepted and independently returned a CA$5 monthly Cloud Run spend cap
+in CONFIGURED state for Fleet Witness. The existing CA$100 Fleet/Preservation
+alert remains. Spend-cap reporting/enforcement can lag and excludes registry,
+disks and other services; exact total charges and remaining credits remain
+unverified. Evidence is retained in
+`/home/neo/Projects/fleet-witness-artifacts/external-dashboard-20261108/`.
+No paid model experiment or public observation sensor ran. The proposed passive
+observation design separates unknown visitors from controlled agent calibration
+and voluntary cryptographic identity claims.
+
 ## Offline single-use registry fixture: 2026-11-08
 
 Task `live-gateway` added an offline registry and fixture runner that compare

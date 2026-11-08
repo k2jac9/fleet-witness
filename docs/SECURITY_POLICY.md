@@ -145,3 +145,14 @@ Current traces support mechanism demonstrations only. A real-model behavioral
 study, global dashboard, live swarm detection, geolocation map, cross-provider
 attribution, independent attestation, and automated coding fleet remain roadmap
 work requiring design, authorization, implementation, and observed validation.
+
+## Authenticated static publication
+
+ADR-0011 permits the owner-requested managed dashboard independently of worker
+hosting. Public Cloud Run ingress is protected by Caddy Basic authentication over
+HTTPS. No model key, database, worker report, environment file or control API is
+packaged. The separate dashboard credential is random and owner-private; only its
+bcrypt hash is injected at runtime. It is a shared password, not identity-based
+access. Browser credential caching requires rotation or service withdrawal for
+reliable revocation. The initial hosting window is bounded and independently
+scheduled for deletion. No public observation sensor is implied by publication.

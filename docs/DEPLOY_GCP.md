@@ -485,3 +485,42 @@ other uses; never delete the project, inherited policy, or shared resources.
 | Worker times out / output absent | Inspect outer and inner journals/results and limits; collect before the active lifetime or VM stop. Outer active state is not task success. See OPERATIONS. |
 | TLS fails | Check public A/AAAA, static IP, real tracked hostname, Caddy logs, outbound ACME, and matching GCP/guest 80/443 TCP and 443 UDP rules. |
 | Provider API unavailable / budget unknown | No live provider exists in this image. Follow the separate [Adaption proposal](ADAPTION.md); never put provider keys in workers or treat GCP billing as the Adaption ledger. |
+
+## Separate authenticated Cloud Run dashboard (ADR-0011)
+
+This static service is independent of the stopped NixOS worker VM. Prepare a new
+campaign with `python3 -m fleet_witness.campaign --output ABSOLUTE_NEW_DIRECTORY`.
+It preserves all databases/replays outside `public/`; only the four regular files
+in `public/`, plus `deploy/dashboard/{Dockerfile,Caddyfile}`, enter the dedicated
+container build context. Never build this image from the repository root.
+
+The operator injects only a bcrypt dashboard-password hash at runtime; the
+plaintext random password stays in an owner-private file. The Adaption key is
+never part of this service. Platform ingress is public, while Caddy requires
+Basic authentication over managed HTTPS for every asset. There is no Google
+sign-in or multi-user audit. Caddy administration is disabled, UID is 65532,
+service account has no project roles, and no worker/controller API exists.
+
+Deployment settings: `us-central1`, gen1, 1 CPU, 128 MiB, concurrency 1,
+request-based billing, min 0, service and revision max 1, no CPU boost, request
+ timeout 10 seconds. A separate Cloud Tasks OAuth identity deletes the named
+service after the initial 24-hour window; no cleanup permissions go to the
+runtime account. Independently inspect the task and IAM bindings. Deletion is
+asynchronous and must be verified when due. Image/queue/IAM retention is separate.
+
+Before publication, run the full suites and `scripts/check_dashboard.py` locally
+against the exact image, passing the password through `--password-file`. Test
+missing, wrong and correct authentication; all assets; writes; and private paths.
+Repeat against the HTTPS URL after deployment. The checker refuses remote plain
+HTTP and redirects. Keep image digest, source commit, asset manifest, service/IAM
+readbacks, test logs and task identity in the retained evidence packet.
+
+Immediate withdrawal:
+
+```sh
+gcloud run services delete fleet-dashboard --region=us-central1 \
+  --project=fleet-witness-261108-aa0c99 --quiet
+```
+
+This withdraws the dashboard only. The reviewed image and four-file bundle remain
+available for a new bounded deployment. It does not roll back experiment data.

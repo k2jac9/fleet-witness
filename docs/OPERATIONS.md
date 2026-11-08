@@ -110,3 +110,20 @@ It does not resume a historical experiment. Signing keys exist only in memory,
 saved databases are inspection artifacts, and no database resume command exists.
 Generate a new replay into a fresh output for a fresh run. Keep exact commit,
 configuration, status, and collected evidence with an incident report.
+
+## Managed dashboard pilot
+
+The Cloud Run `fleet-dashboard` service serves an immutable scripted campaign
+snapshot. New experiments require a newly reviewed bundle and image; the page is
+not live worker telemetry. Use the separately stored dashboard password and the
+username `owner`. Never paste the Adaption key into its login prompt.
+
+Inspect Cloud Run status, current image digest, service IAM, the `fleet-dashboard`
+Cloud Tasks queue and its pending expiry task before extending the hosting window.
+Do not reset or lift a spend cap merely to keep a page available. Cloud Run gross
+spend limits do not cover retained Compute disks, images, registry or other
+services. Check actual billing separately; enforcement/reporting can lag.
+
+Rotate access by generating a new random password and updating its bcrypt hash in
+the runtime configuration, then verify old credentials fail and new ones work.
+For immediate withdrawal use the exact service deletion command in DEPLOY_GCP.
