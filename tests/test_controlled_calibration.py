@@ -235,7 +235,7 @@ class CalibrationRunnerTests(SyntheticSourceTestCase):
 
     def test_noncanonical_ledger_or_expanded_envelope_refused_before_key(self):
         variants = [('ledger_path', str(self.root / 'other.sqlite3')), ('request_limit', 2),
-                    ('run_cap_usd', '1.000000001'), ('max_output_tokens', 257),
+                    ('run_cap_usd', '15.000000001'), ('max_output_tokens', 257),
                     ('timeout_s', 31), ('purpose', 'confirmatory')]
         initial = copy.deepcopy(self.record)
         for name, value in variants:
@@ -246,6 +246,45 @@ class CalibrationRunnerTests(SyntheticSourceTestCase):
                     with self.assertRaises((ValueError, p.ProviderError)):
                         self.run_request()
         self.assertFalse((self.root / 'result').exists())
+
+    def fifteen_dollar_record(self):
+        canonical = self.root / 'larger-authorized-envelope'
+        substitute = patch.object(p, 'LEDGER_DIR', canonical)
+        substitute.start(); self.addCleanup(substitute.stop)
+        self.ledger = p.Ledger('adaption', 15, 15, run_id='fifteen-dollar-calibration')
+        self.record = authorization(self.ledger, provider='adaption')
+        self.record.update(run_cap_usd='15', provider_cap_usd='15', request_limit=1)
+        self.write_record()
+
+    def test_fifteen_dollar_authorization_reserves_full_envelope_bills_actual_usage(self):
+        self.fifteen_dollar_record()
+        with patch.object(p, '_post', return_value=json.dumps(response()).encode()) as post:
+            try:
+                result = self.run_request()
+            except ValueError:
+                self.fail('the explicitly authorized $15 calibration ceiling is rejected')
+        self.assertEqual(post.call_count, 1)
+        self.assertEqual(result['outcome']['status'], 'succeeded')
+        self.assertEqual(result['ledger']['run']['cap_usd'], 15)
+        self.assertEqual(result['ledger']['run']['held_usd'], 0)
+        self.assertGreater(result['outcome']['cost_usd'], 0)
+        self.assertLess(result['outcome']['cost_usd'], 1)
+        with closing(sqlite3.connect(self.ledger.path)) as c:
+            self.assertEqual(c.execute('SELECT reserved FROM requests').fetchone()[0], 15_000_000_000)
+
+    def test_fifteen_dollar_timeout_keeps_full_hold_and_never_retries(self):
+        self.fifteen_dollar_record()
+        with patch.object(p, '_post', side_effect=TimeoutError('synthetic timeout')) as post:
+            try:
+                result = self.run_request()
+            except ValueError:
+                self.fail('the explicitly authorized $15 calibration ceiling is rejected')
+            second = self.run_request('second-result')
+        self.assertEqual(post.call_count, 1)
+        self.assertEqual(result['outcome']['status'], 'unresolved')
+        self.assertEqual(result['outcome']['held_usd'], 15)
+        self.assertEqual(second['outcome']['provider_attempts'], 0)
+        self.assertEqual(self.ledger.run_reserved, 15)
 
     def test_reusing_authorization_with_new_output_does_not_dispatch_again(self):
         with patch.object(p, '_post', return_value=json.dumps(response()).encode()) as post:

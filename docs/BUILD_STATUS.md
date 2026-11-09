@@ -1,5 +1,23 @@
 # Build and deployment verification
 
+## Calibration ceiling update: 2026-11-09
+
+Task `calibration-budget-15-20261109` extends the existing isolated PR #7 branch
+from `5d40ca8`. The owner explicitly authorized **up to $15 for the calibration
+call when required**, followed by merging green software and trying calibration.
+The code now accepts a chosen run envelope up to $15; smaller authorizations
+remain valid. Existing caps are never rewritten. One request, 256 output tokens,
+30 seconds, no retry, full-envelope reservation and all qualification gates
+remain in force. Tests cover exactly $15, refusal one nanodollar above $15,
+actual-usage settlement and preservation of the full $15 on timeout.
+
+The new boundary tests were observed failing before the change. Fresh full-suite,
+independent-review and hosted evidence for this follow-up are retained in
+`/home/neo/Projects/fleet-witness-artifacts/calibration-budget-15-20261109/`
+and PR #7 checks as they complete. Older one-credit plans and receipts are
+unchanged. A larger budget does not establish live provider or host readiness;
+ADR-0010 still governs dispatch. The separate GCP ceiling remains $100.
+
 ## Controlled calibration integration: 2026-11-09
 
 Task `controlled-live-calibration-20261109`, isolated branch

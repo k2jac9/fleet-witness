@@ -17,12 +17,21 @@ The new trusted-host module `fleet_witness.controlled_calibration` prepares one
 synthetic build-receipt request and retains private `manifest.json` before
 dispatch, then separate `result.json` on completion or recorded provider failure.
 It requires deliberate `--live`, one reviewed source-bound authorization, the
-canonical `~/.fleet_witness/spend-ledger.sqlite3`, one request, at most $1 after
+canonical `~/.fleet_witness/spend-ledger.sqlite3`, one request, at most $15 after
 verified conversion, at most 256 output tokens and a 30-second maximum deadline.
 It reserves the entire authorized calibration envelope. Reusing the same run
 with a new output directory cannot send another request. Existing files, old
 JSON ledgers and unresolved holds are not reset. A different run/authorization
 must not be issued to evade reconciliation of the first.
+
+On 2026-11-09 the owner increased the calibration ceiling from $1 to **up to
+$15 when required**, and authorized merging green code and trying calibration.
+The operator record can choose a smaller envelope; $15 is a ceiling, not a
+target charge. Successful accounting settles reported actual usage, while an
+uncertain attempt retains the full selected reservation. Existing authorizations
+and ledger caps remain immutable. This budget update does not waive ADR-0010's
+provider, account or host qualification requirements. Older one-credit plans
+and fixture receipts remain historical evidence.
 
 This is a transport/schema calibration, not the 320-request paired study. It
 returns data only, never calls the controller, and records `controller_effect`

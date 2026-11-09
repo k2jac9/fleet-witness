@@ -16,7 +16,7 @@ no real key read, no inference sent, and no cloud mutation performed.
 | Provider documentation | Seven public model IDs/rates and full terms/privacy recovered with hashes | All billed reasoning/fees, served revision and applicable handling still unqualified |
 | Controlled contract | Strict proposal validation, fixed synthetic request and private manifests implemented; independent review findings fixed; 252 Python and five viewer tests pass | Final-source compatibility evidence in PR checks/task packet and separate live host acceptance |
 | Host/transport | Local Python 3.15.0/OpenSSL 3.5.8 inventoried; provider transport has offline tests | Latest-stable launch qualification, pinned trust and alternate-chain denial, credential/worker denial and recovery on the actual host |
-| Paid calibration | Already authorized by owner: one request, at most one verified credit, 30 seconds, no retry | Close ADR-0010 facts and host gates, issue reviewed source/account record, then dispatch and reconcile |
+| Paid calibration | Owner increased the ceiling on 2026-11-09: one request, up to $15 when required, 30 seconds, no retry; merge green software and try | Close ADR-0010 facts and host gates, issue reviewed source/account record within the chosen envelope, then dispatch and reconcile |
 
 Detailed public-source findings are retained at
 `/home/neo/Projects/fleet-witness-artifacts/live-calibration-20261109/provider-public/REPORT.md`.

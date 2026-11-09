@@ -41,7 +41,7 @@ def _record(path):
     record = validate_record(next(iter(records.values())))
     canonical_ledger = providers.LEDGER_DIR / 'spend-ledger.sqlite3'
     if (record['provider'] != 'adaption' or record['purpose'] != 'calibration' or
-            record['request_limit'] != 1 or not 0 < units(record['run_cap_usd']) <= units(1) or
+            record['request_limit'] != 1 or not 0 < units(record['run_cap_usd']) <= units(15) or
             record['max_output_tokens'] > 256 or record['timeout_s'] > 30 or
             record['ledger_path'] != str(canonical_ledger)):
         raise ValueError('calibration requires the canonical ledger and bounded one-request envelope')
