@@ -212,7 +212,21 @@ class ModelClient:
     def complete(self, system, user, meta=None):
         return self._attempt(system, user, self.max_output_tokens)
 
-    def _attempt(self, system, user, cap):
+    def recommend(self, facts, presentation):
+        """Closed supervisor contract; returns data, with no controller authority.
+
+        The trusted caller supplies only the visible fact schema. Orchestration,
+        issuer keys and expected answers must stay outside this interface.
+        Invalid proposals retain their accounted usage, never a denial label.
+        """
+        from ..gateway import provider_input
+        visible = provider_input(facts, presentation)
+        if self.provider != 'adaption':
+            raise ProviderError('controlled supervisor supports Adaption only')
+        return self._attempt(visible['instruction'], canonical_json(visible['facts']),
+                             self.max_output_tokens, contract='supervisor-v1')
+
+    def _attempt(self, system, user, cap, *, contract=None):
         started = time.monotonic()
         authorization = validate_authorization(self.authorization, provider=self.provider, model=self.model,
                 ledger=self.ledger, max_output_tokens=cap, timeout=self.timeout)
@@ -220,6 +234,11 @@ class ModelClient:
         request_raw = canonical_json(body).encode()
         input_bound = len(request_raw) + 512
         reserved = self.worst_case_usd(system, user, cap)
+        if (contract == 'supervisor-v1' and authorization['purpose'] == 'calibration'
+                and authorization['request_limit'] == 1):
+            if units(reserved) > units(self.ledger.run_cap):
+                raise BudgetExceeded('calibration request exceeds its full reserved envelope')
+            reserved = self.ledger.run_cap
         key = _env_key('ADAPTION_API_KEY' if self.provider == 'adaption' else 'OPENROUTER_API_KEY')
         if key in system or key in user:
             raise ProviderError('credential material forbidden in model inputs')
@@ -230,6 +249,8 @@ class ModelClient:
                    'held_usd': reserved, 'reserved_usd': reserved,
                    'request_sha256': hashlib.sha256(request_raw).hexdigest(), 'response_sha256': None,
                    'latency_s': 0.0, 'finish_reason': None, 'truncated': False}
+        if contract:
+            attempt.update(response_contract=contract, proposal=None)
         raw, data, liability = None, None, None
         try:
             self.ledger.dispatch(identity)
@@ -257,6 +278,12 @@ class ModelClient:
                 attempt['response_redacted'] = True
                 raise ValueError('credential echo')
             text, tokens_in, tokens_out, finish, truncated = self._outcome(data, cap, input_bound)
+            proposal = None
+            if contract == 'supervisor-v1':
+                self._supervisor_envelope(data)
+                from ..gateway import ProviderReply, _proposal
+                proposal = _proposal(ProviderReply(text, None,
+                                    status='incomplete' if truncated else 'completed'))
             computed = (tokens_in * self.prices[0] + tokens_out * self.prices[1]) / Decimal(1000000)
             actual = max(computed, liability if liability is not None else Decimal(0))
             liability = actual
@@ -266,14 +293,19 @@ class ModelClient:
                 attempt['provider_request_id'] = provider_id
             if units(actual, liability=True) > units(reserved):
                 raise ValueError('usage overrun')
-            attempt.update(status='truncated' if truncated else 'succeeded', held_usd=0.0,
+            status = 'truncated' if truncated else 'succeeded'
+            if contract == 'supervisor-v1':
+                status = 'succeeded' if proposal is not None else 'invalid_output'
+                attempt.update(response_contract=contract, proposal=proposal)
+            attempt.update(status=status, held_usd=0.0,
                            cost_usd=dollars(units(actual)), latency_s=round(time.monotonic() - started, 6))
             self.ledger.settle(identity, actual, status=attempt['status'], receipt=attempt, response_raw=raw)
             return {'text': text, 'input_tokens': tokens_in, 'output_tokens': tokens_out,
                     'cost_usd': attempt['cost_usd'], 'latency_s': attempt['latency_s'],
                     'truncation_retries': 0, 'truncated': truncated, 'final_cap': cap,
                     'attempt_output_tokens': [tokens_out], 'attempts': [attempt],
-                    'provider_attempts': 1, 'held_usd': 0.0, 'status': attempt['status']}
+                    'provider_attempts': 1, 'held_usd': 0.0, 'status': attempt['status'],
+                    **({'response_contract': contract, 'proposal': proposal} if contract else {})}
         except Exception as error:
             if isinstance(error, TransportFailure):
                 raw = error.raw
@@ -293,6 +325,8 @@ class ModelClient:
             attempt.update(status=status, error_code=code, cost_usd=0.0, held_usd=dollars(held),
                            latency_s=round(time.monotonic() - started, 6),
                            response_sha256=hashlib.sha256(raw).hexdigest() if isinstance(raw, bytes) else None)
+            if contract:
+                attempt['proposal'] = None
             try:
                 self.ledger.hold(identity, liability=Decimal(held) / 1000000000, receipt=attempt,
                                  response_raw=raw[:1048577] if isinstance(raw, bytes) else None, status=status)
@@ -302,6 +336,36 @@ class ModelClient:
                 attempt['error_code'] = 'receipt_persistence_failure'
             raise ProviderError('provider attempt unresolved; operator reconciliation required',
                                 attempts=[attempt], status=status) from None
+
+    def _supervisor_envelope(self, data):
+        """Verify identities and a single assistant text message before proposing."""
+        if (data.get('model') != self.model or not isinstance(data.get('id'), str) or
+                not re.fullmatch(r'[A-Za-z0-9_.:-]{1,128}', data['id'])):
+            raise ValueError('supervisor response identity mismatch')
+        if data.get('status') == 'completed' and data.get('incomplete_details') is not None:
+            raise ValueError('contradictory supervisor completion details')
+        output = data.get('output')
+        if not isinstance(output, list) or len(output) != 1:
+            raise ValueError('expected one supervisor message')
+        message = output[0]
+        if (not isinstance(message, dict) or
+                set(message) - {'id', 'type', 'role', 'status', 'content'} or
+                message.get('type') != 'message' or message.get('role') != 'assistant' or
+                message.get('status') not in ('completed', 'incomplete')):
+            raise ValueError('unexpected supervisor message')
+        if data['status'] == 'completed' and message['status'] != 'completed':
+            raise ValueError('inconsistent supervisor completion')
+        message_id = message.get('id')
+        if message_id is not None and (not isinstance(message_id, str) or
+                not re.fullmatch(r'[A-Za-z0-9_.:-]{1,128}', message_id)):
+            raise ValueError('invalid supervisor message identity')
+        parts = message.get('content')
+        if (not isinstance(parts, list) or len(parts) != 1 or not isinstance(parts[0], dict) or
+                set(parts[0]) - {'type', 'text', 'annotations', 'logprobs'} or
+                parts[0].get('type') != 'output_text' or not isinstance(parts[0].get('text'), str)):
+            raise ValueError('unexpected supervisor content')
+        if 'output_text' in data and data['output_text'] != parts[0]['text']:
+            raise ValueError('conflicting supervisor text representations')
 
     def _outcome(self, data, cap, input_bound):
         if data.get('error') is not None:

@@ -1,5 +1,62 @@
 # Build and deployment verification
 
+## Calibration ceiling update: 2026-11-09
+
+Task `calibration-budget-15-20261109` extends the existing isolated PR #7 branch
+from `5d40ca8`. The owner explicitly authorized **up to $15 for the calibration
+call when required**, followed by merging green software and trying calibration.
+The code now accepts a chosen run envelope up to $15; smaller authorizations
+remain valid. Existing caps are never rewritten. One request, 256 output tokens,
+30 seconds, no retry, full-envelope reservation and all qualification gates
+remain in force. Tests cover exactly $15, refusal one nanodollar above $15,
+actual-usage settlement and preservation of the full $15 on timeout.
+
+The new boundary tests were observed failing before the change. Fresh full-suite,
+independent-review and hosted evidence for this follow-up are retained in
+`/home/neo/Projects/fleet-witness-artifacts/calibration-budget-15-20261109/`
+and PR #7 checks as they complete. Older one-credit plans and receipts are
+unchanged. A larger budget does not establish live provider or host readiness;
+ADR-0010 still governs dispatch. The separate GCP ceiling remains $100.
+
+## Controlled calibration integration: 2026-11-09
+
+Task `controlled-live-calibration-20261109`, isolated branch
+`feat/controlled-live-calibration-20261109`, base `b50569e`. Changes are the strict
+supervisor adapter, one-request calibration runner, their regression tests and
+current qualification documentation. Fifteen behavioral tests were observed
+failing before implementation and then passed; review added four more focused
+tests. All **252 Python tests and five viewer tests** passed after the review
+fixes, with inherited unclosed-SQLite ResourceWarnings preserved. Commands:
+`python -m unittest discover -s tests -v` and
+`node --test tests/viewer.test.mjs`, run through the storage wrapper, exit 0.
+New tests use real SQLite and synthetic credentials with mocked HTTPS;
+no paid inference is represented by these results. CLI help and `git diff --check`
+passed. The [independent review](reviews/controlled-calibration-review.md) at
+`ebedd47` found contradictory response-envelope acceptance and a missing parent
+directory flush. Both are fixed with retained RED/GREEN tests; malformed message
+ID validation was included in the strict-envelope fix. The initial candidate
+passed all 11 hosted runtime lanes in run `42570514956`; follow-up source results
+are retained separately in the task packet and PR checks. These checks do not
+qualify the live host or provider.
+
+Evidence packet:
+`/home/neo/Projects/fleet-witness-artifacts/live-calibration-20261109/`.
+It retains red/green logs, public provider documents and hashes, the current
+owner-supplied 1,500-credit/$1-per-credit/no-expiry statement, and a host inventory
+without key contents. The protected key exists; the default canonical ledger
+directory does not. No account liability was cleared or migrated. Public terms
+were fully recovered, but all-billed-token bounds and applicable handling remain
+unverified. Local host runtime is Python 3.15.0/OpenSSL 3.5.8, not a newly accepted
+latest-stable live runtime. No host/cloud acceptance, real authorization, paid
+calibration, billing reconciliation or public-web observation has been executed.
+
+For the prior integration, PR #6 merged at
+`b50569e4ae56c6958f5b7f2ceebc9f70e310f246`. Hosted run `42568607211` passed all
+11 pinned Python/Node runtime lanes plus selection. Its tested merge tree
+`46a58d5dcf3160e43b4d1b1b9d57a9d4b8023389` equals merged main's tree; the
+stabilization packet retains all lane artifacts and tree-identity evidence.
+That closes the historical CI gate below, not qualification of the new code.
+
 ## Swarm stabilization: 2026-11-09
 
 The independent review at `8c0c790` found shared request-count, Git-free fixture,

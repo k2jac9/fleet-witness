@@ -1,7 +1,71 @@
 # Controlled pilot foundation
 
-Current continuation: ADR-0010 is accepted, GCP boot and all four offline workers
-have been exercised, and the separate authenticated dashboard is deployed.
+## Controlled calibration candidate: 2026-11-09
+
+`ModelClient.recommend(facts, presentation)` connects the existing provider
+boundary to the closed supervisor contract. It copies only the six approved
+fact fields, keeps paired facts identical, and varies only the instruction.
+Adaption responses must name the selected model and a bounded response ID and
+contain one assistant text message. A proposal has exactly `recommendation`
+(`approve` or `deny`) and a nonempty reason of at most 2,048 characters.
+Unknown keys, malformed JSON and incomplete answers are invalid outcomes.
+Validly reported usage for invalid proposals is still accounted; uncertain
+provider envelopes retain holds. The proposal, contract, raw response and usage
+are committed with the accounting receipt, not reconstructed as a denial.
+
+The new trusted-host module `fleet_witness.controlled_calibration` prepares one
+synthetic build-receipt request and retains private `manifest.json` before
+dispatch, then separate `result.json` on completion or recorded provider failure.
+It requires deliberate `--live`, one reviewed source-bound authorization, the
+canonical `~/.fleet_witness/spend-ledger.sqlite3`, one request, at most $15 after
+verified conversion, at most 256 output tokens and a 30-second maximum deadline.
+It reserves the entire authorized calibration envelope. Reusing the same run
+with a new output directory cannot send another request. Existing files, old
+JSON ledgers and unresolved holds are not reset. A different run/authorization
+must not be issued to evade reconciliation of the first.
+
+On 2026-11-09 the owner increased the calibration ceiling from $1 to **up to
+$15 when required**, and authorized merging green code and trying calibration.
+The operator record can choose a smaller envelope; $15 is a ceiling, not a
+target charge. Successful accounting settles reported actual usage, while an
+uncertain attempt retains the full selected reservation. Existing authorizations
+and ledger caps remain immutable. This budget update does not waive ADR-0010's
+provider, account or host qualification requirements. Older one-credit plans
+and fixture receipts remain historical evidence.
+
+This is a transport/schema calibration, not the 320-request paired study. It
+returns data only, never calls the controller, and records `controller_effect`
+as null rather than an unobserved safety result. `controlled-calibration-v1`
+is a private receipt format, not a viewer replay. Existing scripted/fake modes
+remain unchanged. All new executed tests use synthetic keys and mocked HTTPS.
+
+Help is inert:
+
+```sh
+python -m fleet_witness.controlled_calibration --help
+```
+
+**Live activation remains on hold.** No real authorization was issued or paid
+request sent by this integration. The owner supplied current account text:
+1,500 credits, 1 credit = $1, credits never expire. Public model prices and full
+terms/privacy were retrieved. Complete reasoning/fee bounds, inference charge
+reconciliation, applicable model handling, and actual host/TLS/worker acceptance
+remain open. Qualification flags are operator assertions, not independent proof;
+do not set them to true merely to run the command. See [GATES](GATES.md).
+
+Before issuing a record, bind account identity, source, runtime and trust
+material to the reviewed evidence, verify the host's credential and egress
+boundary, and reconcile applicable prior usage. The current transport has
+offline regressions; its default TLS context is not the qualified pinned trust
+boundary required by the live-gateway design. No actual-key connection is made
+until that separate requirement closes. The single calibration must be matched
+to actual account billing before any confirmatory authorization is issued.
+
+## Historical offline foundation
+
+ADR-0010 was accepted, GCP boot and all four offline workers were exercised,
+and the separate authenticated dashboard was deployed in the earlier work.
+Those receipts do not verify today's service lifetime or new gateway host.
 The following sections describe the original fake gateway. The later
 `live_gateway` and `calibration_registry` modules are also explicitly offline
 fixtures; their names do not establish a production provider integration.

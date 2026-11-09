@@ -1,12 +1,39 @@
 # Current acceptance gates
 
-## Current checkpoint: 2026-11-09
+## Current controlled calibration checkpoint: 2026-11-09
+
+Task `controlled-live-calibration-20261109` adds a strict supervisor interface
+and bounded trusted-host calibration entrypoint. Nineteen focused mocked-transport
+tests pass, including review regressions after observed failures; full-suite and independent-review evidence
+is recorded in [BUILD_STATUS](BUILD_STATUS.md). No live authorization was issued,
+no real key read, no inference sent, and no cloud mutation performed.
+
+| Gate | Fresh evidence | Remaining work |
+| --- | --- | --- |
+| Owner credit statement | Current account text supplied: 1,500 Adaption credits, $1 per credit, no expiry | Preserve as owner-supplied account evidence; actual inference charges still need reconciliation |
+| Key placement | Existing key is an owner-owned, 0600, regular singly linked file; contents not read | Qualify the actual credential-loading and host isolation path |
+| Canonical accounting | Default `~/.fleet_witness` directory is absent; no local legacy ledger there to migrate | Do not infer zero account liability or attribute collaborator data to this key; reconcile applicable historical usage |
+| Provider documentation | Seven public model IDs/rates and full terms/privacy recovered with hashes | All billed reasoning/fees, served revision and applicable handling still unqualified |
+| Controlled contract | Strict proposal validation, fixed synthetic request and private manifests implemented; independent review findings fixed; 252 Python and five viewer tests pass | Final-source compatibility evidence in PR checks/task packet and separate live host acceptance |
+| Host/transport | Local Python 3.15.0/OpenSSL 3.5.8 inventoried; provider transport has offline tests | Latest-stable launch qualification, pinned trust and alternate-chain denial, credential/worker denial and recovery on the actual host |
+| Paid calibration | Owner increased the ceiling on 2026-11-09: one request, up to $15 when required, 30 seconds, no retry; merge green software and try | Close ADR-0010 facts and host gates, issue reviewed source/account record within the chosen envelope, then dispatch and reconcile |
+
+Detailed public-source findings are retained at
+`/home/neo/Projects/fleet-witness-artifacts/live-calibration-20261109/provider-public/REPORT.md`.
+Owner account evidence and secret-free host inventory are alongside that report.
+No new approval of the same budget is required; unresolved facts remain facts
+to verify. The $100 GCP ceiling is separate. Public-web observation and a new
+live dashboard deployment remain outside this calibration.
+
+## Stabilization checkpoint: 2026-11-09 (integrated)
 
 The reviewed swarm stabilization fixes at `519c3aa` pass 233 local Python tests,
 the full Git-free offline launcher (233 Python/five viewer tests and demo), and
 archive reconstruction with the depth-six checker and mutants. The independent
-review and tested integrator resolution are retained; exact final-source hosted
-CI remains a merge gate in PR #6. See [BUILD_STATUS.md](BUILD_STATUS.md).
+review and tested integrator resolution are retained. PR #6 was merged at
+`b50569e`; all 11 hosted runtime lanes passed on an identical source tree.
+See [BUILD_STATUS.md](BUILD_STATUS.md). That evidence applies to the base, not
+automatically to this subsequent calibration change.
 
 The new shared SQLite provider ledger and single-attempt transport have offline
 security regressions, not live qualification. Production CLI entrypoints require
