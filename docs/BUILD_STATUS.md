@@ -1,3 +1,56 @@
+# Submission finalization — November 9, 2026
+
+Task `submission-finalization-20261109`, based on
+`2ce59d34f92516cfb6666b891a4b35da2b46c9ba` (merged PR #14). The containing commit
+identifies this revision. The public package gains a read-only standard-library
+verifier, a PNG cover and an actual scripted viewer screenshot. A separate
+180-second captioned MP4 walks through actual viewer states and the recorded
+pilot result. README navigation links these assets; the viewer footer now lists
+both human authors.
+
+Observed local acceptance:
+
+- Eight new mutation tests failed before verifier implementation, then passed.
+  The initial qualified Python 3.15.2 suite passed **317 tests**; retained Node
+  26.11.1 passes **five viewer tests**. Pre-existing SQLite ResourceWarnings remain.
+- The verifier passes against the repository ZIP and from its extracted standalone
+  copy: **17 explicit members**, balanced 160-trial / 80-pair cohort and all frozen
+  totals. The ZIP is below 1 MB. It checks consistency, not private provider
+  execution or visual PDF layout. Every Python CI lane now invokes it.
+- PNGs and all 16 video scenes were visually inspected. FFprobe reports exactly
+  **180 seconds**, H.264, 1600 × 900, 25 fps, 2,506,489 bytes; full decoding passes.
+  The video is an edited sequence held for reading, with captions and no audio.
+  Command/result cards are editorial summaries, not a raw terminal recording.
+- The seed-42 scripted demo, fleet validation and planner pass. The report source,
+  HTML, PDF and bibliography remain byte-identical to the base. The PDF remains
+  eight pages (six main pages), with a 218-word abstract.
+- Local Markdown audit: 80 files, 340 links, no unresolved target. Twenty-two
+  protected evidence files and five historical guide bodies remain unchanged.
+  `git diff --check` passes.
+
+Logs, mutation failures, capture attempts, action/request records, authoring scripts,
+video checks and source identities are retained in the sibling
+`submission-finalization-20261109` artifact packet. A first capture failed because
+loopback was included in a DNS block rule; a stale debugging-port retry also
+failed. Fresh isolated profiles and a loopback-only exception resolved capture;
+all recorded page requests were local or data URLs. Failed evidence is preserved.
+
+Independent review found three verifier gaps, reproduced by three additional
+regression tests: changed frozen data/interpretation labels, NUL-suffixed ZIP
+names and decompressor exceptions escaping the sanitized error boundary. The
+owner fixed them in one pass; all eleven verifier tests pass. The reviewed full
+suite passes **320 Python tests**, and all five viewer tests, standalone/repository
+checks and full video decoding pass again. The final hosted matrix is recorded
+with exact identities in the packet.
+
+Independent review and final-source hosted CI are separate gates; the final
+identities and results are recorded in the artifact packet and pull request.
+No new paid inference, cloud mutation, public observation or event submission
+was performed. Required contact details and first/replacement status remain
+unresolved outside Git. A prepared package is not event confirmation.
+
+---
+
 # Repository editorial pass — November 9, 2026
 
 Task `editorial-polish-20261109`, based on

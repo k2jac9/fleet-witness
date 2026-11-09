@@ -1,6 +1,6 @@
 # Team submission preparation
 
-**Latest package:** [PDF](report/latest.pdf), [editable report](report/latest.md), [ZIP](submission/latest-submission.zip), [form copy](submission/latest/SUBMISSION.md), [evidence guide](submission/latest/EVIDENCE.md), [demo script](submission/latest/DEMO.md).
+**Latest package:** [PDF](report/latest.pdf), [editable report](report/latest.md), [ZIP](submission/latest-submission.zip), [form copy](submission/latest/SUBMISSION.md), [evidence guide](submission/latest/EVIDENCE.md), [three-minute walkthrough](submission/media/fleet-witness-demo.mp4), [PNG cover](assets/fleet-witness-cover.png).
 
 Authors: Alejandro Castellanos (Independent researcher) and Ignatius Pio Binawan (University of Toronto). The new report retains the existing manuscript's exact title and author order. [Contributions and AI assistance](AI_ASSISTANCE.md) distinguish the baseline, institutional study and new controlled pilot.
 
@@ -23,4 +23,4 @@ These findings do not establish improved useful model judgment, live swarm detec
 
 ## Remaining external step
 
-Review the PDF, enter personal details in the official form, upload the report and retain the confirmation privately. No upload, registration, credit claim or event submission is performed by this publication task. The optional video script is supplied; a video has not been recorded.
+Review the PDF, enter personal details in the official form, upload the report and retain the confirmation privately. No upload, registration, credit claim or event submission is performed by this publication task. The captioned walkthrough, separate WebVTT captions and PNG project image are ready. Personal contacts and whether this is a first or replacement entry still need confirmation; those details stay outside Git.
