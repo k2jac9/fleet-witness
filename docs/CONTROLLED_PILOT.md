@@ -1,3 +1,30 @@
+# Azure opaque metadata compatibility — November 9, 2026
+
+The first exploratory cohort at `92754a9` stopped after one response carried
+`reasoning.encrypted` metadata despite `reasoning.exclude=true`. It recorded no
+decision or effect and left 159 calls unstarted. The response/generation/key
+charge agrees at $0.0016104, including 287 input and 89 combined output tokens
+(28 reasoning). The original failure is retained; accounting reconciliation
+cannot resume it or turn its unaccepted proposal into a scored decision.
+
+[OpenRouter documentation](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens)
+defines the encrypted reasoning-details shape and Azure format. This adapter
+accepts one bounded opaque object only for the qualified Azure route and model,
+with exact keys/type/format, an rs_ identifier, zero integer index and up to
+32 KiB of restricted-character data. It never decodes, interprets, replays or
+puts those bytes into a proposal. Plaintext reasoning, summaries, unqualified
+formats, unknown fields and invalid usage still fail. Raw bytes remain only in
+private response evidence. The exclusion setting is a request, not proof that
+no opaque metadata returned; no extra retention guarantee is asserted.
+
+A separately reviewed operator reconciliation may link a failed receipt to
+verified charge evidence through an atomic `operator_charge_reconciled` audit.
+Recovery retains the original failed receipt and reports the reconciled settled
+amount separately. Missing/mismatched audit links are refused. There is no
+automatic hold release or retry. Prior run and source evidence remain unchanged.
+
+---
+
 # Controlled exploratory paired pilot
 
 The opt-in pilot collects **160 supervisor calls / 80 paired trajectories** from
