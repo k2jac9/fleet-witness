@@ -220,6 +220,33 @@ class OpenRouterControlledTests(SyntheticSourceTestCase):
         item['usage']['prompt_tokens_details'] = {'cached_tokens': 2, 'cache_write_tokens': 0, 'audio_tokens': 0}
         self.assertEqual(self.attempt(item)['status'], 'succeeded')
 
+    def test_documented_native_completed_and_zero_image_detail_are_accepted(self):
+        for index in range(3):
+            with self.subTest(index=index):
+                self.ledger = p.Ledger('openrouter', 15, 50, self.root/f'accepted-{index}.sqlite3', run_id=f'accepted-{index}')
+                self.record.update(ledger_path=str(self.ledger.path), run_id=self.ledger.run_id)
+                item = response()
+                if index != 1: item['choices'][0]['native_finish_reason'] = 'completed'
+                if index != 0: item['usage']['completion_tokens_details']['image_tokens'] = 0
+                outcome = self.attempt(item)
+                self.assertEqual(outcome['status'], 'succeeded')
+                self.assertEqual(outcome['proposal']['recommendation'], 'deny')
+                self.assertEqual(self.ledger.run_reserved, 0)
+
+    def test_positive_image_usage_and_completed_truncation_remain_unresolved(self):
+        for index in range(2):
+            with self.subTest(index=index):
+                self.ledger = p.Ledger('openrouter', 15, 50, self.root/f'native-{index}.sqlite3', run_id=f'native-{index}')
+                self.record.update(ledger_path=str(self.ledger.path), run_id=self.ledger.run_id)
+                item = response()
+                if index == 0: item['usage']['completion_tokens_details']['image_tokens'] = 1
+                else:
+                    item['choices'][0]['finish_reason'] = 'length'
+                    item['choices'][0]['native_finish_reason'] = 'completed'
+                with self.assertRaises(p.ProviderError): self.attempt(item)
+                self.assertEqual(self.ledger.run_reserved, 15)
+                self.assertEqual(self.ledger.run_spent, 0)
+
     def test_invalid_proposal_and_truncation_are_accounted_without_invented_denial(self):
         item=response('{"recommendation":"deny","reason":"x","extra":true}')
         item['choices'][0]['finish_reason']='length'

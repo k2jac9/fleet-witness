@@ -1,5 +1,42 @@
 # Build and deployment verification
 
+## First real calibration and schema correction: 2026-11-09
+
+PR #8 merged as `b4330b3f8ee72b553599c32916e870233e93259c`. The
+reviewed `5f2e096`, hosted CI merge `e950a0c` and integrated source have identical
+tree `6bd13ca1aa62727505ab0909d840399e3a4a081e`. Independent review passed
+277 Python tests, five viewer tests and sixteen additional probes. Hosted run
+`42578898087` passed all eleven runtime lanes plus freshness selection; all lane
+artifacts are retained. The Git-free offline launcher completed its scripted demo.
+
+One authorized synthetic request then reached GPT-6.1 Sol through Azure US.
+It returned in approximately 2.47 seconds with 298 prompt and 76 completion
+tokens and a JSON denial. The gateway rejected the envelope: native status
+`completed` accompanies normalized `stop`, and the documented usage schema
+includes `image_tokens: 0`. It retained the entire $15 reservation and did not
+retry. The original unresolved result, raw response and authority are preserved.
+
+The original response charge, generation lookup and original key usage delta
+agree on **$0.0014916**, leaving **$49.9985084** of the sponsored key allowance.
+Conservative ledger accounting at reviewed rates is $0.0016555. The generation
+lookup uses the previously reviewed canonical model revision. It also reports
+`streamed=true` despite the nonstreaming request/complete JSON response, and a
+zero upstream-cost field differing from the response; those metadata semantics
+remain unexplained. Customer total cost and key usage agree. Accounting-only
+reconciliation is separate from accepting the calibration as successful.
+
+Task `openrouter-live-schema-20261109` corrects only these documented response
+shapes: `completed` is permitted alongside `stop`, and image-token detail is
+permitted only at zero. Positive image usage and contradictory statuses still
+halt. Three independent acceptance cases failed before the fix. Replaying the
+retained response offline validates its denial; that does not rewrite the failed
+live result or constitute another experiment. No controller effect occurred.
+Follow-up review, final CI and ledger reconciliation evidence are retained in
+the packet below as they complete. No second paid request is authorized by this
+correction. GCP and Adaption credits were untouched by this task.
+
+Evidence: `/home/neo/Projects/fleet-witness-artifacts/openrouter-calibration-20261109/`.
+
 ## Controlled OpenRouter implementation candidate: 2026-11-09
 
 Task `openrouter-calibration-20261109`, base `14f3b399`, isolated branch

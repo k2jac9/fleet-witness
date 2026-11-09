@@ -16,6 +16,9 @@ fallbacks/tools/streaming/storage, requests data-collection denial and ZDR
 routing, and requires strict JSON output. Unknown identities, tool content,
 unqualified BYOK or invalid/missing reported cost retain the reservation.
 An exhausted token budget with no visible text is an accounted invalid proposal.
+OpenRouter's normalized `stop` may carry Azure's native `completed` status.
+The documented `image_tokens` completion detail is accepted only when zero;
+positive nontext usage and contradictory completion states remain invalid.
 The request also caps provider input/output prices at the reviewed rates and
 per-request fees at zero. The initial authorization identity is retained;
 valid-looking configuration changes after client construction are refused before
