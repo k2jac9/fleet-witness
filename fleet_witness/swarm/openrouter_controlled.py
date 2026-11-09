@@ -89,7 +89,10 @@ def validate_envelope(data, record):
             choice.get('finish_reason') not in ('stop', 'length') or choice.get('logprobs') is not None):
         raise ValueError('invalid controlled choice envelope')
     native = choice.get('native_finish_reason')
-    if native is not None and native != choice['finish_reason']:
+    # OpenRouter normalizes finish_reason; Azure may retain its native
+    # Responses status "completed" alongside normalized "stop".
+    accepted_native = {'stop': {'stop', 'completed'}, 'length': {'length'}}
+    if native is not None and native not in accepted_native[choice['finish_reason']]:
         raise ValueError('contradictory native completion status')
     message = choice.get('message')
     if (not isinstance(message, dict) or set(message) - {'role', 'content', 'refusal', 'reasoning',
@@ -130,7 +133,7 @@ def validate_envelope(data, record):
     for field, total_field, billable, zero_only in (
             ('prompt_tokens_details', 'prompt_tokens', {'cached_tokens', 'cache_write_tokens'}, {'audio_tokens', 'video_tokens'}),
             ('completion_tokens_details', 'completion_tokens', {'reasoning_tokens'},
-             {'audio_tokens', 'accepted_prediction_tokens', 'rejected_prediction_tokens'})):
+             {'audio_tokens', 'image_tokens', 'accepted_prediction_tokens', 'rejected_prediction_tokens'})):
         details = usage.get(field)
         if details is None:
             continue
