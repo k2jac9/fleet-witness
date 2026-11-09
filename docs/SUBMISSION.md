@@ -1,31 +1,26 @@
 # Team submission preparation
 
-Human team: Alejandro Castellanos (`k2jac9`, repository owner) and `IPBin` (teammate). Project: Fleet Witness. Proposed anchor: Multi-Agent Oversight and Control, with a testbed/infrastructure contribution.
+**Latest package:** [PDF](report/latest.pdf), [editable report](report/latest.md), [ZIP](submission/latest-submission.zip), [form copy](submission/latest/SUBMISSION.md), [evidence guide](submission/latest/EVIDENCE.md), [demo script](submission/latest/DEMO.md).
 
-## Official requirements checked 2026-11-08
+Authors: Alejandro Castellanos (Independent researcher) and Ignatius Pio Binawan (University of Toronto). The new report retains the existing manuscript's exact title and author order. [Contributions and AI assistance](AI_ASSISTANCE.md) distinguish the baseline, institutional study and new controlled pilot.
 
-The [official event guidelines](https://apartresearch.com/sprints/swarm-alignment-2026#guidelines) allow teams of one to five people and AI assistance, with the human entrants responsible for the report. They require a PDF in the official template, at most eight pages before references and appendices, a 150–250-word abstract, author names and affiliations, and a Limitations and Dual-Use / Ethical Considerations appendix. A public repository and a three-to-five-minute video are optional.
+## Official requirements checked 2026-11-09
 
-The deadline shown is November 8, 2026 at 23:59 Anywhere on Earth, which is November 9 at 11:59 UTC / 06:59 Toronto time. Recheck the official page before submitting. Use its current template link; the template itself has not been inspected here.
+The [official guidelines](https://apartresearch.com/sprints/swarm-alignment-2026#guidelines) require a PDF using the official template, at most eight main pages excluding references and appendices, a 150–250-word abstract, author names/affiliations and a Limitations and Dual-Use / Ethical Considerations appendix. The inspected [official template](https://docs.google.com/document/d/1_1_27EyZriMlc8n8EBE2YScaeyMjm-8xjR097nmHXAE/edit) permits adapting its section structure; the new report follows its research-paper structure and adds the required event appendix. The PDF upload limit is 25 MB. A public repository and three-to-five-minute video are optional.
 
-Only work completed during the sprint is judged. Identify prior work in the README and report. See [AI assistance and provenance](AI_ASSISTANCE.md).
+The deadline is **9 November 2026, 11:59 UTC / 06:59 Toronto EST**, corresponding to 8 November at 23:59 Anywhere on Earth. For a replacement submission, retain the exact same title and upload before the deadline. The event's confirmation email or receipt establishes submission.
 
-## What this initial build can support
+Only sprint work is judged; earlier conceptual work and imported contributions are identified in the README and AI disclosure. Proposed track: Multi-Agent Oversight and Control. The package contains copy-ready public metadata; personal registration and contact details remain outside the repository.
 
-- A reproducible mechanism demonstration with synthetic scenarios.
-- Controller boundary tests, including genuine-but-insufficient evidence, revocation, and duplicate execution.
-- Replayable decision and effect traces with explicit limitations.
+## What the new report supports
 
-This baseline cannot support a claim that a real model became safer, that a live swarm was detected, or that a compromised operating-system process was contained. Those need additional experiments. Separate actual test observations from hypotheses and future work in the report.
+- A finite implementation-to-specification comparison and mutation checks for the institution kernel.
+- A corrected historical comparison of majority/committee rules over retained shared model outputs, with incomplete original provider provenance.
+- A separately accounted 160-request live-supervisor pilot with synthetic worker/reviewer evidence: 18 invalid raw approvals, blanket denial under explicit presentation, and no invalid or revoked local effect.
+- Offline reproduction and aggregate checks using a public derived trial table.
 
-## Remaining submission work
+These findings do not establish improved useful model judgment, live swarm detection, production containment or an unbounded verification proof. Historical logical responses are not a provider-attempt count. The original [REPORT.pdf](report/REPORT.pdf) remains unchanged as an archive; `latest.pdf` is the new submission candidate.
 
-- Confirm IPBin's preferred author name and both members' affiliations and contributions. Include both teammates in the submission's team details; confirm the final author list and order together. Keep personal registration/contact details outside the public repository.
+## Remaining external step
 
-- Choose and prerecord a precise research question and comparison.
-- Add live-model trials only after verifying access, defining a personal budget, and retaining the same controller boundary.
-- Record model/prompt versions, seeds, failures, trial counts, and variance.
-- Draft the report in the official template with honest limitations and dual-use analysis.
-- Review the final artifact and submit through the official form. Repository creation is not hackathon submission.
-
-No registration, credit claim, or submission has been made by this repository's setup.
+Review the PDF, enter personal details in the official form, upload the report and retain the confirmation privately. No upload, registration, credit claim or event submission is performed by this publication task. The optional video script is supplied; a video has not been recorded.

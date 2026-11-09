@@ -1,0 +1,77 @@
+{
+  "schema": "fleet-witness-reference-check-v1",
+  "references": [
+    {
+      "number": 1,
+      "author_year": "Hammond, L., et al. (2025).",
+      "title": "Multi-Agent Risks from Advanced AI.",
+      "primary_url": "https://arxiv.org/abs/2502.14143",
+      "verified_at": "2026-11-09",
+      "verification": "Primary record title, author attribution, year and relevant abstract or technical description checked. Not a claim that every full text or empirical finding was independently reproduced."
+    },
+    {
+      "number": 2,
+      "author_year": "Motwani, S. R., et al. (2024).",
+      "title": "Secret Collusion among AI Agents: Multi-Agent Deception via Steganography.",
+      "primary_url": "https://proceedings.neurips.cc/paper_files/paper/2024/hash/861f7dad098aec1c3560fb7add468d41-Abstract-Conference.html",
+      "verified_at": "2026-11-09",
+      "verification": "Primary record title, author attribution, year and relevant abstract or technical description checked. Not a claim that every full text or empirical finding was independently reproduced."
+    },
+    {
+      "number": 3,
+      "author_year": "Greenblatt, R., Shlegeris, B., Sachan, K., and Roger, F. (2023).",
+      "title": "AI Control: Improving Safety Despite Intentional Subversion.",
+      "primary_url": "https://arxiv.org/abs/2312.06942",
+      "verified_at": "2026-11-09",
+      "verification": "Primary record title, author attribution, year and relevant abstract or technical description checked. Not a claim that every full text or empirical finding was independently reproduced."
+    },
+    {
+      "number": 4,
+      "author_year": "Ruan, A. (2026).",
+      "title": "From Logic Monopoly to Social Contract: Separation of Power and the Institutional Foundations for Autonomous Agent Economies.",
+      "primary_url": "https://arxiv.org/abs/2603.25100",
+      "verified_at": "2026-11-09",
+      "verification": "Primary record title, author attribution, year and relevant abstract or technical description checked. Not a claim that every full text or empirical finding was independently reproduced."
+    },
+    {
+      "number": 5,
+      "author_year": "Zheng, S., and Zhang, Q. (2026).",
+      "title": "AgentRFC: Security Design Principles and Conformance Testing for Agent Protocols.",
+      "primary_url": "https://arxiv.org/abs/2603.23801",
+      "verified_at": "2026-11-09",
+      "verification": "Primary record title, author attribution, year and relevant abstract or technical description checked. Not a claim that every full text or empirical finding was independently reproduced."
+    },
+    {
+      "number": 6,
+      "author_year": "Muruaga, X. (2026).",
+      "title": "Bounded Agents: Delegation Security for Multi-Agent AI Systems.",
+      "primary_url": "https://arxiv.org/abs/2608.15888",
+      "verified_at": "2026-11-09",
+      "verification": "Primary record title, author attribution, year and relevant abstract or technical description checked. Not a claim that every full text or empirical finding was independently reproduced."
+    },
+    {
+      "number": 7,
+      "author_year": "Lamport, L., Shostak, R., and Pease, M. (1982).",
+      "title": "The Byzantine Generals Problem.",
+      "primary_url": "https://www.microsoft.com/en-us/research/uploads/prod/2016/12/The-Byzantine-Generals-Problem.pdf",
+      "verified_at": "2026-11-09",
+      "verification": "Primary record title, author attribution, year and relevant abstract or technical description checked. Not a claim that every full text or empirical finding was independently reproduced."
+    },
+    {
+      "number": 8,
+      "author_year": "Knight, J., and Leveson, N. (1985).",
+      "title": "An Experimental Evaluation of the Assumption of Independence in Multi-Version Programming.",
+      "primary_url": "https://doi.org/10.18130/V3P499",
+      "verified_at": "2026-11-09",
+      "verification": "Primary record title, author attribution, year and relevant abstract or technical description checked. Not a claim that every full text or empirical finding was independently reproduced."
+    },
+    {
+      "number": 9,
+      "author_year": "SQLite.",
+      "title": "Atomic Commit in SQLite.",
+      "primary_url": "https://sqlite.org/atomiccommit.html",
+      "verified_at": "2026-11-09",
+      "verification": "Primary record title, author attribution, year and relevant abstract or technical description checked. Not a claim that every full text or empirical finding was independently reproduced."
+    }
+  ]
+}

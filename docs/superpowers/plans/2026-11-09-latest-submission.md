@@ -38,21 +38,31 @@ this plan and its spec. Task receipts only in the sibling latest-submission-2026
 
 ### Task 1: Publication evidence and report
 
-- [ ] Verify primary reference metadata and narrow unsupported novelty claims.
-- [ ] Add failing export regressions for unknown nested sensitive fields and mismatched/incomplete evidence; implement explicit allowlists.
-- [ ] Write latest.md with separate historical and new-pilot evidence; preserve old report hashes.
-- [ ] Render and inspect all PDF pages after storage admission; enforce page and abstract limits.
+- [x] Verify primary reference metadata and narrow unsupported novelty claims.
+- [x] Add failing export regressions for unknown nested sensitive fields and mismatched/incomplete evidence; implement explicit allowlists.
+- [x] Write latest.md with separate historical and new-pilot evidence; preserve old report hashes.
+- [x] Render and inspect all PDF pages after storage admission; enforce page and abstract limits.
 
 ### Task 2: README and submission package
 
-- [ ] Write original static SVG artwork and semantic README links, claims, setup and limitations.
-- [ ] Build the package from an explicit member list, with portable evidence, metadata and checksums.
-- [ ] Align current submission/author notes and add an observed build-status entry.
-- [ ] Inspect README preview at desktop and narrow widths; verify local links and SVG safety.
+- [x] Write original static SVG artwork and semantic README links, claims, setup and limitations.
+- [x] Build the package from an explicit member list, with portable evidence, metadata and checksums.
+- [x] Align current submission/author notes and add an observed build-status entry.
+- [x] Inspect README preview at desktop and narrow widths; verify local links and SVG safety.
 
 ### Task 3: Verify and integrate
 
-- [ ] Run full Python/viewer suites and publication checks; retain commands/results and failures.
+- [x] Run full Python/viewer suites and publication checks; retain commands/results and failures.
 - [ ] Independent whole-branch evidence/code/visual review; root fixes material findings with behavioral regressions where applicable.
 - [ ] Run exact-source hosted CI, retain identities, merge green PR and fast-forward clean main.
 - [ ] Deliver latest.pdf, ZIP and current README links with explicit remaining submission steps.
+
+## Execution ledger
+
+- Ruling: publish only trial scalars and aggregate outcomes; omit free-text prompts, reasons and provider envelopes. This reduces accidental private-data exposure; the public table supports recomputation, not full private trace replay.
+- Ruling: reuse the existing Markdown renderer and installed Chromium rather than install a new PDF dependency. Preserve a standalone editable Markdown/HTML/figure set.
+- Ruling: retain the existing title and author order; use the owner-confirmed Independent researcher affiliation. Historical manuscripts remain byte-identical.
+- Ruling: link the historical reproduction receipt rather than package its workstation path. Keep the original receipt unchanged in the repository.
+- Evidence: public-export module missing (RED), canonical receipt fixture corrected, export tests GREEN; package module missing (RED), symlink/traversal checks GREEN; existing historical receipt path disclosure (RED), linked receipt plus package input regression GREEN.
+- Local verification: 308 Python tests; five viewer checks; all eight PDF pages visually reviewed; six main pages; 218-word abstract; 14 package members verified and extracted aggregate commands executed. Full receipts are in the sibling latest-submission-20261109 artifact directory.
+- Pending: fresh whole-branch review and exact-source hosted CI/integration. No paid calls or external form submission belong to this publication task.

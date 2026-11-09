@@ -1,3 +1,56 @@
+# Latest report and submission package — November 9, 2026
+
+Task `latest-submission-20261109`, based on `ee7c17e6f8b50684084caf6f6900c577801351c5`.
+The containing Git commit identifies the publication source. The new `latest`
+manuscript has six main pages plus one references page and one appendix page,
+a 218-word abstract, the original title/author order, Alejandro's confirmed
+Independent researcher affiliation and the required ethics appendix. The
+original REPORT.md/HTML/PDF and historical archive remain unchanged.
+
+The README adds original static SVG mission-control art, a scripted local launch
+path and distinct historical/new-pilot results. The public derived dataset
+contains all 160 trial rows without free-text responses, credentials, transport
+profiles or provider/account envelopes. The explicit 14-member ZIP includes the
+PDF, editable source/HTML/figure, bibliography/provenance, abstract, public trial
+table, submission text, reproduction guide, demo script, license and checksums.
+The historical reproduction receipt is linked rather than copied because it
+contains a workstation-local path.
+
+Observed local checks:
+
+- `python -m unittest discover -s tests -v`: **308 passed**, Python 3.15.2 using
+  the retained qualified runtime command. Full logs retain pre-existing SQLite
+  ResourceWarnings; no claim that these historical warnings were repaired.
+- `node --test tests/viewer.test.mjs`: **five passed**, retained Node 26.11.1.
+  This local run does not replace the exact-source hosted runtime matrix.
+- Red/green regressions cover unknown nested private fields, altered/incomplete
+  cohort evidence, symlink/path-traversal archive inputs and workstation-path
+  disclosure. An initial sentinel injection violated canonical receipt equality;
+  the fixture was corrected in both matching receipt copies, preserving validation.
+- Chromium 155.0.8059.39 rendered the report with an isolated profile and blocked
+  external networking; Poppler 26.06.0 rendered all eight pages for inspection.
+  Figure/caption grouping and separate author lines were corrected before the
+  final page review. PDF size is well below the 25 MB upload limit.
+- Package member bytes/checksums, extracted offline aggregate recomputation,
+  Markdown local links, SVG active-content absence and historical report hashes
+  passed. Desktop/mobile README previews were visually inspected; they are local
+  approximations of GitHub rendering, not a browser acceptance test on github.com.
+- `git diff --check` passed. Storage admission initially refused the unchanged
+  2 GiB budget while an unrelated 32 GiB job was active; later admission passed
+  after that job ended. No unrelated reservation or evidence was removed.
+
+Evidence: `/home/neo/Projects/fleet-witness-artifacts/latest-submission-20261109/`.
+It retains failed checks, final logs, command vectors, page images, previews,
+extracted-package checks and publication digests. Independent whole-branch review
+and hosted CI/integration are recorded in subsequent entries when observed.
+
+No new paid call, cloud change, depth-six exploration, video recording or event
+submission was performed. Public hashes identify bytes; they do not independently
+authenticate private provider execution. The unfavorable blanket-denial result
+and historical provenance limitations remain explicit in every public narrative.
+
+---
+
 # Completed real-model paired pilot — November 9, 2026
 
 The controlled cohort on `8f589dcfb62ddde090d59dcbc9b03688a6e41e44` completed
