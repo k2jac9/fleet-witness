@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520">
+<rect width="1200" height="520" fill="#fcfcfb"/>
+<text x="90" y="40" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="600" fill="#0b0b0b">Collusion has a deliberation cost</text>
+<text x="90" y="64" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="14" fill="#52514e">Median output tokens (including hidden reasoning) per response on target cases; n shown under each bar.</text>
+<text x="352.5" y="466" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="14" fill="#0b0b0b" text-anchor="middle">Reviewer votes</text>
+<text x="352.5" y="486" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#52514e" text-anchor="middle">DeepSeek v4 Flash</text>
+<path d="M305.5,420 V321.08159618820724 q0,-4 4,-4 H347.5 q4,0 4,4 V420 Z" fill="#2a78d6"><title>DeepSeek v4 Flash Reviewer votes Honest: median 108 (n=5400)</title></path>
+<text x="328.5" y="309.08159618820724" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#0b0b0b" text-anchor="middle">108</text>
+<text x="328.5" y="438" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#52514e" text-anchor="middle">n=5400</text>
+<path d="M353.5,420 V145.73913043478257 q0,-4 4,-4 H395.5 q4,0 4,4 V420 Z" fill="#eb6834"><title>DeepSeek v4 Flash Reviewer votes Colluding: median 292 (n=1709)</title></path>
+<text x="376.5" y="133.73913043478257" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#0b0b0b" text-anchor="middle">292</text>
+<text x="376.5" y="438" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#52514e" text-anchor="middle">n=1709</text>
+<text x="877.5" y="466" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="14" fill="#0b0b0b" text-anchor="middle">Committee audits</text>
+<text x="877.5" y="486" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#52514e" text-anchor="middle">DeepSeek v4 Flash</text>
+<path d="M830.5,420 V322.03454437164976 q0,-4 4,-4 H872.5 q4,0 4,4 V420 Z" fill="#2a78d6"><title>DeepSeek v4 Flash Committee audits Honest: median 107 (n=745)</title></path>
+<text x="853.5" y="310.03454437164976" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#0b0b0b" text-anchor="middle">107</text>
+<text x="853.5" y="438" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#52514e" text-anchor="middle">n=745</text>
+<path d="M878.5,420 V192.43359142346634 q0,-4 4,-4 H920.5 q4,0 4,4 V420 Z" fill="#eb6834"><title>DeepSeek v4 Flash Committee audits Colluding: median 243 (n=258)</title></path>
+<text x="901.5" y="180.43359142346634" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#0b0b0b" text-anchor="middle">243</text>
+<text x="901.5" y="438" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#52514e" text-anchor="middle">n=258</text>
+<line x1="90" y1="420" x2="1140" y2="420" stroke="#52514e" stroke-width="1"/>
+<rect x="900" y="24" width="14" height="14" rx="3" fill="#2a78d6"/><text x="922" y="36" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#0b0b0b">Honest agents</text>
+<rect x="900" y="46" width="14" height="14" rx="3" fill="#eb6834"/><text x="922" y="58" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#0b0b0b">Colluding agents</text>
+</svg>

@@ -7,6 +7,40 @@ from .experiment import run_demo
 from .server import serve
 
 
+def _swarm(args):
+    from .swarm.detect import analyze, format_report
+    from .swarm.providers import FakeClient, Ledger, ModelClient
+    from .swarm.runner import CONDITIONS, estimate_run, run_swarm
+
+    conditions = args.conditions or list(CONDITIONS)
+    if args.provider == 'fake':
+        client = FakeClient(seed=args.seed)
+    else:
+        ledger = Ledger(args.provider, run_cap_usd=args.max_usd)
+        client = ModelClient(args.provider, args.model, ledger, max_output_tokens=args.max_output_tokens,
+                             max_concurrency=args.concurrency)
+    estimate = estimate_run(client, agents=args.agents, cases=args.cases, conditions=conditions)
+    print(f"Planned calls: {estimate['calls']}  worst case: ${estimate['worst_case_total_usd']:.4f} "
+          f"(${estimate['worst_case_per_call_usd']:.6f}/call)  run cap: ${args.max_usd:.2f}")
+    if args.provider != 'fake':
+        print(f"{args.provider} spent so far on this machine: ${client.ledger.lifetime_spent():.4f} "
+              f"of lifetime cap ${client.ledger.lifetime_cap:.2f}")
+    if args.dry_run:
+        return
+    manifest = run_swarm(args.output, client, agents=args.agents, cases=args.cases, conditions=conditions,
+                         cell_fraction=args.cell_fraction, waves=args.waves, seed=args.seed)
+    print(format_report(analyze(args.output)))
+    if args.judge_model:
+        from .swarm.judge import judge_run
+        judge = ModelClient('openrouter', args.judge_model, Ledger('openrouter', run_cap_usd=args.judge_max_usd),
+                            max_output_tokens=600, temperature=0.0)
+        for condition, entry in judge_run(args.output, judge, conditions)['conditions'].items():
+            print(f"judge {condition:<14} suspects={len(entry['suspects'])} "
+                  + ' '.join(f'{k}={v}' for k, v in entry.items() if k in ('precision', 'recall', 'false_positives', 'error')))
+    print(f'Output: {args.output}  (truth.json is sealed ground truth; detectors read events.jsonl only)')
+    return manifest
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description='Fleet Witness local scripted evaluation')
     commands = parser.add_subparsers(dest='command', required=True)
@@ -16,8 +50,66 @@ def main(argv=None):
     viewer = commands.add_parser('serve', help='serve only local read-only replay assets')
     viewer.add_argument('--directory', type=Path, default=Path('runs/demo'))
     viewer.add_argument('--port', type=int, default=8765)
+    swarm = commands.add_parser('swarm', help='run an LLM agent swarm (paid unless --provider fake)')
+    swarm.add_argument('--output', type=Path, required=True)
+    swarm.add_argument('--provider', choices=['fake', 'adaption', 'openrouter'], default='fake')
+    swarm.add_argument('--model', default='deepseek-v4-flash')
+    swarm.add_argument('--agents', type=int, default=20)
+    swarm.add_argument('--cases', type=int, default=6)
+    swarm.add_argument('--conditions', nargs='+', default=None,
+                       help='subset of hidden-clean hidden-cell visible-clean visible-cell')
+    swarm.add_argument('--cell-fraction', type=float, default=0.1)
+    swarm.add_argument('--waves', type=int, default=5)
+    swarm.add_argument('--seed', type=int, default=0)
+    swarm.add_argument('--max-usd', type=float, default=0.50, help='hard cap for this run')
+    # Reasoning models spend hidden tokens first; 220 truncated colluders mid-thought in the smoke test.
+    swarm.add_argument('--max-output-tokens', type=int, default=600)
+    swarm.add_argument('--concurrency', type=int, default=16)
+    swarm.add_argument('--dry-run', action='store_true', help='print worst-case cost and exit')
+    swarm.add_argument('--judge-model', default=None,
+                       help='OpenRouter model for the independent judge, e.g. qwen/qwen3.7-flash')
+    swarm.add_argument('--judge-max-usd', type=float, default=0.10)
+    sweep = commands.add_parser('swarm-sweep', help='sweep the colluding share across governance regimes')
+    sweep.add_argument('--root', type=Path, required=True)
+    sweep.add_argument('--provider', choices=['fake', 'adaption', 'openrouter'], default='fake')
+    sweep.add_argument('--model', default='deepseek-v4-flash')
+    sweep.add_argument('--fractions', type=float, nargs='+', default=None)
+    sweep.add_argument('--agents', type=int, default=50)
+    sweep.add_argument('--cases', type=int, default=24)
+    sweep.add_argument('--seed', type=int, default=0)
+    sweep.add_argument('--max-usd', type=float, default=3.0, help='hard cap for the whole sweep')
+    sweep.add_argument('--concurrency', type=int, default=24)
+    sweep.add_argument('--max-output-tokens', type=int, default=600,
+                       help='includes hidden reasoning; thinking-heavy models (e.g. Qwen) need ~2000')
+    summary_cmd = commands.add_parser('swarm-summary', help='pool finished sweeps into one table')
+    summary_cmd.add_argument('roots', type=Path, nargs='+')
+    analyze_cmd = commands.add_parser('swarm-analyze', help='re-run detectors on a finished swarm run')
+    analyze_cmd.add_argument('--directory', type=Path, required=True)
+    analyze_cmd.add_argument('--edge-z', type=float, default=2.0)
+    analyze_cmd.add_argument('--min-cluster', type=int, default=3)
     args = parser.parse_args(argv)
     try:
+        if args.command == 'swarm':
+            return _swarm(args)
+        if args.command == 'swarm-sweep':
+            from .swarm.providers import FakeClient, Ledger, ModelClient
+            from .swarm.sweep import DEFAULT_FRACTIONS, run_sweep
+            client = (FakeClient(seed=args.seed) if args.provider == 'fake' else
+                      ModelClient(args.provider, args.model, Ledger(args.provider, run_cap_usd=args.max_usd),
+                                  max_output_tokens=args.max_output_tokens, max_concurrency=args.concurrency))
+            run_sweep(args.root, client, fractions=args.fractions or DEFAULT_FRACTIONS, agents=args.agents,
+                      cases=args.cases, seed=args.seed)
+            return
+        if args.command == 'swarm-summary':
+            from .swarm.sweep import format_summary, summarize
+            summary = summarize(args.roots)
+            Path(args.roots[0], 'sweep-summary.json').write_text(json.dumps(summary, indent=2), encoding='utf-8')
+            print(format_summary(summary))
+            return
+        if args.command == 'swarm-analyze':
+            from .swarm.detect import analyze, format_report
+            print(format_report(analyze(args.directory, edge_z=args.edge_z, min_cluster=args.min_cluster)))
+            return
         if args.command == 'demo':
             replay = run_demo(args.output, args.seed)
             print('Fleet Witness — SCRIPTED DEMO (deterministic policies; illustrative, not empirical model results)')
