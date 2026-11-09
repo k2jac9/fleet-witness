@@ -1,0 +1,70 @@
+{
+  "model": "openai/gpt-6.1-sol",
+  "summary": "The report combines a small governance kernel, bounded implementation checking, mutation tests, and paired LLM experiments to separate mechanical enforcement from committee capture. Its strongest evidence supports the kernel's modeled checks and a cost\u2013capture trade-off under instructed collusion, rather than robust oversight of difficult semantic judgments. This is a promising hackathon contribution, but the hybrid probability calculation and several generalizations require correction or qualification.",
+  "scores": {
+    "impact_innovation": 3,
+    "execution": 3,
+    "presentation": 4
+  },
+  "score_rationale": {
+    "impact_innovation": "Institution-level oversight is important, and combining implementation-level bounded checking with an LLM evaluation harness is useful. However, the underlying mechanisms are established quorum and access-control techniques, while the experiments do not yet demonstrate effective oversight where honest agents make consequential judgment errors. The contribution is a promising integration rather than an established new safety mechanism.",
+    "execution": "Strong hackathon elements include checking the actual implementation, testing seven mutants, adding the mechanically gated majority control, using two model families, and explicitly documenting truncation and dependence limitations. Execution falls short of strong validation because the behavioral task is nearly error-free, the hybrid's reported expected capture is not its release probability, and deployment-cost and sampling assumptions need clarification.",
+    "presentation": "The scientific evidence is generally traceable through explicit conditional claims, per-regime outcomes, verification bounds, and reproduction commands. Probability labels and concluding claims occasionally blur distinctions that the methods otherwise make carefully."
+  },
+  "strengths": [
+    "Sections 3.2 and 4.1 report checking the real SQLite-backed implementation against a separate specification, with mutation tests providing useful evidence that the checker detects meaningful failures.",
+    "The gated-majority control in Table 1 isolates mechanical validation from committee governance and supports the appropriately limited finding that committees add no safety over gated majority in this task.",
+    "Section 3.3 distinguishes mechanical enforcement, a zero-honest-error seat bound, and a probabilistic behavioral model; this separation is valuable for identifying where assurance depends on agents.",
+    "The report acknowledges important negative results and confounds: essentially absent honest errors, few herding exposures, planted detector signatures, and prompt-confounded output lengths.",
+    "The reported logs, table-regeneration scripts, retained superseded run, and explicit abstention handling provide a useful foundation for reproducibility."
+  ],
+  "concerns": [
+    {
+      "id": "C1",
+      "severity": "major",
+      "category": "validity",
+      "location": "Sections 3.4, 4.2\u20134.3, 5, and 6",
+      "issue": "The experiments chiefly test exact-match receipt rules with essentially perfect honest judgments. Moreover, the conclusion that random committees 'matched a gated majority's judgement' is not supported across the sweep: 4-of-7 released 16/120 and 17/120 targets, versus 0/120 for gated majority. The report acknowledges the task limitation, but its final interpretation exceeds that evidence.",
+      "why_it_matters": "The demonstrated result is a cheaper but less safe decision procedure under this planted adversary, not equivalent judgment quality or validated oversight of difficult semantic decisions. The full-majority baseline is also structurally protected when honest agents never err, colluders occupy at most half the electorate, and approval requires a strict majority.",
+      "suggested_fix": "Replace the equivalence claim with the observed cost\u2013capture trade-off and explicitly state the majority tie rule. Clarify whether a deterministic validator could classify all synthetic receipt cases; if so, include that inexpensive baseline or explain why the task is only a mechanism demonstration. A small judgment-based pilot would help, but narrowing the claims is sufficient for the hackathon report."
+    },
+    {
+      "id": "C2",
+      "severity": "major",
+      "category": "validity",
+      "location": "Section 3.3, G3; Table 1, hybrid row",
+      "issue": "The hypergeometric\u2013binomial expression describes committee approval under the stated behavioral assumptions, not hybrid release probability. Table 1 nevertheless gives the hybrid an 'A-priori expected (G3)' value of 21.8 without marking it as committee-only. Hybrid release additionally requires majority approval, and those events are dependent because committee members belong to the voting population.",
+      "why_it_matters": "This mislabels a committee opportunity rate as an expected number of unsafe releases. With zero honest error and a strict majority threshold, the hybrid's target-release probability is zero at every tested colluder share, rather than the committee-only expectation.",
+      "suggested_fix": "Label 21.8 explicitly as a committee-only opportunity estimate or replace it with 'not applicable'. If reporting a hybrid prediction, calculate the joint probability of majority and committee approval, and state that the other mechanical and proposal gates must also permit release."
+    },
+    {
+      "id": "C3",
+      "severity": "minor",
+      "category": "confound",
+      "location": "Section 3.4; Table 1, 'Calls per decision'; Sections 4.2 and 5",
+      "issue": "The seven-versus-fifty comparison is a nominal request-count comparison obtained from common traces. Please clarify whether committee auditors receive any tally, comments, or other information produced by the fifty-reviewer stage, and whether their prompts are otherwise identical across replayed regimes.",
+      "why_it_matters": "If committee decisions depend on the full voting stage, seven calls would be marginal rather than standalone decision cost. Even without that dependency, a sevenfold request reduction is not necessarily a sevenfold reduction in tokens, dollars, or latency, particularly given the reported output-length differences.",
+      "suggested_fix": "Specify the auditor information set and confirm that a committee-only deployment can omit all reviewer calls. Report token or dollar cost per decision from existing logs, including retries, or consistently describe the result as approximately sevenfold fewer model requests rather than sevenfold lower cost."
+    },
+    {
+      "id": "C4",
+      "severity": "minor",
+      "category": "statistics",
+      "location": "Section 3.4; Tables 1\u20132; Figure 1; Section 4.2, Finding 2",
+      "issue": "The report correctly recognizes paired board conditions, but reporting counts by share does not itself quantify uncertainty. Please document the seed schedule sufficiently to establish whether the stated 60 independent committee draws are also independent across colluder shares, rather than only distinct target draws within a share.",
+      "why_it_matters": "Shared seeds, cells, committee prefixes, and repeated cases can induce dependence across comparisons. Small draw counts also make statements such as matching safety at 10% collusion substantially less informative than the zero observed captures might suggest.",
+      "suggested_fix": "Publish a compact mapping of runs to seeds and shared draws. Add uncertainty estimates or predictive ranges using the actual draw-level dependence structure, and treat the two models and board conditions as paired evaluations rather than independent replications of seating."
+    },
+    {
+      "id": "C5",
+      "severity": "minor",
+      "category": "overclaiming",
+      "location": "Section 1, theory of change; Sections 3.2\u20133.3, 5, and 6; Appendix B",
+      "issue": "The bounded scope is commendably explicit, but statements that the mechanical guarantees hold 'regardless of swarm size' and that oversight 'does not get harder as swarms grow' extend beyond the checked world. Section 5 also lists independent honest errors among assumptions of 'the guarantee', although independence is needed for G3, not G1 or the zero-error G2 claim.",
+      "why_it_matters": "Readers need to distinguish implementation evidence within a finite sequential model from a size-independent theorem, and mechanical guarantees from probabilistic behavioral predictions. Database at-most-once release records also should not be read as an established guarantee for external gateway side effects.",
+      "suggested_fix": "Provide a short assumption-and-scope table for G1\u2013G3. Keep size-independent assurance explicitly conditional on establishing the invariants beyond the checked bound, and specify whether 'release' denotes only a database state transition. Clarify whether any additional tests support concurrent execution or external-action semantics; otherwise leave those outside the claim."
+    }
+  ],
+  "verdict": "weak accept",
+  "confidence": 4
+}

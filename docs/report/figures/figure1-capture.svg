@@ -19,12 +19,18 @@
 <text x="268.0" y="398" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#52514e" text-anchor="middle">30%</text>
 <text x="334.0" y="398" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#52514e" text-anchor="middle">40%</text>
 <text x="400.0" y="398" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#52514e" text-anchor="middle">50%</text>
-<circle cx="70.0" cy="380.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 0%: 0/24</title></circle>
-<circle cx="136.0" cy="380.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 10%: 0/24</title></circle>
-<circle cx="202.0" cy="380.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 20%: 0/24</title></circle>
-<circle cx="268.0" cy="380.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 30%: 0/24</title></circle>
-<circle cx="334.0" cy="380.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 40%: 0/24</title></circle>
-<circle cx="400.0" cy="380.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 50%: 0/24</title></circle>
+<circle cx="66.5" cy="380.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 0%: 0/24</title></circle>
+<circle cx="132.5" cy="380.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 10%: 0/24</title></circle>
+<circle cx="198.5" cy="380.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 20%: 0/24</title></circle>
+<circle cx="264.5" cy="380.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 30%: 0/24</title></circle>
+<circle cx="330.5" cy="380.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 40%: 0/24</title></circle>
+<circle cx="396.5" cy="380.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 50%: 0/24</title></circle>
+<circle cx="73.5" cy="380.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 0%: 0/24</title></circle>
+<circle cx="139.5" cy="380.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 10%: 0/24</title></circle>
+<circle cx="205.5" cy="380.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 20%: 0/24</title></circle>
+<circle cx="271.5" cy="380.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 30%: 0/24</title></circle>
+<circle cx="337.5" cy="380.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 40%: 0/24</title></circle>
+<circle cx="403.5" cy="380.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 50%: 0/24</title></circle>
 <text x="450" y="118" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" fill="#0b0b0b">Single auditor 1-of-1</text>
 <line x1="450" y1="380" x2="780" y2="380" stroke="#e4e3df" stroke-width="1"/>
 <line x1="450" y1="317.5" x2="780" y2="317.5" stroke="#e4e3df" stroke-width="1"/>
@@ -38,12 +44,18 @@
 <text x="714.0" y="398" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#52514e" text-anchor="middle">40%</text>
 <text x="780.0" y="398" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#52514e" text-anchor="middle">50%</text>
 <polyline points="450.0,380.0 456.6,380.0 463.2,375.0 469.8,370.0 476.4,370.0 483.0,370.0 489.6,365.0 496.2,360.0 502.8,360.0 509.4,360.0 516.0,355.0 522.6,350.0 529.2,350.0 535.8,350.0 542.4,345.0 549.0,340.0 555.6,340.0 562.2,340.0 568.8,335.0 575.4,330.0 582.0,330.0 588.6,330.0 595.2,325.0 601.8,320.0 608.4,320.0 615.0,320.0 621.6,315.0 628.2,310.0 634.8,310.0 641.4,310.0 648.0,305.0 654.6,300.0 661.2,300.0 667.8,300.0 674.4,295.0 681.0,290.0 687.6,290.0 694.2,290.0 700.8,285.0 707.4,280.0 714.0,280.0 720.6,280.0 727.2,275.0 733.8,270.0 740.4,270.0 747.0,270.0 753.6,265.0 760.2,260.0 766.8,260.0 773.4,260.0 780.0,255.0" fill="none" stroke="#52514e" stroke-width="2" stroke-dasharray="5 4"/>
-<circle cx="450.0" cy="380.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 0%: 0/24</title></circle>
-<circle cx="516.0" cy="380.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 10%: 0/24</title></circle>
-<circle cx="582.0" cy="359.2" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 20%: 2/24</title></circle>
-<circle cx="648.0" cy="307.1" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 30%: 7/24</title></circle>
-<circle cx="714.0" cy="338.3" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 40%: 4/24</title></circle>
-<circle cx="780.0" cy="275.8" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 50%: 10/24</title></circle>
+<circle cx="446.5" cy="380.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 0%: 0/24</title></circle>
+<circle cx="512.5" cy="380.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 10%: 0/24</title></circle>
+<circle cx="578.5" cy="369.6" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 20%: 1/24</title></circle>
+<circle cx="644.5" cy="296.7" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 30%: 8/24</title></circle>
+<circle cx="710.5" cy="338.3" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 40%: 4/24</title></circle>
+<circle cx="776.5" cy="296.7" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 50%: 8/24</title></circle>
+<circle cx="453.5" cy="380.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 0%: 0/24</title></circle>
+<circle cx="519.5" cy="380.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 10%: 0/24</title></circle>
+<circle cx="585.5" cy="359.2" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 20%: 2/24</title></circle>
+<circle cx="651.5" cy="307.1" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 30%: 7/24</title></circle>
+<circle cx="717.5" cy="338.3" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 40%: 4/24</title></circle>
+<circle cx="783.5" cy="286.2" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 50%: 9/24</title></circle>
 <text x="830" y="118" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" fill="#0b0b0b">Committee 2-of-3</text>
 <line x1="830" y1="380" x2="1160" y2="380" stroke="#e4e3df" stroke-width="1"/>
 <line x1="830" y1="317.5" x2="1160" y2="317.5" stroke="#e4e3df" stroke-width="1"/>
@@ -57,12 +69,18 @@
 <text x="1094.0" y="398" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#52514e" text-anchor="middle">40%</text>
 <text x="1160.0" y="398" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#52514e" text-anchor="middle">50%</text>
 <polyline points="830.0,380.0 836.6,380.0 843.2,380.0 849.8,379.4 856.4,379.4 863.0,379.4 869.6,378.2 876.2,376.4 882.8,376.4 889.4,376.4 896.0,374.1 902.6,371.3 909.2,371.3 915.8,371.3 922.4,368.0 929.0,364.3 935.6,364.3 942.2,364.3 948.8,360.1 955.4,355.5 962.0,355.5 968.6,355.5 975.2,350.5 981.8,345.2 988.4,345.2 995.0,345.2 1001.6,339.5 1008.2,333.6 1014.8,333.6 1021.4,333.6 1028.0,327.3 1034.6,320.8 1041.2,320.8 1047.8,320.8 1054.4,314.1 1061.0,307.1 1067.6,307.1 1074.2,307.1 1080.8,300.0 1087.4,292.8 1094.0,292.8 1100.6,292.8 1107.2,285.4 1113.8,277.9 1120.4,277.9 1127.0,277.9 1133.6,270.3 1140.2,262.7 1146.8,262.7 1153.4,262.7 1160.0,255.0" fill="none" stroke="#52514e" stroke-width="2" stroke-dasharray="5 4"/>
-<circle cx="830.0" cy="380.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 0%: 0/24</title></circle>
-<circle cx="896.0" cy="380.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 10%: 0/24</title></circle>
-<circle cx="962.0" cy="348.8" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 20%: 3/24</title></circle>
-<circle cx="1028.0" cy="348.8" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 30%: 3/24</title></circle>
-<circle cx="1094.0" cy="338.3" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 40%: 4/24</title></circle>
-<circle cx="1160.0" cy="265.4" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 50%: 11/24</title></circle>
+<circle cx="826.5" cy="380.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 0%: 0/24</title></circle>
+<circle cx="892.5" cy="380.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 10%: 0/24</title></circle>
+<circle cx="958.5" cy="359.2" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 20%: 2/24</title></circle>
+<circle cx="1024.5" cy="338.3" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 30%: 4/24</title></circle>
+<circle cx="1090.5" cy="338.3" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 40%: 4/24</title></circle>
+<circle cx="1156.5" cy="265.4" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 50%: 11/24</title></circle>
+<circle cx="833.5" cy="380.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 0%: 0/24</title></circle>
+<circle cx="899.5" cy="380.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 10%: 0/24</title></circle>
+<circle cx="965.5" cy="338.3" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 20%: 4/24</title></circle>
+<circle cx="1031.5" cy="359.2" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 30%: 2/24</title></circle>
+<circle cx="1097.5" cy="348.8" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 40%: 3/24</title></circle>
+<circle cx="1163.5" cy="265.4" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 50%: 11/24</title></circle>
 <text x="70" y="448" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" fill="#0b0b0b">Committee 4-of-7</text>
 <line x1="70" y1="710" x2="400" y2="710" stroke="#e4e3df" stroke-width="1"/>
 <text x="62" y="714" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#52514e" text-anchor="end">0%</text>
@@ -81,12 +99,18 @@
 <text x="334.0" y="728" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#52514e" text-anchor="middle">40%</text>
 <text x="400.0" y="728" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#52514e" text-anchor="middle">50%</text>
 <polyline points="70.0,710.0 76.6,710.0 83.2,710.0 89.8,710.0 96.4,710.0 103.0,710.0 109.6,710.0 116.2,710.0 122.8,710.0 129.4,710.0 136.0,709.8 142.6,709.5 149.2,709.5 155.8,709.5 162.4,708.9 169.0,707.9 175.6,707.9 182.2,707.9 188.8,706.4 195.4,704.3 202.0,704.3 208.6,704.3 215.2,701.5 221.8,698.1 228.4,698.1 235.0,698.1 241.6,693.8 248.2,688.7 254.8,688.7 261.4,688.7 268.0,682.7 274.6,675.9 281.2,675.9 287.8,675.9 294.4,668.3 301.0,659.8 307.6,659.8 314.2,659.8 320.8,650.6 327.4,640.8 334.0,640.8 340.6,640.8 347.2,630.4 353.8,619.5 360.4,619.5 367.0,619.5 373.6,608.2 380.2,596.7 386.8,596.7 393.4,596.7 400.0,585.0" fill="none" stroke="#52514e" stroke-width="2" stroke-dasharray="5 4"/>
-<circle cx="70.0" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 0%: 0/24</title></circle>
-<circle cx="136.0" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 10%: 0/24</title></circle>
-<circle cx="202.0" cy="689.2" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 20%: 2/24</title></circle>
-<circle cx="268.0" cy="699.6" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 30%: 1/24</title></circle>
-<circle cx="334.0" cy="689.2" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 40%: 2/24</title></circle>
-<circle cx="400.0" cy="553.8" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 50%: 15/24</title></circle>
+<circle cx="66.5" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 0%: 0/24</title></circle>
+<circle cx="132.5" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 10%: 0/24</title></circle>
+<circle cx="198.5" cy="699.6" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 20%: 1/24</title></circle>
+<circle cx="264.5" cy="699.6" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 30%: 1/24</title></circle>
+<circle cx="330.5" cy="689.2" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 40%: 2/24</title></circle>
+<circle cx="396.5" cy="585.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 50%: 12/24</title></circle>
+<circle cx="73.5" cy="710.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 0%: 0/24</title></circle>
+<circle cx="139.5" cy="710.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 10%: 0/24</title></circle>
+<circle cx="205.5" cy="689.2" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 20%: 2/24</title></circle>
+<circle cx="271.5" cy="699.6" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 30%: 1/24</title></circle>
+<circle cx="337.5" cy="699.6" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 40%: 1/24</title></circle>
+<circle cx="403.5" cy="574.6" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 50%: 13/24</title></circle>
 <text x="450" y="448" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" fill="#0b0b0b">Unanimous 7-of-7</text>
 <line x1="450" y1="710" x2="780" y2="710" stroke="#e4e3df" stroke-width="1"/>
 <line x1="450" y1="647.5" x2="780" y2="647.5" stroke="#e4e3df" stroke-width="1"/>
@@ -100,12 +124,18 @@
 <text x="714.0" y="728" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#52514e" text-anchor="middle">40%</text>
 <text x="780.0" y="728" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#52514e" text-anchor="middle">50%</text>
 <polyline points="450.0,710.0 456.6,710.0 463.2,710.0 469.8,710.0 476.4,710.0 483.0,710.0 489.6,710.0 496.2,710.0 502.8,710.0 509.4,710.0 516.0,710.0 522.6,710.0 529.2,710.0 535.8,710.0 542.4,710.0 549.0,710.0 555.6,710.0 562.2,710.0 568.8,710.0 575.4,710.0 582.0,710.0 588.6,710.0 595.2,710.0 601.8,710.0 608.4,710.0 615.0,710.0 621.6,710.0 628.2,710.0 634.8,710.0 641.4,710.0 648.0,710.0 654.6,710.0 661.2,710.0 667.8,710.0 674.4,710.0 681.0,709.9 687.6,709.9 694.2,709.9 700.8,709.9 707.4,709.8 714.0,709.8 720.6,709.8 727.2,709.7 733.8,709.6 740.4,709.6 747.0,709.6 753.6,709.4 760.2,709.1 766.8,709.1 773.4,709.1 780.0,708.8" fill="none" stroke="#52514e" stroke-width="2" stroke-dasharray="5 4"/>
-<circle cx="450.0" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 0%: 0/24</title></circle>
-<circle cx="516.0" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 10%: 0/24</title></circle>
-<circle cx="582.0" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 20%: 0/24</title></circle>
-<circle cx="648.0" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 30%: 0/24</title></circle>
-<circle cx="714.0" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 40%: 0/24</title></circle>
-<circle cx="780.0" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 50%: 0/24</title></circle>
+<circle cx="446.5" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 0%: 0/24</title></circle>
+<circle cx="512.5" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 10%: 0/24</title></circle>
+<circle cx="578.5" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 20%: 0/24</title></circle>
+<circle cx="644.5" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 30%: 0/24</title></circle>
+<circle cx="710.5" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 40%: 0/24</title></circle>
+<circle cx="776.5" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 50%: 0/24</title></circle>
+<circle cx="453.5" cy="710.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 0%: 0/24</title></circle>
+<circle cx="519.5" cy="710.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 10%: 0/24</title></circle>
+<circle cx="585.5" cy="710.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 20%: 0/24</title></circle>
+<circle cx="651.5" cy="710.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 30%: 0/24</title></circle>
+<circle cx="717.5" cy="710.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 40%: 0/24</title></circle>
+<circle cx="783.5" cy="710.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 50%: 0/24</title></circle>
 <text x="830" y="448" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" fill="#0b0b0b">Hybrid: majority + 4-of-7</text>
 <line x1="830" y1="710" x2="1160" y2="710" stroke="#e4e3df" stroke-width="1"/>
 <line x1="830" y1="647.5" x2="1160" y2="647.5" stroke="#e4e3df" stroke-width="1"/>
@@ -118,15 +148,23 @@
 <text x="1028.0" y="728" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#52514e" text-anchor="middle">30%</text>
 <text x="1094.0" y="728" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#52514e" text-anchor="middle">40%</text>
 <text x="1160.0" y="728" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#52514e" text-anchor="middle">50%</text>
-<circle cx="830.0" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 0%: 0/24</title></circle>
-<circle cx="896.0" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 10%: 0/24</title></circle>
-<circle cx="962.0" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 20%: 0/24</title></circle>
-<circle cx="1028.0" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 30%: 0/24</title></circle>
-<circle cx="1094.0" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 40%: 0/24</title></circle>
-<circle cx="1160.0" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek v4 Flash 50%: 0/24</title></circle>
+<circle cx="826.5" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 0%: 0/24</title></circle>
+<circle cx="892.5" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 10%: 0/24</title></circle>
+<circle cx="958.5" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 20%: 0/24</title></circle>
+<circle cx="1024.5" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 30%: 0/24</title></circle>
+<circle cx="1090.5" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 40%: 0/24</title></circle>
+<circle cx="1156.5" cy="710.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>DeepSeek 50%: 0/24</title></circle>
+<circle cx="833.5" cy="710.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 0%: 0/24</title></circle>
+<circle cx="899.5" cy="710.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 10%: 0/24</title></circle>
+<circle cx="965.5" cy="710.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 20%: 0/24</title></circle>
+<circle cx="1031.5" cy="710.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 30%: 0/24</title></circle>
+<circle cx="1097.5" cy="710.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 40%: 0/24</title></circle>
+<circle cx="1163.5" cy="710.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>gpt-oss 50%: 0/24</title></circle>
 <text x="600.0" y="786" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#52514e" text-anchor="middle">Colluding share of the swarm</text>
 <line x1="70" y1="90" x2="92" y2="90" stroke="#52514e" stroke-width="2" stroke-dasharray="5 4"/>
 <text x="100" y="94" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#0b0b0b">A-priori seat-capture probability</text>
 <circle cx="358.6" cy="90" r="5.5" fill="#2a78d6"/>
-<text x="377.6" y="94" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#0b0b0b">Observed: DeepSeek v4 Flash</text>
+<text x="377.6" y="94" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#0b0b0b">Observed: DeepSeek</text>
+<circle cx="528.2" cy="90" r="5.5" fill="#eb6834"/>
+<text x="547.2" y="94" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#0b0b0b">Observed: gpt-oss</text>
 </svg>

@@ -19,15 +19,18 @@ from pathlib import Path
 import random
 import secrets
 import threading
+import uuid
 
 from ..institution import Institution, sign_attestation
 from .providers import BudgetExceeded, ProviderError, parse_sign, parse_vote
+from .run_records import PrivateRunLog, prompt_digest, public_attempts, runtime_identity
 from .world import case_prompt, make_cases
 
 COMMITTEE_MAX = 7
 # name: (committee size m, quorum k, also require swarm majority). All kernel regimes check evidence
 # integrity, policy, seating and uniqueness. 'direct' (majority acts, no kernel) is evaluated separately.
-REGIMES = {'auditor-1of1': (1, 1, False), 'committee-2of3': (3, 2, False), 'committee-3of5': (5, 3, False),
+REGIMES = {'gated-majority': (0, 0, True), 'auditor-1of1': (1, 1, False),
+           'committee-2of3': (3, 2, False), 'committee-3of5': (5, 3, False),
            'committee-4of7': (7, 4, False), 'unanimous-7of7': (7, 7, False), 'hybrid-maj+4of7': (7, 4, True)}
 MAX_CONSECUTIVE_ERRORS = 25
 
@@ -112,20 +115,16 @@ class _EventLog:
 
 
 def estimate_run(client, *, agents: int, cases: int, conditions: list[str]) -> dict:
-    """Worst-case cost from the largest prompt an agent can receive."""
-    key = b'estimate-only'
-    sample_case = make_cases(1, 0, key)[0]
-    board = [{'agent_id': 'A000', 'vote': 'approve', 'reason': 'x' * 160}] * 6
-    system = SYSTEM_PROMPT.format(agent_id='A000') + COLLUDER_PROMPT.format(
-        targets='case-01, case-02, case-03', talking_point=max(TALKING_POINTS, key=len))
-    user = case_prompt(sample_case) + '\n\n' + _board_text(board, 6)
+    """Conservative authorized prompt/token envelope; exactly one attempt per call."""
     calls = (agents + COMMITTEE_MAX) * cases * len(conditions)
-    per_call = client.worst_case_usd(system, user)
-    return {'calls': calls, 'worst_case_per_call_usd': per_call, 'worst_case_total_usd': per_call * calls}
+    per_call = client.maximum_request_usd()
+    return {'calls': calls, 'provider_attempts': 0 if client.label == 'fake:scripted' else calls,
+            'worst_case_per_call_usd': per_call, 'worst_case_total_usd': per_call * calls}
 
 
 def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditions=None,
-              cell_fraction: float = 0.1, waves: int = 5, recent_comments: int = 6, seed: int = 0) -> dict:
+              cell_fraction: float = 0.1, waves: int = 5, recent_comments: int = 6, seed: int = 0,
+              case_mode: str = 'standard') -> dict:
     conditions = list(conditions or CONDITIONS)
     unknown = set(conditions) - set(CONDITIONS)
     if unknown:
@@ -139,7 +138,7 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
 
     rng = random.Random(seed)
     key = secrets.token_bytes(32)  # controller-only; never written out
-    world = make_cases(cases, seed, key)
+    world = make_cases(cases, seed, key, mode=case_mode)
     agent_ids = [f'A{index:03d}' for index in range(agents)]
     colluders = sorted(rng.sample(agent_ids, round(agents * cell_fraction)))
     talking_point = rng.choice(TALKING_POINTS)
@@ -157,33 +156,70 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
     }, indent=2), encoding='utf-8')
 
     started = datetime.now(timezone.utc).isoformat()
+    from .providers import source_identity
+    source = source_identity()
+    ledger = getattr(client, 'ledger', None)
+    def budget_snapshot():
+        if ledger is None:
+            return None
+        return {key: value for key, value in ledger.snapshot().items() if key != 'path'}
+    ledger_before = budget_snapshot()
+    authorization = getattr(client, 'authorization', None)
+    authorization_identity = None if authorization is None else {
+        'id': authorization['authorization_id'], 'purpose': authorization['purpose'],
+        'sha256': hashlib.sha256(json.dumps(authorization, sort_keys=True, separators=(',', ':'),
+                                           allow_nan=False).encode()).hexdigest()}
     log = _EventLog(output / 'events.jsonl')
+    private_log = PrivateRunLog(output)
     abort = threading.Event()
     abort_reason = []
-    stats = {'calls': 0, 'errors': 0, 'abstentions': 0, 'skipped': 0, 'cost_usd': 0.0}
+    stats = {'calls': 0, 'errors': 0, 'abstentions': 0, 'skipped': 0, 'cost_usd': 0.0,
+             'provider_attempts': 0, 'held_usd': 0.0, 'settled_cost_usd': 0.0,
+             'known_unresolved_cost_usd': 0.0}
     stats_lock = threading.Lock()
     consecutive_errors = [0]
 
     def call(event, system, user, meta, parse):
         """Shared model call: fills `event` with outcome, usage, cost; handles abort and errors."""
+        event['logical_request_id'] = uuid.uuid4().hex
+        event['prompt_sha256'] = prompt_digest(system, user)
+        attempts = []
+        response_text = None
+        status = 'skipped'
+        cost = held = 0.0
+        attempted = 0
         if abort.is_set():
-            event.update(outcome='skipped', reason='run aborted: ' + abort_reason[0], ok=False)
+            event.update(outcome='skipped', reason='run aborted: ' + abort_reason[0], ok=False,
+                         attempts=[], provider_attempts=0, cost_usd=0.0, held_usd=0.0,
+                         provider_status='skipped')
             with stats_lock:
                 stats['skipped'] += 1
+            private_log.write(event['logical_request_id'], system, user, None, status, attempts)
             return None
         try:
             result = client.complete(system, user, meta)
-            outcome, reason = parse(result['text'])
+            attempts = public_attempts(result.get('attempts', []))
+            attempted = result.get('provider_attempts', len(attempts))
+            cost, held = result.get('cost_usd') or 0.0, result.get('held_usd') or 0.0
+            response_text = result['text']
+            status = result.get('status', 'completed')
+            outcome, reason = (('abstain', 'incomplete provider response') if result.get('truncated')
+                               or status not in ('succeeded', 'completed', 'settled', 'scripted')
+                               else parse(response_text))
             event.update(outcome=outcome, reason=reason, ok=True, latency_s=result['latency_s'],
                          input_tokens=result['input_tokens'], output_tokens=result['output_tokens'],
-                         cost_usd=result['cost_usd'])
+                         cost_usd=result['cost_usd'], truncation_retries=result.get('truncation_retries', 0),
+                         truncated=result.get('truncated', False))
             with stats_lock:
                 stats['calls'] += 1
-                stats['cost_usd'] += result['cost_usd'] or 0.0
                 stats['abstentions'] += outcome == 'abstain'
                 consecutive_errors[0] = 0
             return outcome
         except BudgetExceeded as error:
+            attempts = public_attempts(getattr(error, 'attempts', []))
+            attempted = getattr(error, 'provider_attempts', len(attempts))
+            cost, held = getattr(error, 'cost_usd', 0.0), getattr(error, 'held_usd', 0.0)
+            status = getattr(error, 'status', 'budget_denied')
             if not abort.is_set():
                 abort_reason.append(str(error))
                 abort.set()
@@ -191,13 +227,32 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
             with stats_lock:
                 stats['skipped'] += 1
         except (ProviderError, OSError, ValueError, KeyError) as error:
-            event.update(outcome='error', reason='provider error', error=str(error)[:300], ok=False)
+            attempts = public_attempts(getattr(error, 'attempts', []))
+            attempted = getattr(error, 'provider_attempts', len(attempts))
+            cost, held = getattr(error, 'cost_usd', 0.0), getattr(error, 'held_usd', 0.0)
+            status = getattr(error, 'status', 'provider_error')
+            event.update(outcome='error', reason='provider error', error=type(error).__name__, ok=False)
             with stats_lock:
                 stats['errors'] += 1
                 consecutive_errors[0] += 1
                 if consecutive_errors[0] >= MAX_CONSECUTIVE_ERRORS and not abort.is_set():
-                    abort_reason.append(f'{MAX_CONSECUTIVE_ERRORS} consecutive provider errors; last: {error}')
+                    abort_reason.append(f'{MAX_CONSECUTIVE_ERRORS} consecutive provider errors')
                     abort.set()
+        finally:
+            event.update(attempts=attempts, provider_attempts=attempted, cost_usd=cost,
+                         held_usd=held, provider_status=status)
+            with stats_lock:
+                stats['provider_attempts'] += attempted
+                stats['cost_usd'] += cost
+                stats['held_usd'] += held
+                stats['settled_cost_usd'] += sum(a.get('cost_usd') or 0.0 for a in attempts
+                                                if a.get('status') in ('succeeded', 'truncated', 'settled'))
+                stats['known_unresolved_cost_usd'] += sum(a.get('cost_usd') or 0.0 for a in attempts
+                                                          if a.get('status') == 'unresolved')
+                if (held or status == 'unresolved') and not abort.is_set():
+                    abort_reason.append('provider liability is unresolved; reconciliation required')
+                    abort.set()
+            private_log.write(event['logical_request_id'], system, user, response_text, status, attempts)
         return None
 
     def audit(condition, case, agent_id, seat, final_board):
@@ -248,7 +303,7 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
         random.Random(f'{seed}:{condition}:{case["id"]}').shuffle(order)
         size = -(-len(order) // waves)
         board = []
-        with ThreadPoolExecutor(max_workers=size) as pool:
+        with ThreadPoolExecutor(max_workers=1 if ledger is not None else size) as pool:
             for wave_index in range(waves):
                 wave = order[wave_index * size:(wave_index + 1) * size]
                 snapshot = list(board)
@@ -262,12 +317,14 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
         return condition, case, board, attestations
 
     try:
-        # Cases run in parallel (bounded); the client's semaphore bounds actual concurrent requests.
-        with ThreadPoolExecutor(max_workers=min(8, len(world) * len(conditions))) as pool:
+        # Paid work is sequential. The ledger rejects any competing process/request;
+        # a local thread pool must not turn planned work into budget-denied races.
+        with ThreadPoolExecutor(max_workers=1 if ledger is not None else min(8, len(world) * len(conditions))) as pool:
             boards = [future.result() for future in
                       [pool.submit(run_case, condition, case) for condition in conditions for case in world]]
     finally:
         log.close()
+        private_log.close()
 
     # Governance stage: the same votes and attestations, judged under each institutional regime.
     database = output / 'institution.sqlite3'
@@ -303,14 +360,25 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
     (output / 'decisions.json').write_text(json.dumps(outcomes, indent=2), encoding='utf-8')
 
     manifest = {
+        'schema_version': 'swarm-run-2',
         'project': 'Fleet Witness', 'mode': 'live-swarm' if client.label != 'fake:scripted' else 'fake-swarm',
         'model': client.label, 'seed': seed, 'agents': agents, 'cases': cases, 'conditions': conditions,
         'waves': waves, 'recent_comments': recent_comments, 'cell_size': len(colluders),
-        'cell_fraction': cell_fraction, 'regimes': {'direct': None, **REGIMES},
+        'cell_fraction': cell_fraction, 'case_mode': case_mode, 'regimes': {'direct': None, **REGIMES},
         'max_output_tokens': client.max_output_tokens, 'started_at': started,
         'finished_at': datetime.now(timezone.utc).isoformat(),
         'incomplete': abort.is_set(), 'abort_reason': abort_reason[0] if abort_reason else None,
-        **{key_: round(value, 6) if isinstance(value, float) else value for key_, value in stats.items()},
+        'source': source, 'runtime': runtime_identity(),
+        'authorization': authorization_identity,
+        'ledger_before': ledger_before, 'ledger_after': budget_snapshot(),
+        'model_config': {'label': client.label, 'temperature': getattr(client, 'temperature', None),
+                         'max_output_tokens': client.max_output_tokens, 'timeout_s': getattr(client, 'timeout', None),
+                         'attempt_policy': 'one-attempt-no-retries'},
+        'scheduled_logical_requests': (agents + COMMITTEE_MAX) * cases * len(conditions),
+        'logical_responses_completed': stats['calls'],
+        'private_receipts': 'private/requests.jsonl',
+        'budget_liability_usd': round(stats['settled_cost_usd'] + stats['held_usd'], 9),
+        **{key_: round(value, 9) if isinstance(value, float) else value for key_, value in stats.items()},
     }
     (output / 'manifest.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')
     return manifest

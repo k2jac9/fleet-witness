@@ -1,0 +1,96 @@
+{
+  "model": "openai/gpt-6.1-sol",
+  "summary": "The manuscript combines bounded exploration of an executable governance kernel with a synthetic, two-model evaluation of randomly seated committees facing instructed colluders. Its strongest evidence concerns enforcement of mechanical admission rules within the explored state space; the live experiments primarily demonstrate seat capture when honest auditors make no unsafe errors. The evidence does not yet establish an advantage for the committee-based institutional architecture over simpler mechanically checked voting, and several statistical, verification-scope, and behavioral claims need qualification or additional controls.",
+  "strengths": [
+    "Sections 3.1\u20133.3 clearly distinguish mechanical admission checks from semantic safety judgments and state a conditional quorum guarantee rather than claiming to verify agent alignment.",
+    "Section 4.1 and Appendix B exercise the actual SQLite-backed implementation and report mutation counterexamples, including a uniqueness defect detectable only at greater depth.",
+    "The paired committee draws across board conditions and models support controlled comparisons, and Section 4.2 appropriately distinguishes realized seat exposure from its ex ante expectation.",
+    "The manuscript explicitly acknowledges important negative results and limitations: no observed unsafe honest errors, few herding exposures, a synthetic instructed adversary, and a signature-verification disadvantage imposed on the crowd baseline.",
+    "Appendices B.3\u2013B.4 provide useful detail about truncation handling and detector construction, including disclosure of the rerun's changed outcome."
+  ],
+  "concerns": [
+    {
+      "id": "C1",
+      "severity": "major",
+      "category": "missing-controls",
+      "location": "Sections 3.4, 4.2 Finding 2, and 5",
+      "issue": "The comparison bundles mechanical verification with committee governance. Direct majority is denied signature-verification capability, while every kernel regime receives it; a majority-plus-mechanical-checks baseline without an additional committee is not reported. With honest voters rejecting every target and ties failing, that simpler baseline appears capable of matching the hybrid's reported safety and throughput on these cases.",
+      "why_it_matters": "The results establish the value of mechanical checks, but do not isolate a benefit from separation of powers or committee attestation. The hybrid's characterization as combining the best institutional properties is therefore not supported against the most relevant simpler alternative.",
+      "suggested_fix": "Replay the existing majority decisions through the kernel's integrity, policy, uniqueness, and audit checks without requiring committee approval. Report outcomes and decision costs alongside the hybrid, and distinguish benefits of mechanical gating from benefits of committee governance."
+    },
+    {
+      "id": "C2",
+      "severity": "major",
+      "category": "statistics",
+      "location": "Section 4.2, Table 1 and Figure 1",
+      "issue": "The reported Clopper\u2013Pearson intervals treat 120 target outcomes as independent Bernoulli trials despite shared committee draws, heterogeneous colluder shares, and potentially additional dependence through shared cases and agents. The manuscript acknowledges that the intervals are optimistic but still presents them as its principal uncertainty estimates. The independent sampling unit and the variance calculation behind the '1.7 standard deviations' statement also need clarification.",
+      "why_it_matters": "The stated 3.0% upper bound for zero captures and the committee-rate intervals are not justified under the documented dependence structure. Pooling deliberately different colluder shares also obscures what population these rates estimate.",
+      "suggested_fix": "Report results by colluder share and identify every level at which randomness is independently drawn. Use paired, cluster-aware resampling at the independent draw or run level where justified; otherwise report descriptive outcomes without nominal binomial coverage. Recompute the seat-draw deviation using the actual sampling design and distinguish conditional-on-these-cases uncertainty from generalization uncertainty."
+    },
+    {
+      "id": "C3",
+      "severity": "major",
+      "category": "validity",
+      "location": "Sections 3.2 and 4.1; Appendix B.1\u2013B.2",
+      "issue": "The verification description leaves several important coverage questions unresolved: which kernel mode produced the depth-6 total, whether deduplication preserves all state relevant to future behavior, how evidence tampering and policy changes enter the action alphabet, and how parameter values beyond the three-seat world relate to the checked implementation. S2 is described as liveness, but 'a release whenever preconditions hold' appears to be a property of an execution attempt rather than eventual progress under a scheduler. Sequential exploration also does not by itself establish crash or concurrent-transaction behavior.",
+      "why_it_matters": "These distinctions determine what the 23,376 explored states actually establish. Mutation detection demonstrates sensitivity to selected defects, not completeness of the abstraction or temporal liveness and transactional guarantees.",
+      "suggested_fix": "Provide the exact executable state abstraction, action definitions, invariant predicates, and per-mode depth results. Label S2 as successful admission on an eligible execution attempt unless temporal progress is checked. Explicitly separate bounded sequential findings from crash/concurrency assumptions; a small two-case or competing-execution test would provide useful additional coverage."
+    },
+    {
+      "id": "C4",
+      "severity": "major",
+      "category": "validity",
+      "location": "Sections 3.1, 3.3, 4.2 Finding 1, and 5",
+      "issue": "The manuscript sometimes conflates three different objects: the deterministic requirement for k false attestations, the realized count of committees containing k colluders, and the probabilistic capture model with independent honest errors and compliant colluders. Honest-error independence is not necessary for the first guarantee, while a bound based only on colluder seats is not generally valid when honest auditors can err. Because observed unsafe honest error is zero, the live evaluation does not test the nontrivial honest-error component of the probability model.",
+      "why_it_matters": "Readers could interpret the seat-capture curve as an institutional safety guarantee beyond the tested zero-error task. The experiment largely checks the conjunction of mechanically enforced quorum rules and measured colluder compliance, rather than validating capture prediction under realistic semantic uncertainty.",
+      "suggested_fix": "State the deterministic invariant, the zero-honest-error seat bound, and the independence-based probabilistic model separately, including their different assumptions. Restrict empirical validation claims accordingly. If feasible, add a small preregistered set of ambiguous or misleading receipts that produces nonzero honest errors and report joint committee errors rather than only marginal error rates."
+    },
+    {
+      "id": "C5",
+      "severity": "major",
+      "category": "confound",
+      "location": "Abstract; Section 4.2 Finding 5; Section 5 Future Work",
+      "issue": "Longer outputs are associated with the instructed colluder role, but the role also receives extra instructions, a shared talking point, and a different required judgment on targets. The presented medians do not distinguish a cost of deception or coordination from prompt complexity, answer choice, or stylistic requirements. No held-out detection performance is reported for token length itself.",
+      "why_it_matters": "The claims of a 'deliberation cost' and a cheap detection signal, and the proposed deadline defense, require more than an in-distribution token-length association. A benign agent given equally complex instructions or asked to defend an unusual position could trigger the same signal.",
+      "suggested_fix": "Add a prompt-length/task-complexity-matched benign role and, if feasible, a colluder instructed to answer concisely. Report within-case token differences and a held-out token-only detector with false-positive rates. Until then, describe the result as a role-conditioned output-length association rather than a measured cost of collusion."
+    },
+    {
+      "id": "C6",
+      "severity": "major",
+      "category": "validity",
+      "location": "Section 4.2 Finding 6; Appendix B.4",
+      "issue": "The detector evaluation uses colluders instructed to share a talking point and to vote incorrectly on targets that honest agents unanimously recognize. Both detector features therefore directly reflect the planted behavioral signature. Please clarify how F1 is aggregated across cases, conditions, and detected components, and how the reported no-colluder false-positive cluster enters evaluation.",
+      "why_it_matters": "High F1 in this setting demonstrates recovery of an unusually separable instructed group, not that collusion is generally easy to detect. Benign dissent and adversaries that paraphrase or suppress coordination cues could change performance substantially.",
+      "suggested_fix": "Add two inexpensive controls: benign minority agents sharing an argument, and colluders instructed to avoid common wording. Report agent-level confusion matrices by condition, explicitly include zero-colluder runs, and ablate voting similarity versus text similarity. Narrow the finding's title to the tested planted-cell setting."
+    },
+    {
+      "id": "C7",
+      "severity": "major",
+      "category": "reproducibility",
+      "location": "Sections 3.4 and 4.2; Code and Data; Appendix B.3",
+      "issue": "The repository is identified by a mutable branch and the raw reported logs are available only on request. The text does not fully expose exact prompts, independent seed counts, committee nesting across regimes, provider reasoning settings, retry accounting, or whether reported call totals and costs include the superseded run. The stated planned totals of 16,416 calls per sweep also need reconciliation with the reported 16,415 calls plus one transport error.",
+      "why_it_matters": "The conclusions depend on exact seat draws, parsing behavior, model outputs, and rerun selection. Regenerating new live calls cannot reproduce the reported observations when provider behavior is stochastic or changes over time.",
+      "suggested_fix": "Archive a commit hash and release sanitized raw logs, prompts, configuration files, seed mappings, and both versions of the rerun. Provide a single offline command that regenerates every table from those artifacts, plus an accounting table separating attempted, successful, retried, superseded, and analyzed calls and costs."
+    },
+    {
+      "id": "C8",
+      "severity": "minor",
+      "category": "statistics",
+      "location": "Section 4.2 Finding 3 and Table 1",
+      "issue": "The explanation of gpt-oss unanimity failures cites eight honest valid-release refusals but nine blocked valid releases. These counts may be compatible if colluders also refused a valid release, responses were missing, or the denominators cover different events, but the causal attribution is currently unclear.",
+      "why_it_matters": "The finding attributes the throughput loss specifically to honest refusals, so event-level accounting is needed to support that explanation.",
+      "suggested_fix": "Provide a short breakdown of the nine blocked valid cases into honest refusal, colluder refusal, abstention, transport/parsing failure, and other causes, allowing multiple causes per case."
+    },
+    {
+      "id": "C9",
+      "severity": "minor",
+      "category": "related-work",
+      "location": "Sections 1\u20132 and References",
+      "issue": "Several novelty claims rely on categorical descriptions of recent work, including that the closest proposal implements and measures nothing and that no prior institution distributes authority across a partially capturable committee. The manuscript also states that two candidate papers were inaccessible and that references still require verification.",
+      "why_it_matters": "The claimed contribution is a combination of established mechanisms, so accurate characterization of the closest implementations is important to assessing novelty. Unchecked negative claims about prior work are not sufficient evidence of a gap.",
+      "suggested_fix": "Verify the cited sources and their actual evaluation scope, identify the inaccessible candidates, and qualify comparisons that could not be checked. Add a compact comparison of implementation, verification scope, committee authority, and live adversarial evaluation for the closest verified references."
+    }
+  ],
+  "verdict": "weak reject",
+  "confidence": 4
+}

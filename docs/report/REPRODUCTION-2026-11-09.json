@@ -1,0 +1,29 @@
+{
+  "task": "swarm-stabilization-integrated-reproduction",
+  "source_commit": "50902524c8e7db59d9a6d0b9b80c44162d3ffb86",
+  "source_worktree_dirty": false,
+  "reproduction_receipt_sha256": "386c345c95e885b17e86f60e9e317d5a629040db50477c6767d6eccb77eba318",
+  "retained_receipt": "/home/neo/Projects/fleet-witness-artifacts/stabilization-20261109/reproduction/integrated-final/reproduction-provenance.json",
+  "inputs_unchanged": true,
+  "input_files": 147,
+  "derived_json_files": 18,
+  "archive_sha256": "c55e8acf07ed8dd3c11bc3dc8f70269adebaac6bfa14727642cca7314d1f821a",
+  "previous_independence_sha256": "090dc2c98bd4f5f9f5525532cdcf5c1f71e0585596f3e47781bb1760be989079",
+  "current_independence_sha256": "8eaa128360d3e6367e9907e680f0a0ab07e2976b9ef7795c539f9843d5e33dd7",
+  "checker": {
+    "executed": true,
+    "command": [
+      "/run/current-system/sw/bin/python3",
+      "-m",
+      "fleet_witness.verify_institution",
+      "--depth",
+      "6",
+      "--mutants"
+    ],
+    "returncode": 0
+  },
+  "historical_signatures_verified": false,
+  "new_model_calls": 0,
+  "publication_hashes_verified": true,
+  "historical_reviews_unchanged": true
+}

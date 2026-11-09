@@ -1,0 +1,267 @@
+{
+  "model": "openai/gpt-6.1-sol",
+  "judgements": [
+    {
+      "concern_ref": "B.C1",
+      "stance": "agree",
+      "reason": "Tables 1\u20132 and \u00a74.2 show only 12 seating draws per share and a favorable 1-of-1 realization, warranting draw-level uncertainty, although auditor decisions cannot automatically be resampled from reviewer votes."
+    },
+    {
+      "concern_ref": "B.C2",
+      "stance": "agree",
+      "reason": "The one-case world in \u00a73.2 and Appendix B.1 cannot exercise cross-case isolation, while the abstract omits the bounds that distinguish this check from the live configuration."
+    },
+    {
+      "concern_ref": "B.C3",
+      "stance": "agree",
+      "reason": "Section 4.3 acknowledges the longer, conflicting colluder prompt, and \u00a73.4 supplies non-target cases that could provide an informative control without fully isolating a causal effect of deception."
+    },
+    {
+      "concern_ref": "B.C4",
+      "stance": "agree",
+      "reason": "Section 3.4 does not establish auditors' exposure to reviewer-generated information or audit timing, so Table 1's seven-call standalone deployment interpretation needs clarification."
+    },
+    {
+      "concern_ref": "B.C5",
+      "stance": "agree",
+      "reason": "Appendix B.4 requires positive shared-minority evidence that can disappear when colluders win target votes, and \u00a74.3 reports a false-positive cluster without an explicit run-level denominator."
+    },
+    {
+      "concern_ref": "B.C6",
+      "stance": "agree",
+      "reason": "Section 2's substantive comparisons depend on references that the manuscript itself flags for verification, although that flag does not establish that any identifier is a placeholder or fabricated."
+    },
+    {
+      "concern_ref": "B.N1",
+      "stance": "agree",
+      "reason": "Table 1 mislabels the hybrid's committee-only expectation, \u00a76 claims judgment equivalence despite 16/17 versus zero captures, and the abstract omits Finding 1's architectural explanation of forged-receipt approval."
+    },
+    {
+      "concern_ref": "C.C1",
+      "stance": "agree",
+      "reason": "Section 6's judgment-equivalence statement conflicts with Table 1's 16/120 and 17/120 committee captures versus zero for gated majority on a task with no observed honest unsafe attestations."
+    },
+    {
+      "concern_ref": "C.C2",
+      "stance": "agree",
+      "reason": "Section 3.2 and Appendix B.1 explicitly restrict verification to one case, three seats and depth six, excluding cross-case interactions and the live seven-seat configurations."
+    },
+    {
+      "concern_ref": "C.C3",
+      "stance": "agree",
+      "reason": "Finding 1 explains that voters cannot verify the symmetric HMAC and identifies gated majority as the informative control, whereas the abstract reports forged approvals without that qualification."
+    },
+    {
+      "concern_ref": "C.C4",
+      "stance": "agree",
+      "reason": "Section 4.3 explicitly identifies hidden reasoning and the longer conflicting colluder prompt, so the abstract's monitoring suggestion needs the same non-causal qualification."
+    },
+    {
+      "concern_ref": "C.C5",
+      "stance": "agree",
+      "reason": "The revised concern correctly acknowledges Figure 1's existing independent-draw disclosure, while Tables 1\u20132 still need uncertainty treatment that separates seating variation from behavioral variation."
+    },
+    {
+      "concern_ref": "C.C6",
+      "stance": "agree",
+      "reason": "Section 2 acknowledges inaccessible candidate papers while asserting a combination-of-methods gap whose supporting references remain flagged for verification."
+    },
+    {
+      "concern_ref": "C.N1",
+      "stance": "agree",
+      "reason": "Table 1 assigns hybrid the committee-only G3 value of 21.8 even though \u00a7\u00a73.1 and 3.4 require an additional majority gate, which cannot pass under zero honest error and a strict majority at the tested colluder shares."
+    },
+    {
+      "concern_ref": "C.N2",
+      "stance": "agree",
+      "reason": "Sections 1 and 6 extend assurance beyond the checked world, while \u00a75 conflates G3's error-independence premise with G1/G2 and \u00a73.1 establishes atomic database commits rather than external-action semantics."
+    },
+    {
+      "concern_ref": "C.N3",
+      "stance": "agree",
+      "reason": "Section 3.4 leaves the auditors' information set unspecified, and Table 1's request counts alone do not establish the proportional cost savings claimed in \u00a75."
+    },
+    {
+      "concern_ref": "D.C1",
+      "stance": "agree",
+      "reason": "Table 1 acknowledges paired conditions and 60 independent seating draws, but neither Table 2 nor Figure 1 quantifies uncertainty in capture rates or paired regime differences."
+    },
+    {
+      "concern_ref": "D.C2",
+      "stance": "disagree",
+      "reason": "Section 3.3 defines G2/G3 and Finding 2 explicitly reconciles 24 versus 36 pooled opportunities with 12 versus 18 capturable independent draws, so the remaining request is clarification rather than an unresolved denominator error."
+    },
+    {
+      "concern_ref": "D.C3",
+      "stance": "agree",
+      "reason": "Sections 3.3 and 4.3 explicitly leave G3's honest-error independence untested, and \u00a76 nevertheless makes a broader judgment-equivalence statement than Table 1 supports."
+    },
+    {
+      "concern_ref": "D.C4",
+      "stance": "agree",
+      "reason": "The revised concern appropriately targets the abstract's omission of Finding 1's architectural caveat, rather than treating Table 1's existing gated-majority control as missing."
+    },
+    {
+      "concern_ref": "D.C5",
+      "stance": "agree",
+      "reason": "Section 3.2 and Appendix A acknowledge that the bounded same-team verification excludes larger configurations and multi-case interleavings, although Code and Data already identifies the released checker and tests."
+    },
+    {
+      "concern_ref": "D.C6",
+      "stance": "agree",
+      "reason": "Section 4.3 identifies the longer colluder instruction and inclusion of hidden reasoning, qualifications missing from the abstract's output-length monitoring suggestion."
+    },
+    {
+      "concern_ref": "D.C7",
+      "stance": "agree",
+      "reason": "The revised concern identifies genuine residual limitations in Appendix B.4's losing-side feature and \u00a74.3's unquantified false-positive denominator despite the existing planted-signature qualification."
+    },
+    {
+      "concern_ref": "D.C8",
+      "stance": "disagree",
+      "reason": "The now-withdrawn concern's alleged strong absence claim is not present because \u00a74.3 calls the observations weak evidence specific to a crisp rule and Appendix A explicitly rejects generalization."
+    },
+    {
+      "concern_ref": "D.C9",
+      "stance": "agree",
+      "reason": "Section 2's novelty and prior-system characterizations require source verification because the manuscript acknowledges inaccessible papers and retains an explicit reference-verification note."
+    },
+    {
+      "concern_ref": "D.N1",
+      "stance": "agree",
+      "reason": "Table 1's hybrid prediction omits the majority gate required by \u00a7\u00a73.1 and 3.4 and therefore is not an expected hybrid-release count."
+    },
+    {
+      "concern_ref": "D.N2",
+      "stance": "agree",
+      "reason": "Table 1 supplies nominal model-request counts, but \u00a73.4 does not establish standalone auditor independence from reviewer information or corresponding token, dollar and latency costs."
+    }
+  ],
+  "revised_own_concerns": [
+    {
+      "id": "C1",
+      "severity": "major",
+      "issue": "Sections 3.4 and 4.2\u20134.3 evaluate essentially exact-match receipt judgments with no observed main-sweep honest unsafe attestations, yet \u00a76 says random committees matched gated-majority judgment despite Table 1's 16/120 and 17/120 captures for 4-of-7 versus zero for gated majority; zero observed captures at 10% collusion also does not establish safety equivalence.",
+      "suggested_fix": "Replace equivalence language with the observed request-count\u2013capture trade-off, state the majority threshold and tie rule, and keep G3's behavioral validity explicitly untested; clarify whether a deterministic receipt validator could classify the synthetic cases and either report that baseline or identify the experiment as a mechanism demonstration rather than semantic-oversight validation."
+    },
+    {
+      "id": "C2",
+      "severity": "major",
+      "issue": "Section 3.3's G3 expression concerns committee approval under its behavioral assumptions, but Table 1 labels 21.8 as hybrid expected capture without marking it committee-only; hybrid release additionally requires majority approval and the remaining mechanical gates.",
+      "suggested_fix": "Label 21.8 as a committee-only opportunity estimate or replace it with not applicable; if predicting hybrid release, specify a joint model of reviewer votes and auditor attestations rather than assuming independence, noting that zero honest error and a strict majority imply zero hybrid target releases at every tested colluder share."
+    },
+    {
+      "id": "C3",
+      "severity": "minor",
+      "issue": "Section 3.4 does not establish whether committee auditors receive reviewer-generated board information or when audits occur, leaving Table 1's standalone seven-call interpretation uncertain; request counts also do not establish proportional token, dollar or latency savings.",
+      "suggested_fix": "Specify auditor prompts, information sets and audit timing across board conditions, and confirm whether committee-only deployment can omit reviewer calls; report token or dollar costs including retries if available, otherwise consistently claim fewer model requests rather than sevenfold lower cost."
+    },
+    {
+      "id": "C4",
+      "severity": "minor",
+      "issue": "Tables 1\u20132 and Figure 1 correctly disclose paired board conditions, but the seed structure across shares and uncertainty in capture rates and paired regime contrasts remain insufficiently documented; cross-row capture differences cannot be attributed wholly to either seating or behavior from the presented summaries.",
+      "suggested_fix": "Provide a run-to-seed and shared-draw mapping, distinguish seating randomness from response variation, and report draw-level or appropriately clustered uncertainty and paired contrasts; preserve the existing independent-draw disclosure and only resample logged decisions when their coverage and exchangeability justify it."
+    },
+    {
+      "id": "C5",
+      "severity": "minor",
+      "issue": "Sections 1 and 6 extend assurance to arbitrary swarm sizes despite bounded implementation evidence, while \u00a75 lists independent honest errors as an assumption of an undifferentiated guarantee; the demonstrated atomic SQLite release record also does not establish at-most-once external gateway effects.",
+      "suggested_fix": "Add an assumption-and-scope table distinguishing G1, G2 and G3, attach the verification bound to the abstract's state count, and make scale-independent implementation assurance conditional on establishing the invariants beyond that bound; define release as a database transition unless concurrency and external effects have separate supporting evidence."
+    },
+    {
+      "id": "N1",
+      "severity": "major",
+      "issue": "The one-case verification world in \u00a73.2 and Appendix B.1 cannot exercise cross-case isolation, including erroneous reuse of another case's attestations, policy or release records; Appendix A acknowledges this exclusion, but G1's release-binding and per-case claims remain central to the assurance argument.",
+      "suggested_fix": "Clarify whether separate cross-case tests exist and report them; otherwise add a small two-case check with cross-case attestation and policy-reuse attempts plus a corresponding mutant, or explicitly distinguish cross-case isolation from properties supported by the bounded result."
+    },
+    {
+      "id": "N2",
+      "severity": "minor",
+      "issue": "The abstract's output-length monitoring suggestion omits \u00a74.3's prompt and hidden-reasoning qualifications, and the target-only contrast cannot distinguish active manipulation from receiving the colluder instruction.",
+      "suggested_fix": "Qualify the abstract's association and use existing non-target cases to compare colluder-versus-honest output lengths when both are instructed to answer honestly; treat this as a partial control because target status and case content also differ, and reserve causal attribution for a matched-instruction design."
+    },
+    {
+      "id": "N3",
+      "severity": "minor",
+      "issue": "Section 2's novelty argument and substantive descriptions of prior systems depend on references flagged for checking and an acknowledged incomplete scan; the manuscript does not establish that any reference is fabricated.",
+      "suggested_fix": "Verify cited identifiers, titles, versions and substantive characterizations against original sources, and keep the combination-of-methods gap provisional wherever relevant comparisons remain inaccessible or unverified."
+    },
+    {
+      "id": "N4",
+      "severity": "minor",
+      "issue": "Appendix B.4's mandatory shared-minority evidence can lose signal when colluders win target votes, while \u00a74.3 does not give an explicit run-level denominator for zero-collusion false positives; this is a voting-pattern limitation rather than a strict threshold on planted cell size.",
+      "suggested_fix": "Describe the failure regime in terms of realized losing-side votes, and report false-positive runs over all evaluated zero-collusion runs by model and board condition alongside the existing planted-signature limitation."
+    },
+    {
+      "id": "N5",
+      "severity": "minor",
+      "issue": "Section 4.3 says near-miss errors were too rare to affect any committee and that there were no errors to diversify away, whereas its table reports two 1-of-1 captures from honest errors; these statements appear inconsistent unless they refer only to larger committees or a different evaluation subset.",
+      "suggested_fix": "Specify which configurations and cases support each statement, clarify whether the no-capture observation applies only to larger committees, and document the mixed-model comparison sufficiently to interpret its null result."
+    }
+  ],
+  "withdrawn": [],
+  "new_concerns": [],
+  "rebuttals": [
+    {
+      "to": "B",
+      "about": "B.C1",
+      "response": "I agree that seating noise warrants uncertainty estimates, but \u00a73.4 distinguishes reviewer votes from auditor attestations, so fifty logged reviewer votes do not automatically supply fifty interchangeable auditor decisions; the resampling proposal needs a justified response model and adequate auditor coverage."
+    },
+    {
+      "to": "B",
+      "about": "B.C3",
+      "response": "The non-target comparison is useful, but it does not directly isolate deception: \u00a73.4 makes target status depend on case type, so target versus non-target differences can also reflect content and instruction interactions."
+    },
+    {
+      "to": "B",
+      "about": "B.C6",
+      "response": "Source verification is scientifically necessary because \u00a72 relies on substantive comparisons, but the editorial verification note alone does not show that the cited identifiers are placeholders or hallucinations."
+    },
+    {
+      "to": "C",
+      "about": "C.C5",
+      "response": "Your revised concern corrects the original caption misreading, so I now agree with its residual uncertainty concern; I retain minor severity because the paper discloses pairing and avoids significance claims, and I would not label all observed capture differences seating artifacts because imperfect compliance also contributes."
+    },
+    {
+      "to": "C",
+      "about": "C.C5",
+      "response": "There is also no strict committee-size improvement at 50% collusion under zero-error, full-compliance G3: symmetry gives a one-half capture probability for each odd-sized majority committee, so Table 2's ordering at that share is not itself a violation of a decreasing theoretical curve."
+    },
+    {
+      "to": "C",
+      "about": "C.N1",
+      "response": "I agree about the mislabeled hybrid expectation, but shared membership alone does not fully specify dependence between votes and attestations because \u00a73.4 collects them as separate decisions; any nonzero-error joint prediction needs an explicit response-dependence model."
+    },
+    {
+      "to": "C",
+      "about": "B.C4",
+      "response": "Your correction of the original Table 2 interpretation is right: 12/13 denotes DeepSeek/gpt-oss, not visible/hidden conditions; B's revised concern no longer relies on that error, and the auditor-information clarification remains valid."
+    },
+    {
+      "to": "D",
+      "about": "D.C2",
+      "response": "I continue to disagree with treating the denominator reconciliation as a major unresolved defect: Finding 2 explicitly gives twelve realized versus eighteen expected capturable draws, doubled to twenty-four versus thirty-six paired opportunities; a compact summation formula would improve reproducibility, but compliance adjustment is not required for the explicitly full-compliance G3 prediction."
+    },
+    {
+      "to": "D",
+      "about": "D.C3",
+      "response": "I agree that G3 remains unvalidated, but honest-error independence is not required by mechanical G1 or the conditional zero-error G2 implication, so correlated-error concerns should remain attached to the appropriate claim."
+    },
+    {
+      "to": "D",
+      "about": "D.C4",
+      "response": "I agree with the revised minor abstract-scoping concern; Table 1 already contains the informative crowd-plus-mechanical-check control, while a public-key or tool-assisted voter experiment would extend applicability rather than repair a missing control in the existing comparison."
+    },
+    {
+      "to": "D",
+      "about": "D.C7",
+      "response": "The losing-side limitation is real, but Appendix B.4 does not impose a hard less-than-50% planted-cell assumption: imperfect compliance and case-specific outcomes determine whether shared-minority evidence remains available."
+    }
+  ],
+  "updated_scores": {
+    "impact_innovation": 3,
+    "execution": 3,
+    "presentation": 4
+  },
+  "updated_verdict": "weak accept"
+}

@@ -1,5 +1,66 @@
 # Build and deployment verification
 
+## Swarm stabilization: 2026-11-09
+
+The independent review at `8c0c790` found shared request-count, Git-free fixture,
+dataset-attribution and unsent-attempt accounting defects. All four were fixed
+at `519c3aacfc4cd32b10dafb598915ac11930da5f8` with retained red/green regressions.
+The fix-pass suite passed **233 Python tests**. The complete Git-free offline
+task then passed **233 Python tests, five viewer tests and the scripted demo**,
+ending at `stage=complete`, exit 0. Full reproduction at that clean commit again
+preserved 147 inputs and passed both depth-six configurations and all seven
+mutants; 18 strict JSON outputs now include validated model/configuration
+identities. See [review resolution](reviews/swarm-stabilization-resolution.md)
+and [final reproduction receipt](report/REPRODUCTION-REVIEW-FIX-2026-11-09.json).
+Exact final-source hosted CI remains the integration gate in
+[PR #6](https://github.com/k2jac9/fleet-witness/pull/6). Earlier failed checks and
+the original negative review are preserved, not overwritten by this resolution.
+
+The initial integration checkpoint follows for provenance.
+
+Task `swarm-stabilization` preserves `feat/live-swarm` at `6061cb2` and integrates
+the reviewed changes on `fix/swarm-stabilization-20261109`. Implementation source
+`50902524c8e7db59d9a6d0b9b80c44162d3ffb86` passed 228 Python tests and five viewer
+tests, fleet validation/planning and whitespace checks. The Python command was
+`python3 -m unittest discover -s tests -v` on Python 3.15.0; viewer tests used
+Node 26.11.0. Full logs retain inherited unclosed-SQLite `ResourceWarning`s.
+Targeted red/green regressions cover shared durable budgets, failed-request
+liability, authorization before I/O, public/private receipts, integration with
+real provider code under synthetic transport, and preservation after parsing
+failures. No credential or provider network access was used by these tests.
+
+The shared SQLite ledger uses fixed-point reservations and immutable caps;
+unknown or excess charges stop dispatch. Paid requests are sequential and never
+implicitly retried. CLI entrypoints require private, source-bound operator
+records and a clean committed tree. These controls do not independently verify
+provider facts or establish production readiness. See [SWARM.md](SWARM.md).
+
+Full offline reproduction at that clean commit validated 147 input files without
+mutation and emitted 18 strict JSON outputs. Both main sweeps reconstructed the
+gated-majority result through the actual kernel: 0/120 target effects, 0/48 forged
+effects and 96/96 valid effects each. Fresh keys do not authenticate historical
+signatures. The depth-six checker passed 23,376 states / 105,708 transitions in
+hybrid mode and 27,636 / 120,456 in committee-only mode; all seven mutants were
+caught. This bounded result does not prove all world sizes or the zero-seat
+configuration, which has separate behavioral tests.
+
+The corrected Markdown/HTML/PDF and figures have bound hashes; all 17 PDF pages
+were rendered and visually checked by the publication worker. Current medians,
+denominators, cost scope, paired-study limitations and AI-review status were
+corrected. The original archive and historical reviews remain byte-identical.
+The current independence JSON now uses `null` for undefined values. See
+[publication corrections](report/CORRECTIONS-2026-11-09.md) and
+[integrated reproduction](report/REPRODUCTION-2026-11-09.json).
+
+Evidence packet: `/home/neo/Projects/fleet-witness-artifacts/stabilization-20261109/`.
+Independent whole-candidate review and final-source hosted CI were pending at
+this initial checkpoint. No new model inference, cloud deployment, dashboard check,
+provider-balance verification or Nix build was performed. The historical
+dashboard and account statements below are dated observations, not current
+health or balance claims. GCP remains a separate $100 maximum; no part of this
+offline work spends it. Provider qualification and ledger reconciliation remain
+explicit gates before a new paid canary.
+
 ## Publication and gate closure: 2026-11-08
 
 The owner requested publication of all current work and continuation through the

@@ -1,0 +1,194 @@
+{
+  "model": "google/gemini-4-argon",
+  "judgements": [
+    {
+      "concern_ref": "A.C1",
+      "stance": "agree",
+      "reason": "Direct majority is tested without kernel mechanical checks while the hybrid regime adds both a 4-of-7 committee and mechanical checks (Section 3.4, Table 1), leaving a 'majority + mechanical checks' baseline unmeasured."
+    },
+    {
+      "concern_ref": "A.C2",
+      "stance": "agree",
+      "reason": "Table 1 pools 120 trials across five different colluder shares and paired board conditions that share 60 committee draws, violating the i.i.d. Bernoulli assumption of the reported Clopper-Pearson intervals."
+    },
+    {
+      "concern_ref": "A.C3",
+      "stance": "agree",
+      "reason": "Section 3.2 and Appendix B.1-B.2 do not specify the exact state deduplication abstraction, which kernel mode produced the 23,376 depth-6 states, or how S2 ('a release whenever preconditions hold') constitutes temporal liveness rather than transition enablement."
+    },
+    {
+      "concern_ref": "A.C4",
+      "stance": "agree",
+      "reason": "Because observed honest unsafe error is 0/746 in both models (Section 4.2, Finding 1), the binomial honest-error component and independence assumption of the Section 3.3 capture formula are never empirically exercised."
+    },
+    {
+      "concern_ref": "A.C5",
+      "stance": "agree",
+      "reason": "Colluders receive extra conditional instructions and a shared talking point in their prompt (Section 3.4), confounding the 1.9-2.8x token length increase (Finding 5) with prompt complexity and role instructions."
+    },
+    {
+      "concern_ref": "A.C6",
+      "stance": "agree",
+      "reason": "The detector relies on shared-minority voting and TF-IDF text similarity (Appendix B.4) while colluders are explicitly instructed to reuse a shared talking point on targets that honest agents unanimously reject (Section 3.4)."
+    },
+    {
+      "concern_ref": "A.C7",
+      "stance": "agree",
+      "reason": "The Code and Data section notes that raw logs are only available on request and points to a mutable git branch, while exact prompts and seed nesting details are omitted from the text."
+    },
+    {
+      "concern_ref": "A.C8",
+      "stance": "agree",
+      "reason": "Section 4.2 (Finding 3) attributes 9/96 blocked valid releases under unanimity to 8/492 honest valid-release refusals without accounting for the remaining blocked release."
+    },
+    {
+      "concern_ref": "A.C9",
+      "stance": "agree",
+      "reason": "Section 2 makes categorical gap claims while admitting two candidate papers were inaccessible, and the References section includes unverified/impossible future arXiv IDs and an explicit editorial reminder to verify sources."
+    },
+    {
+      "concern_ref": "C.C1",
+      "stance": "factually_wrong",
+      "reason": "26 is already an even number (13 capturable draws doubled across the 2 paired board conditions), and for a hypergeometric/Bernoulli sum over 60 independent draws with shares 0.1 to 0.5 (expected 18 capturable draws, variance sum 11.4, SD ~3.38), an observed count of 12 vs 18 (or 24 vs 36 when doubled across the 2 perfectly correlated paired conditions, where SD doubles to ~6.75) is indeed ~1.78 standard deviations below expectation."
+    },
+    {
+      "concern_ref": "C.C2",
+      "stance": "agree",
+      "reason": "Bounded verification only checks 1 case, 3 seats (quorum 2), and depth 6 (Section 3.2, Appendix B.1), and Appendix A admits the specification was written by the same team (with Claude Code implementing both per the LLM Usage Statement), contradicting 'independently written' in Section 3.2."
+    },
+    {
+      "concern_ref": "C.C3",
+      "stance": "agree",
+      "reason": "Figure 2 and Finding 5 include hidden reasoning tokens in the 1.9-2.8x deliberation ratio without separating visible output tokens or controlling for the longer conditional colluder instruction."
+    },
+    {
+      "concern_ref": "C.C4",
+      "stance": "agree",
+      "reason": "The detector combines shared-minority voting and TF-IDF cosine similarity (Appendix B.4) against colluders explicitly instructed to push targets using a shared talking point (Section 3.4), without an ablation separating vote-only and text-only detection."
+    },
+    {
+      "concern_ref": "C.C5",
+      "stance": "agree",
+      "reason": "Table 1 labels the n=120 Clopper-Pearson intervals 'Exact 95% intervals' despite pooling across shared committee draws and repeated agents across cases."
+    },
+    {
+      "concern_ref": "C.C6",
+      "stance": "agree",
+      "reason": "The Abstract and Section 6 state unqualified claims about scaling with swarm size and honest agents never herding, whereas the experiment tests a fixed N=50 swarm on a crisp task with only 14 and 16 herding exposure events (Finding 4)."
+    },
+    {
+      "concern_ref": "C.C7",
+      "stance": "agree",
+      "reason": "Raw sweep logs are only available on request (Code and Data), and denominators like 746, 492, and 262 in Section 4.2 are not explicitly derived from the trial structure."
+    },
+    {
+      "concern_ref": "C.C8",
+      "stance": "agree",
+      "reason": "Section 2's novelty gap relies on 2026 preprints (several with impossible future arXiv IDs in References) and notes that two candidate papers were inaccessible."
+    },
+    {
+      "concern_ref": "D.C1",
+      "stance": "agree",
+      "reason": "The Abstract and Contribution 4 present the verification broadly, whereas Section 3.2 and Appendix A clarify it is bounded model checking of a single-case, 3-seat, depth-6 configuration using a same-team specification."
+    },
+    {
+      "concern_ref": "D.C2",
+      "stance": "agree",
+      "reason": "Table 1 pools 120 target trials across shared committee draws and heterogeneous colluder shares, reporting naive n=120 Clopper-Pearson intervals without a cluster-adjusted or draw-level uncertainty analysis."
+    },
+    {
+      "concern_ref": "D.C3",
+      "stance": "agree",
+      "reason": "Section 3.3 assumes independent honest errors and 100% colluder compliance, whereas observed honest unsafe error was 0/746 and colluder compliance was 89.3-92.4% (Section 4.2, Finding 1)."
+    },
+    {
+      "concern_ref": "D.C4",
+      "stance": "agree",
+      "reason": "Finding 2 states that 'crowds judge but cannot verify' and highlights 48/48 forged-signature approvals in the Abstract, even though Section 4.2 admits voters were architected without HMAC keys or verification tools."
+    },
+    {
+      "concern_ref": "D.C5",
+      "stance": "agree",
+      "reason": "Finding 5 and Figure 2 measure total output tokens including hidden reasoning under a longer, conditional colluder prompt, which confounds deception cost with instruction complexity and relies on hidden chain-of-thought tokens."
+    },
+    {
+      "concern_ref": "D.C6",
+      "stance": "agree",
+      "reason": "The raw logs from the temperature 0.7 sweeps are only available on request (Code and Data), and Appendix B.4 provides fixed detector thresholds without sensitivity analysis."
+    },
+    {
+      "concern_ref": "D.C7",
+      "stance": "agree",
+      "reason": "Table 1 mixes denominators across columns (120 for target captures over shares > 0, vs. 96 for valid releases and 48 for forged releases across all 6 shares including 0%) without explicit column footnotes explaining the pooling."
+    },
+    {
+      "concern_ref": "D.C8",
+      "stance": "agree",
+      "reason": "Section 3.2 labels S2 ('a release whenever preconditions hold') as 'liveness', which in a finite-depth BFS check is a one-step transition/enablement property rather than temporal liveness."
+    },
+    {
+      "concern_ref": "D.C9",
+      "stance": "agree",
+      "reason": "The Abstract states unconditionally that 'Honest agents never herded', whereas Section 4.2 (Finding 4) notes this rests on only 0/14 and 0/16 exposures and calls it 'weak evidence of absence'."
+    },
+    {
+      "concern_ref": "D.C10",
+      "stance": "agree",
+      "reason": "The References section contains impossible future-dated 2026 arXiv identifiers alongside an unremoved editorial prompt note, and Section 2 notes two candidate papers were inaccessible."
+    }
+  ],
+  "revised_own_concerns": [
+    {
+      "id": "C1",
+      "severity": "critical",
+      "issue": "Multiple cited references contain impossible future arXiv identifiers (e.g., arXiv:2605.20704, arXiv:2607.23532, arXiv:2608.15888, arXiv:2609.04170) or future sprint dates (2026-11-08 in Appendix A), alongside an editorial note left in the text: '*(Verify every reference against its source before submission; do not add uncited claims.)*', and Section 2 admits two candidate papers were inaccessible.",
+      "suggested_fix": "Audit every entry in the References section and Section 2. Remove all hallucinated or unverifiable citations, verify the actual arXiv IDs and publication years of real papers, explicitly qualify claims regarding inaccessible papers, and delete the internal prompt note at the end of the References section."
+    },
+    {
+      "id": "C2",
+      "severity": "major",
+      "issue": "Colluding agents were explicitly instructed to 'push the targets using a shared talking point' (Section 3.4), and the blue-team detector relies on TF-IDF cosine similarity of the public reasons alongside shared-minority voting (Appendix B.4) on a task where honest error is 0%.",
+      "suggested_fix": "Temper the claim in Finding 6 ('detection is easy below a majority') to state that detection succeeds under a shared talking point and unanimous honest majority. Explicitly report an ablation on existing logs in Appendix B.4 showing detector F1 using *only* the voting matrix (`z_minority`) vs. *only* text similarity (`z_text`), and include false-positive accounting across the 0% colluder runs."
+    },
+    {
+      "id": "C3",
+      "severity": "major",
+      "issue": "The evaluation task is so unambiguous that the honest unsafe error rate is exactly zero (0/746 in both models), and honest voters exposed to an approving majority Prior only occurred 14 and 16 times across the entire sweep. Thus, the binomial honest-error term and independence assumption in Section 3.3 are untested, and the non-herding claim in the Abstract is underpowered.",
+      "suggested_fix": "Clearly separate the deterministic k-attestation kernel rule, the zero-error hypergeometric seat bound, and the probabilistic honest-error model (Section 3.3). Revise the Abstract and Introduction to state that only the hypergeometric colluder-seating component (modulated by 89-92% colluder compliance) was empirically exercised, and qualify the Abstract's herding claim with the exact exposure counts (0/14 and 0/16)."
+    },
+    {
+      "id": "C4",
+      "severity": "major",
+      "issue": "Table 1 pools 120 target trials across five heterogeneous colluder shares and paired board conditions that share 60 pseudo-random committee draws, and presents naive n=120 'Exact' Clopper-Pearson confidence intervals as its primary uncertainty estimates. Furthermore, denominator changes across columns (120 vs 96 vs 48) and event counts (e.g., 8/492 honest refusals causing 9/96 blocked valid releases in Finding 3, and derivations of 746 and 262) are not explained.",
+      "suggested_fix": "Drop 'Exact' from Table 1's Clopper-Pearson intervals; report outcomes stratified by colluder share and compute uncertainty at the independent draw/cluster level (n=60). Add clear footnotes deriving all denominators (120, 96, 48, 746, 492, 262), explain the 8 refusals vs. 9 blocked valid cases in Finding 3, and clarify whether k-of-m committees are nested subsets of the 7-seat draw."
+    },
+    {
+      "id": "C5",
+      "severity": "major",
+      "issue": "The 1.9-2.8x output token deliberation overhead for colluders (Abstract, Finding 5, Figure 2) is attributed to the cognitive cost of deception and proposed as a 'content-free monitoring signal', but (a) the colluder system prompt is longer and adds conditional instructions, and (b) the token counts include hidden reasoning tokens that may not be visible to a public-log monitor.",
+      "suggested_fix": "From existing logs, report visible completion tokens separately from hidden reasoning tokens, and compare colluder vs. honest token lengths on *non-target* (valid) cases where colluders have the same system prompt but vote honestly. Reframe Finding 5 and the Abstract as an instruction-conditioned token-length association unless an equal-length benign prompt control is run."
+    },
+    {
+      "id": "C6",
+      "severity": "major",
+      "issue": "The formal verification claims in the Abstract, Contribution 2/4, and Section 3.2 overstate the scope of the check: bounded model checking only covers 1 case, 3 seats (quorum 2), and depth 6, while live runs use up to 7 seats and 24 cases; Section 3.2 calls the specification 'independently written' despite Appendix A and the LLM Usage Statement noting the same team and AI assistant wrote both; S2 is called 'liveness' despite being a bounded transition check; and the SQLite state deduplication abstraction is unspecified.",
+      "suggested_fix": "Narrow the Abstract and Introduction to specify bounded verification on a 1-case, 3-seat configuration, and drop 'independently written'. Relabel S2 as bounded transition enablement/admission rather than temporal liveness. In Appendix B.1-B.2, specify the canonical SQLite state abstraction used for deduplication and state which kernel mode produced the 23,376 depth-6 states."
+    }
+  ],
+  "withdrawn": [],
+  "new_concerns": [
+    {
+      "id": "N1",
+      "severity": "major",
+      "issue": "Section 3.4 and Finding 2 bundle mechanical verification (HMAC receipt checking) with committee governance. Direct majority is tested without any mechanical checks (resulting in 48/48 forged releases approved), whereas the hybrid regime adds both a 4-of-7 committee and kernel mechanical checks. Without a 'majority + mechanical checks' baseline, the specific benefit of the 4-of-7 committee in the hybrid regime is not isolated.",
+      "suggested_fix": "Evaluate the existing direct-majority votes gated by the kernel's mechanical checks (integrity, policy, uniqueness, audit) without the 4-of-7 committee, and report it in Table 1 alongside the hybrid regime. Also temper the Abstract and Finding 2 title ('crowds judge but cannot verify') to make clear inside the Abstract that voters were denied verification tools by architectural design."
+    },
+    {
+      "id": "N2",
+      "severity": "minor",
+      "issue": "The Code and Data section references a mutable git branch (`feat/live-swarm`) and states that raw logs from the reported sweeps are only available on request, preventing direct offline reproduction of Table 1 and Figure 1-2 from the repository alone.",
+      "suggested_fix": "Release the sanitized raw JSON/event logs of the two reported sweeps (including both versions of the 30% DeepSeek re-run) directly in the repository or an archival deposit, and cite an immutable commit hash or release tag."
+    }
+  ],
+  "updated_verdict": "weak reject"
+}

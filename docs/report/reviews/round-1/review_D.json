@@ -1,0 +1,103 @@
+{
+  "model": "qwen/qwen3.8-max-0902",
+  "summary": "The paper proposes a small separation-of-powers kernel that separates mechanically verifiable governance checks from LLM auditors' semantic judgments and evaluates it with bounded model checking and live LLM swarm stress tests. The evidence supports the narrow claim that, in this synthetic task, unsafe releases occurred only when enough colluders were seated and signed, while majority voting resisted persuasion but could not check forged signatures. However, the strength of the claims is limited by the small bounded-verification scope, non-independent trials, untested correlated honest error, and potential overstatement of crowd and detection results.",
+  "strengths": [
+    "The paper clearly separates mechanical invariants from semantic safety judgment, and the kernel's checks are concrete enough to be bounded-checked and mutation-tested.",
+    "The live stress test includes useful baselines and regime comparisons, including direct majority, committees of varying quorums, and a hybrid rule, with paired committee draws across conditions.",
+    "The authors are unusually transparent about limitations, pre-declared truncation handling, seat-draw bounds versus a-priori expectations, and the conditional nature of the guarantee."
+  ],
+  "concerns": [
+    {
+      "id": "C1",
+      "severity": "major",
+      "category": "validity",
+      "location": "Abstract; \u00a73.2; \u00a74.1",
+      "issue": "The abstract's 'formally checked' and 'safety ... hold' language is broader than the bounded check of one case, three auditors, depth 6, with a same-team specification.",
+      "why_it_matters": "Readers may generalize verified mechanical invariants to the full 50-agent, 7-member, multi-case system and to semantic safety, which was not verified.",
+      "suggested_fix": "Rewrite the abstract and introduction to say bounded model checking of a toy kernel configuration; add a table mapping verified assumptions to live-test assumptions and explicitly list unverified dimensions such as multi-case interleavings, 7-seat committees, 50 agents, and LLM parsing/retry logic."
+    },
+    {
+      "id": "C2",
+      "severity": "major",
+      "category": "statistics",
+      "location": "\u00a74.2; Table 1; Figure 1",
+      "issue": "Target trials are pooled across paired board conditions, repeated targets, and shared committee draws; Clopper-Pearson intervals use n=120 and are acknowledged as optimistic, but no corrected analysis is shown.",
+      "why_it_matters": "Capture rates and uncertainty may be driven by a few committees or target cases, so regime and model comparisons may be statistically misleading.",
+      "suggested_fix": "Report analyses at the independent draw level, or use cluster-robust bootstrap, exact paired tests, or mixed-effects logistic regression with committee and target random effects; also present per-condition and per-target counts."
+    },
+    {
+      "id": "C3",
+      "severity": "major",
+      "category": "validity",
+      "location": "\u00a73.3; \u00a75; Limitations",
+      "issue": "The capture formula assumes independent honest error and implicitly full colluder compliance, but observed compliance was below 100% and honest unsafe error was zero, leaving correlated honest failures untested.",
+      "why_it_matters": "The paper's central safety guarantee is conditional; without measuring or bounding correlated honest error, the reported capture bounds may be optimistic for realistic ambiguous tasks and same-model committees.",
+      "suggested_fix": "Add a sensitivity analysis for nonzero epsilon, correlated-error scenarios, and observed colluder compliance; report exact confidence intervals for honest error and compliance; qualify all guarantee statements as task-specific."
+    },
+    {
+      "id": "C4",
+      "severity": "major",
+      "category": "overclaiming",
+      "location": "\u00a74.2 Finding 2; Abstract",
+      "issue": "The claim that crowds cannot verify is tested only because voters were given no cryptographic verification tool, and the authors note this is architectural, yet it is framed as an empirical finding.",
+      "why_it_matters": "The result is tautological and cannot support a general comparison between crowds and institutions unless a tool-augmented crowd baseline is included or the claim is narrowed.",
+      "suggested_fix": "Add a crowds-plus-tools baseline where agents can call a signature verifier, or reframe the finding as 'crowds without verification tools cannot check HMAC-bound receipts' and adjust the abstract accordingly."
+    },
+    {
+      "id": "C5",
+      "severity": "major",
+      "category": "confound",
+      "location": "\u00a73.4; \u00a74.2 Finding 5; Figure 2",
+      "issue": "The token-length 'deliberation cost' compares honest and colluding agents under different private instructions and includes hidden reasoning, so it may reflect instruction complexity or deception load rather than a robust collusion signal.",
+      "why_it_matters": "If proposed as a monitoring signal, it may be confounded, unavailable in deployments without hidden reasoning, or easily adapted by colluders.",
+      "suggested_fix": "Report visible-final-only token counts, control for instruction length and difficulty, and present the result as preliminary; if feasible, include a small adaptive-colluder condition where colluders are instructed to minimize output length."
+    },
+    {
+      "id": "C6",
+      "severity": "major",
+      "category": "reproducibility",
+      "location": "Code and Data; Appendix B; \u00a73.4",
+      "issue": "Raw live logs are only available on request, detector tuning details and threshold sensitivity are sparse, and each model sweep appears to be a single stochastic run at temperature 0.7.",
+      "why_it_matters": "Independent verification of empirical numbers and assessment of sampling variability or detector overfitting are limited.",
+      "suggested_fix": "Archive prompts, responses, seeds, ground truth, and detector outputs in the repository or a data deposit; provide at least one repeated seed or repeated subset, or bootstrap over cases; include a detector threshold ablation."
+    },
+    {
+      "id": "C7",
+      "severity": "minor",
+      "category": "statistics",
+      "location": "Table 1",
+      "issue": "Denominators are not uniform: target columns pool share greater than zero, valid and forged columns appear to include zero-share conditions, and the hybrid bound is committee-only despite the majority precondition.",
+      "why_it_matters": "Readers may misattribute hybrid safety to the committee or compare columns as if they share the same trial set.",
+      "suggested_fix": "Add footnotes or separate tables for each denominator; for the hybrid regime, show a bound conditioned on the majority rule or report the observed majority precondition failure rate."
+    },
+    {
+      "id": "C8",
+      "severity": "minor",
+      "category": "validity",
+      "location": "\u00a73.2; Appendix B, S2",
+      "issue": "The liveness property S2 is not precisely defined; bounded checking cannot establish eventual release under arbitrary schedules.",
+      "why_it_matters": "The liveness claim may be stronger than what finite-depth state exploration supports.",
+      "suggested_fix": "Define S2 as a bounded enablement or transition property, for example that when preconditions hold an enabled executive action commits in the explored model, and state the scheduling assumptions."
+    },
+    {
+      "id": "C9",
+      "severity": "minor",
+      "category": "overclaiming",
+      "location": "Abstract; \u00a74.2 Finding 4",
+      "issue": "The no-herding result is based on very few exposure events, 0/14 and 0/16 honest approvals after an approving majority.",
+      "why_it_matters": "The abstract's statement that honest agents never herded is stronger than the limited exposure data can support.",
+      "suggested_fix": "Temper the claim to 'no herding was observed, but exposure events were rare'; report exact exposure denominators and confidence intervals or a simple power analysis."
+    },
+    {
+      "id": "C10",
+      "severity": "minor",
+      "category": "related-work",
+      "location": "\u00a72; References",
+      "issue": "The manuscript relies on several very recent or future-dated arXiv items and notes that two candidate papers were inaccessible, making some positioning claims hard to verify.",
+      "why_it_matters": "The novelty gap depends on accurate coverage of prior verified agent runtimes and governance mechanisms.",
+      "suggested_fix": "Verify every citation and arXiv identifier, remove or replace inaccessible items unless essential, and explicitly state which related-work claims could not be checked."
+    }
+  ],
+  "verdict": "borderline",
+  "confidence": 4
+}

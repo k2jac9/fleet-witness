@@ -1,284 +1,372 @@
-"""Budget-capped model clients for live swarm runs (standard library only).
+"""Single-attempt paid provider boundary with private durable receipts.
 
-Every real request first reserves its worst-case cost in a persistent ledger
-shared by all runs on this machine. A request that would cross the lifetime
-cap or the per-run cap is refused before anything is sent. Ambiguous failures
-(timeouts, transport errors after sending) are charged at the reserved worst
-case so the ledger never under-counts. Keys are read from the environment only
-and are never logged or written to run output.
-
-This is a hackathon spend guard for one machine and one process at a time,
-not a provider-enforced cap: always also watch the provider's own dashboard.
+Defaults remain offline. Frozen operator-verified USD rates are mandatory; no
+credential, price-discovery request, or model call occurs during construction.
+Unknown charges halt the shared ledger until separate operator reconciliation.
 """
+from decimal import Decimal
+import hashlib
+import http.client
 import json
+import math
 import os
 from pathlib import Path
+import queue
 import random
 import re
-import socket
 import threading
 import time
-import urllib.error
-import urllib.request
+from urllib.parse import urlsplit
 
-ADAPTION_URL = 'https://api.prod.adaptionlabs.ai/api/v1/responses'
-OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
-OPENROUTER_MODELS_URL = 'https://openrouter.ai/api/v1/models'
-
-# Credits per 1M tokens (input, output) from docs.adaptionlabs.ai/inference-stacks/models,
-# checked 2026-11-08. The account owner reports 1 credit = 1 USD.
-ADAPTION_PRICES = {
-    'deepseek-v4-flash': (0.04444, 0.13332),
-    'gemma-4-26b-a4b-it': (0.0765, 0.255),
-    'gemma-4-31b-it': (0.09, 0.34),
-    'qwen3.8-27b': (0.039, 1.25),
-    'glm-53-flash': (0.15, 0.50),
-    'qwen3.5-397b': (0.55, 3.50),
-    'glm-5.2': (1.40, 4.40),
-}
+from .authorization import ADAPTION_URL, OPENROUTER_URL, source_identity, validate_authorization, validate_record
+from .ledger import (Ledger as _Ledger, BudgetExceeded, ProviderError, DEFAULT_LIFETIME_CAP,
+                     canonical_json, decimal_usd, dollars, units)
 
 LEDGER_DIR = Path.home() / '.fleet_witness'
-# Lifetime caps per provider unless overridden; deliberately far below the balances.
-DEFAULT_LIFETIME_CAP = {'adaption': 100.0, 'openrouter': 15.0, 'fake': 1e9}
 
 
-class BudgetExceeded(RuntimeError):
-    pass
+class Ledger(_Ledger):
+    def __init__(self, provider, run_cap_usd, lifetime_cap_usd=None, path=None, *, run_id=None, tag=None):
+        super().__init__(provider, run_cap_usd, lifetime_cap_usd,
+                         path if path is not None else LEDGER_DIR / 'spend-ledger.sqlite3',
+                         run_id=run_id, tag=tag)
 
 
-class ProviderError(RuntimeError):
-    pass
-
-
-def _env_key(name: str) -> str:
+def _env_key(name):
     value = os.environ.get(name)
-    if not value and os.name == 'nt':
-        # Keys saved with `setx` are visible to new processes only; read the user scope directly.
-        try:
-            import winreg
-            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, 'Environment') as handle:
-                value = winreg.QueryValueEx(handle, name)[0]
-        except OSError:
-            value = None
-    if not value:
-        raise ProviderError(f'{name} is not set')
+    if not value or not isinstance(value, str) or len(value) > 8192 or '\r' in value or '\n' in value:
+        raise ProviderError('provider credential unavailable or invalid')
     return value
 
 
-def estimate_tokens(text: str) -> int:
-    """Deliberately pessimistic: about 3 characters per token, plus overhead."""
-    return len(text) // 3 + 64
+def estimate_tokens(text):
+    """Conservative byte bound plus fixed protocol overhead, not a tokenizer."""
+    return len(text.encode('utf-8')) + 256
 
 
-class Ledger:
-    """Persistent per-provider spend with lifetime and per-run hard caps."""
-
-    def __init__(self, provider: str, run_cap_usd: float, lifetime_cap_usd: float | None = None,
-                 path: Path | None = None):
-        """One ledger file per provider, so parallel sweeps on different providers never share a file.
-        Two processes on the SAME provider would still race: run one sweep per provider at a time."""
-        self.provider = provider
-        self.path = Path(path) if path else LEDGER_DIR / f'spend-ledger-{provider}.json'
-        self.run_cap = float(run_cap_usd)
-        self.lifetime_cap = float(DEFAULT_LIFETIME_CAP.get(provider, 5.0)
-                                  if lifetime_cap_usd is None else lifetime_cap_usd)
-        self.run_spent = 0.0
-        self.run_reserved = 0.0
-        self.calls = 0
-        self._lock = threading.Lock()
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-
-    def _load(self) -> dict:
-        for attempt in range(20):
-            try:
-                return json.loads(self.path.read_text(encoding='utf-8'))
-            except FileNotFoundError:
-                return {}
-            except PermissionError:  # Windows: file briefly locked by antivirus/indexer
-                time.sleep(0.05 * (attempt + 1))
-        raise BudgetExceeded(f'cannot read spend ledger {self.path}; refusing to spend blind')
-
-    def _save(self, data: dict):
-        tmp = self.path.with_name(f'{self.path.stem}.{os.getpid()}.tmp')
-        tmp.write_text(json.dumps(data, indent=2, sort_keys=True), encoding='utf-8')
-        for attempt in range(20):
-            try:
-                os.replace(tmp, self.path)
-                return
-            except PermissionError:
-                time.sleep(0.05 * (attempt + 1))
-        raise BudgetExceeded(f'cannot write spend ledger {self.path}; stopping to stay safe')
-
-    def lifetime_spent(self) -> float:
-        with self._lock:
-            return self._load().get(self.provider, {}).get('spent_usd', 0.0)
-
-    def reserve(self, usd: float):
-        with self._lock:
-            spent = self._load().get(self.provider, {}).get('spent_usd', 0.0)
-            if spent + self.run_reserved + usd > self.lifetime_cap:
-                raise BudgetExceeded(f'{self.provider} lifetime cap ${self.lifetime_cap:.2f} would be exceeded '
-                                     f'(spent ${spent:.4f})')
-            if self.run_spent + self.run_reserved + usd > self.run_cap:
-                raise BudgetExceeded(f'run cap ${self.run_cap:.2f} would be exceeded '
-                                     f'(run spent ${self.run_spent:.4f})')
-            self.run_reserved += usd
-
-    def settle(self, reserved: float, actual: float):
-        with self._lock:
-            self.run_reserved -= reserved
-            self.run_spent += actual
-            self.calls += 1
-            data = self._load()
-            entry = data.setdefault(self.provider, {'spent_usd': 0.0, 'calls': 0})
-            entry['spent_usd'] = round(entry['spent_usd'] + actual, 8)
-            entry['calls'] += 1
-            self._save(data)
+class TransportFailure(ProviderError):
+    def __init__(self, code, *, raw=None, http_status=None):
+        super().__init__(code)
+        self.error_code, self.raw, self.http_status = code, raw, http_status
 
 
-class NotSent(ProviderError):
-    """The provider certainly did not process the request (DNS/connect failure, 4xx, rate limit)."""
+def _post(url, key, body, timeout, *, max_response_bytes=1048576):
+    """One direct HTTPS exchange; no proxy discovery, redirect, or retry layer.
 
+    A daemon worker bounds caller latency even if OS name resolution stalls.
+    Timed-out work cannot submit after connect without checking its deadline;
+    a request already submitted can finish remotely, so its hold is unresolved.
+    """
+    if url not in (ADAPTION_URL, OPENROUTER_URL):
+        raise TransportFailure('endpoint_refused')
+    parsed = urlsplit(url)
+    payload = canonical_json(body).encode()
+    deadline = time.monotonic() + timeout
+    finished = queue.Queue(maxsize=1)
+    cancelled = threading.Event()
 
-RETRY_AFTER_RE = re.compile(r'retry after (\d+)', re.I)
-
-
-class _RateGate:
-    """Shared pause: when any request is rate limited, every thread waits it out."""
-
-    def __init__(self):
-        self._lock = threading.Lock()
-        self._resume_at = 0.0
-
-    def wait(self):
-        while True:
-            with self._lock:
-                delay = self._resume_at - time.monotonic()
-            if delay <= 0:
-                return
-            time.sleep(min(delay, 5.0))
-
-    def pause(self, seconds: float):
-        with self._lock:
-            self._resume_at = max(self._resume_at, time.monotonic() + seconds)
-
-
-def _post(url: str, key: str, body: dict, timeout: float, gate: _RateGate, extra_headers=None,
-          max_rate_waits: int = 15) -> dict:
-    headers = {'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'}
-    headers.update(extra_headers or {})
-    request = urllib.request.Request(url, data=json.dumps(body).encode(), headers=headers, method='POST')
-    for _ in range(max_rate_waits + 1):
-        gate.wait()
+    def exchange():
+        connection = http.client.HTTPSConnection(parsed.hostname, timeout=timeout)
         try:
-            with urllib.request.urlopen(request, timeout=timeout) as response:
-                return json.loads(response.read().decode('utf-8'))
-        except urllib.error.HTTPError as error:
-            detail = error.read()[:300].decode('utf-8', 'replace')
-            if error.code == 429:
-                # Not processed, so retrying cannot double bill. Honour the provider's wait for everyone.
-                match = RETRY_AFTER_RE.search(detail)
-                header = error.headers.get('Retry-After') if error.headers else None
-                seconds = float(match.group(1)) if match else float(header) if (header or '').isdigit() else 30.0
-                gate.pause(seconds + random.random() * 3)
-                continue
-            if 400 <= error.code < 500:
-                raise NotSent(f'HTTP {error.code}: {detail}') from None
-            raise ProviderError(f'HTTP {error.code}: {detail}') from None
-        except urllib.error.URLError as error:
-            if isinstance(error.reason, (socket.gaierror, ConnectionRefusedError)):
-                raise NotSent(f'not sent: {error.reason}') from None
-            raise ProviderError(str(error)) from None
-    raise NotSent('rate limited too many times')
+            connection.connect()
+            if cancelled.is_set() or time.monotonic() >= deadline:
+                raise TransportFailure('deadline_exceeded')
+            transport_socket = connection.sock
+            transport_socket.settimeout(max(.001, deadline - time.monotonic()))
+            connection.request('POST', parsed.path, body=payload,
+                               headers={'Authorization': f'Bearer {key}', 'Content-Type': 'application/json',
+                                        'Accept-Encoding': 'identity'})
+            if cancelled.is_set() or time.monotonic() >= deadline:
+                raise TransportFailure('deadline_exceeded')
+            transport_socket.settimeout(max(.001, deadline - time.monotonic()))
+            response = connection.getresponse()
+            chunks, size = [], 0
+            while True:
+                remaining = deadline - time.monotonic()
+                if cancelled.is_set() or remaining <= 0:
+                    raise TransportFailure('deadline_exceeded', raw=b''.join(chunks))
+                transport_socket.settimeout(remaining)
+                chunk = response.read1(min(65536, max_response_bytes + 1 - size))
+                if not chunk:
+                    break
+                chunks.append(chunk)
+                size += len(chunk)
+                if size > max_response_bytes:
+                    raise TransportFailure('response_too_large', raw=b''.join(chunks), http_status=response.status)
+            raw = b''.join(chunks)
+            if not 200 <= response.status < 300:
+                raise TransportFailure('http_error', raw=raw, http_status=response.status)
+            if response.getheader('Content-Encoding', 'identity').lower() != 'identity':
+                raise TransportFailure('content_encoding_refused', raw=raw, http_status=response.status)
+            finished.put((raw, None))
+        except TransportFailure as error:
+            finished.put((None, error))
+        except Exception:
+            finished.put((None, TransportFailure('transport_failure')))
+        finally:
+            connection.close()
+
+    threading.Thread(target=exchange, daemon=True, name='swarm-single-https-attempt').start()
+    try:
+        raw, error = finished.get(timeout=max(.001, deadline - time.monotonic()))
+    except queue.Empty:
+        cancelled.set()
+        raise TransportFailure('deadline_exceeded') from None
+    if error is not None:
+        raise error
+    return raw
+
+
+def _parse_json(raw, limit):
+    if not isinstance(raw, bytes) or len(raw) > limit:
+        raise ValueError('invalid bounded response')
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError('duplicate JSON member')
+            result[key] = value
+        return result
+    def constant(value):
+        raise ValueError('non-finite JSON number')
+    data = json.loads(raw.decode('utf-8'), object_pairs_hook=unique, parse_constant=constant, parse_float=Decimal)
+    if not isinstance(data, dict):
+        raise ValueError('response is not an object')
+    pending = [(data, 0)]
+    while pending:
+        item, depth = pending.pop()
+        if depth > 32:
+            raise ValueError('response nesting exceeds limit')
+        if isinstance(item, dict):
+            pending.extend((value, depth + 1) for value in item.values())
+        elif isinstance(item, list):
+            pending.extend((value, depth + 1) for value in item)
+        elif isinstance(item, str):
+            item.encode('utf-8')
+        elif isinstance(item, float) and not math.isfinite(item):
+            raise ValueError('non-finite number')
+    return data
+
+
+def _redact(raw, key):
+    return raw.replace(key.encode(), b'[REDACTED]').replace(canonical_json(key)[1:-1].encode(), b'[REDACTED]')
 
 
 class ModelClient:
-    """One model on one provider. `complete` returns text plus usage and cost."""
+    MAX_OUTPUT_CEILING = 16000
 
-    def __init__(self, provider: str, model: str, ledger: Ledger, *, max_output_tokens: int = 220,
-                 temperature: float = 0.7, timeout: float = 90.0, max_concurrency: int = 16):
-        if provider not in ('adaption', 'openrouter'):
-            raise ValueError('provider must be adaption or openrouter')
+    def __init__(self, provider, model, ledger, *, max_output_tokens=220, temperature=.7,
+                 timeout=30, max_concurrency=1, authorization=None):
         self.provider, self.model, self.ledger = provider, model, ledger
         self.max_output_tokens, self.temperature, self.timeout = max_output_tokens, temperature, timeout
-        self._gate = threading.Semaphore(max_concurrency)
-        self._rate = _RateGate()
-        self._key = _env_key('ADAPTION_API_KEY' if provider == 'adaption' else 'OPENROUTER_API_KEY')
-        if provider == 'adaption':
-            if model not in ADAPTION_PRICES:
-                raise ValueError(f'unknown Adaption price for {model}; known: {sorted(ADAPTION_PRICES)}')
-            self.prices = ADAPTION_PRICES[model]
-        else:
-            self.prices = openrouter_prices(model)
+        self.authorization = validate_authorization(authorization, provider=provider, model=model, ledger=ledger,
+                                                   max_output_tokens=max_output_tokens, timeout=timeout)
+        if type(max_concurrency) is not int or max_concurrency != 1:
+            raise ProviderError('exactly one in-flight request is permitted')
+        if isinstance(temperature, bool) or not isinstance(temperature, (int, float)) or not 0 <= temperature <= 2:
+            raise ProviderError('temperature outside supported limits')
+        self.prices = tuple(Decimal(str(self.authorization['pricing'][name]))
+                            for name in ('input_per_million', 'output_per_million'))
+        self.extra_body = {}
 
     @property
     def label(self):
         return f'{self.provider}:{self.model}'
 
-    def worst_case_usd(self, system: str, user: str) -> float:
-        tokens_in = estimate_tokens(system) + estimate_tokens(user)
-        return (tokens_in * self.prices[0] + self.max_output_tokens * self.prices[1]) / 1e6
+    def worst_case_usd(self, system, user, max_tokens=None):
+        cap = self.max_output_tokens if max_tokens is None else max_tokens
+        # The entire JSON request, including protocol fields, is bounded as input.
+        request = self._body(system, user, cap)
+        input_bound = len(canonical_json(request).encode()) + 512
+        return dollars(units((input_bound * self.prices[0] + cap * self.prices[1]) / Decimal(1000000)))
 
-    def complete(self, system: str, user: str, meta=None) -> dict:
-        reserved = self.worst_case_usd(system, user)
-        self.ledger.reserve(reserved)
-        actual = reserved
+    def maximum_request_usd(self):
+        # JSON can expand each input byte to six ASCII bytes. The fixed margin
+        # exceeds every allowlisted protocol/model/temperature/extension field.
+        input_bound = 6 * self.authorization['max_input_bytes'] + 4096
+        output_bound = self.authorization['max_output_tokens']
+        return dollars(units((input_bound * self.prices[0] + output_bound * self.prices[1]) / Decimal(1000000)))
+
+    def _body(self, system, user, cap):
+        if (not isinstance(system, str) or not isinstance(user, str) or
+                len(system.encode()) + len(user.encode()) > self.authorization['max_input_bytes'] or
+                type(cap) is not int or not 1 <= cap <= self.authorization['max_output_tokens']):
+            raise ProviderError('request exceeds authorized input/output bounds')
+        if not isinstance(self.extra_body, dict) or set(self.extra_body) - {'reasoning'}:
+            raise ProviderError('protected or unsupported request extension')
+        extra = {}
+        if self.extra_body:
+            reasoning = self.extra_body['reasoning']
+            if (self.provider != 'openrouter' or not isinstance(reasoning, dict) or set(reasoning) != {'effort'} or
+                    reasoning['effort'] not in ('none', 'minimal', 'low', 'medium', 'high')):
+                raise ProviderError('unsupported reasoning extension')
+            extra = {'reasoning': dict(reasoning)}
+        if self.provider == 'adaption':
+            return {'model': self.model, 'instructions': system, 'input': user, 'max_output_tokens': cap,
+                    'temperature': self.temperature, 'store': False, 'tools': [], 'tool_choice': 'none',
+                    'agentic_memory': False, 'background': False}
+        return {'model': self.model, 'messages': [{'role': 'system', 'content': system},
+                    {'role': 'user', 'content': user}], 'max_tokens': cap, 'temperature': self.temperature,
+                'usage': {'include': True}, 'stream': False, 'tools': [], 'tool_choice': 'none', **extra}
+
+    def complete(self, system, user, meta=None):
+        return self._attempt(system, user, self.max_output_tokens)
+
+    def _attempt(self, system, user, cap):
         started = time.monotonic()
+        authorization = validate_authorization(self.authorization, provider=self.provider, model=self.model,
+                ledger=self.ledger, max_output_tokens=cap, timeout=self.timeout)
+        body = self._body(system, user, cap)
+        request_raw = canonical_json(body).encode()
+        input_bound = len(request_raw) + 512
+        reserved = self.worst_case_usd(system, user, cap)
+        key = _env_key('ADAPTION_API_KEY' if self.provider == 'adaption' else 'OPENROUTER_API_KEY')
+        if key in system or key in user:
+            raise ProviderError('credential material forbidden in model inputs')
+        identity = self.ledger.reserve(reserved, request=body, authorization=authorization)
+        attempt = {'attempt_id': identity, 'provider': self.provider, 'model': self.model,
+                   'status': 'reserved', 'provider_attempts': 0, 'provider_request_id': None,
+                   'input_tokens': None, 'output_tokens': None, 'cost_usd': 0.0,
+                   'held_usd': reserved, 'reserved_usd': reserved,
+                   'request_sha256': hashlib.sha256(request_raw).hexdigest(), 'response_sha256': None,
+                   'latency_s': 0.0, 'finish_reason': None, 'truncated': False}
+        raw, data, liability = None, None, None
         try:
-            with self._gate:
-                if self.provider == 'adaption':
-                    data = _post(ADAPTION_URL, self._key, {
-                        'model': self.model, 'instructions': system, 'input': user,
-                        'max_output_tokens': self.max_output_tokens, 'temperature': self.temperature,
-                        'store': False}, self.timeout, self._rate)
-                    text = data.get('output_text') or ''.join(
-                        part.get('text', '') for item in data.get('output', []) if item.get('type') == 'message'
-                        for part in item.get('content', []) if part.get('type') == 'output_text')
-                    usage = data.get('usage') or {}
-                    tokens_in, tokens_out = usage.get('input_tokens'), usage.get('output_tokens')
-                    reported_cost = None
-                else:
-                    data = _post(OPENROUTER_URL, self._key, {
-                        'model': self.model, 'max_tokens': self.max_output_tokens,
-                        'temperature': self.temperature, 'usage': {'include': True},
-                        'messages': [{'role': 'system', 'content': system},
-                                     {'role': 'user', 'content': user}]}, self.timeout, self._rate,
-                        {'X-Title': 'Fleet Witness hackathon'})
-                    if 'error' in data:
-                        raise ProviderError(str(data['error'])[:300])
-                    text = (data.get('choices') or [{}])[0].get('message', {}).get('content') or ''
-                    usage = data.get('usage') or {}
-                    tokens_in, tokens_out = usage.get('prompt_tokens'), usage.get('completion_tokens')
-                    reported_cost = usage.get('cost')
-            if isinstance(tokens_in, int) and isinstance(tokens_out, int):
-                computed = (tokens_in * self.prices[0] + tokens_out * self.prices[1]) / 1e6
-                actual = float(reported_cost) if isinstance(reported_cost, (int, float)) else computed
+            self.ledger.dispatch(identity)
+            attempt['provider_attempts'] = 1
+            raw = _post(authorization['endpoint'], key, body,
+                        min(self.timeout, max(.001, authorization['expires_at'] - time.time())),
+                        max_response_bytes=authorization['max_response_bytes'])
+            if isinstance(raw, bytes):
+                attempt['response_sha256'] = hashlib.sha256(raw).hexdigest()
+            data = _parse_json(raw, authorization['max_response_bytes'])
+            # Extract known liability before validating content and authorized caps.
+            # Excess tokens remain billable even though they invalidate the outcome.
+            usage = data.get('usage')
+            if isinstance(usage, dict):
+                names = ('input_tokens', 'output_tokens') if self.provider == 'adaption' else ('prompt_tokens', 'completion_tokens')
+                counts = tuple(usage.get(name) for name in names)
+                if all(type(count) is int and 0 <= count <= 2**53 for count in counts):
+                    liability = (counts[0] * self.prices[0] + counts[1] * self.prices[1]) / Decimal(1000000)
+                if 'cost' in usage:
+                    liability = max(liability or Decimal(0), decimal_usd(usage['cost'], liability=True))
+            canonical_response = json.dumps(data, sort_keys=True, separators=(',', ':'), ensure_ascii=True,
+                                            allow_nan=False, default=str).encode()
+            if key.encode() in canonical_response or canonical_json(key)[1:-1].encode() in canonical_response:
+                raw = _redact(canonical_response, key)
+                attempt['response_redacted'] = True
+                raise ValueError('credential echo')
+            text, tokens_in, tokens_out, finish, truncated = self._outcome(data, cap, input_bound)
+            computed = (tokens_in * self.prices[0] + tokens_out * self.prices[1]) / Decimal(1000000)
+            actual = max(computed, liability if liability is not None else Decimal(0))
+            liability = actual
+            attempt.update(input_tokens=tokens_in, output_tokens=tokens_out, finish_reason=finish, truncated=truncated)
+            provider_id = data.get('id')
+            if isinstance(provider_id, str) and re.fullmatch(r'[A-Za-z0-9_.:-]{1,128}', provider_id):
+                attempt['provider_request_id'] = provider_id
+            if units(actual, liability=True) > units(reserved):
+                raise ValueError('usage overrun')
+            attempt.update(status='truncated' if truncated else 'succeeded', held_usd=0.0,
+                           cost_usd=dollars(units(actual)), latency_s=round(time.monotonic() - started, 6))
+            self.ledger.settle(identity, actual, status=attempt['status'], receipt=attempt, response_raw=raw)
             return {'text': text, 'input_tokens': tokens_in, 'output_tokens': tokens_out,
-                    'cost_usd': actual, 'latency_s': round(time.monotonic() - started, 3)}
-        except NotSent:
-            actual = 0.0  # certainly unprocessed, so certainly unbilled
-            raise
-        finally:
-            # On any failure `actual` stays at the reserved worst case.
-            self.ledger.settle(reserved, actual)
+                    'cost_usd': attempt['cost_usd'], 'latency_s': attempt['latency_s'],
+                    'truncation_retries': 0, 'truncated': truncated, 'final_cap': cap,
+                    'attempt_output_tokens': [tokens_out], 'attempts': [attempt],
+                    'provider_attempts': 1, 'held_usd': 0.0, 'status': attempt['status']}
+        except Exception as error:
+            if isinstance(error, TransportFailure):
+                raw = error.raw
+                attempt['http_status'] = error.http_status
+                code = error.error_code
+            elif isinstance(error, (ValueError, TypeError, KeyError, UnicodeError, RecursionError)):
+                code = 'invalid_response'
+            else:
+                code = 'transport_failure'
+            if isinstance(raw, bytes):
+                redacted = _redact(raw, key)
+                if redacted != raw:
+                    attempt['response_redacted'] = True
+                    raw = redacted
+            held = max(units(reserved), units(liability, liability=True) if liability is not None else 0)
+            status = 'overrun' if held > units(reserved) else 'unresolved'
+            attempt.update(status=status, error_code=code, cost_usd=0.0, held_usd=dollars(held),
+                           latency_s=round(time.monotonic() - started, 6),
+                           response_sha256=hashlib.sha256(raw).hexdigest() if isinstance(raw, bytes) else None)
+            try:
+                self.ledger.hold(identity, liability=Decimal(held) / 1000000000, receipt=attempt,
+                                 response_raw=raw[:1048577] if isinstance(raw, bytes) else None, status=status)
+            except Exception:
+                # Original reservation/dispatch remains authoritative after an atomic
+                # receipt failure. Surface the observed liability without hiding it.
+                attempt['error_code'] = 'receipt_persistence_failure'
+            raise ProviderError('provider attempt unresolved; operator reconciliation required',
+                                attempts=[attempt], status=status) from None
+
+    def _outcome(self, data, cap, input_bound):
+        if data.get('error') is not None:
+            raise ValueError('provider error')
+        usage = data.get('usage')
+        if not isinstance(usage, dict):
+            raise ValueError('missing usage')
+        if self.provider == 'adaption':
+            tokens_in, tokens_out = usage.get('input_tokens'), usage.get('output_tokens')
+            finish = data.get('status')
+            if finish == 'completed':
+                truncated = False
+            elif finish == 'incomplete' and data.get('incomplete_details') == {'reason': 'max_output_tokens'}:
+                truncated = True
+            else:
+                raise ValueError('unknown completion status')
+            if 'output' in data:
+                output = data['output']
+                if not isinstance(output, list):
+                    raise ValueError('invalid output')
+                texts = []
+                for item in output:
+                    if not isinstance(item, dict) or item.get('type') != 'message' or not isinstance(item.get('content'), list):
+                        raise ValueError('unexpected provider output')
+                    for part in item['content']:
+                        if not isinstance(part, dict) or part.get('type') != 'output_text' or not isinstance(part.get('text'), str):
+                            raise ValueError('unexpected output item')
+                        texts.append(part['text'])
+                text = ''.join(texts)
+            else:
+                text = data.get('output_text')
+        else:
+            tokens_in, tokens_out = usage.get('prompt_tokens'), usage.get('completion_tokens')
+            choices = data.get('choices')
+            if not isinstance(choices, list) or len(choices) != 1 or not isinstance(choices[0], dict):
+                raise ValueError('unexpected choices')
+            choice = choices[0]
+            finish = choice.get('finish_reason')
+            if finish not in ('stop', 'length', 'max_tokens'):
+                raise ValueError('unknown finish reason')
+            truncated = finish in ('length', 'max_tokens')
+            message = choice.get('message')
+            if (not isinstance(message, dict) or message.get('tool_calls') or message.get('function_call') or
+                    message.get('role') not in (None, 'assistant')):
+                raise ValueError('unexpected tool/role output')
+            text = message.get('content')
+        if (type(tokens_in) is not int or type(tokens_out) is not int or
+                not 0 <= tokens_in <= input_bound or not 0 <= tokens_out <= cap or not isinstance(text, str)):
+            raise ValueError('invalid or excess usage/content')
+        total = usage.get('total_tokens')
+        if total is not None and (type(total) is not int or total != tokens_in + tokens_out):
+            raise ValueError('inconsistent total usage')
+        for name in ('completion_tokens_details', 'output_tokens_details'):
+            details = usage.get(name)
+            if details is not None:
+                if not isinstance(details, dict):
+                    raise ValueError('invalid output usage details')
+                for value in details.values():
+                    if type(value) is not int or not 0 <= value <= tokens_out:
+                        raise ValueError('invalid reasoning usage')
+        return text, tokens_in, tokens_out, finish, truncated
 
 
-_PRICE_CACHE = {}
-
-
-def openrouter_prices(model: str) -> tuple[float, float]:
-    """USD per 1M tokens from OpenRouter's public model list (no key, no cost)."""
-    if model not in _PRICE_CACHE:
-        with urllib.request.urlopen(OPENROUTER_MODELS_URL, timeout=30) as response:
-            for entry in json.loads(response.read().decode('utf-8'))['data']:
-                pricing = entry.get('pricing') or {}
-                try:
-                    _PRICE_CACHE[entry['id']] = (float(pricing['prompt']) * 1e6, float(pricing['completion']) * 1e6)
-                except (KeyError, TypeError, ValueError):
-                    continue
-    if model not in _PRICE_CACHE:
-        raise ValueError(f'OpenRouter model not found: {model}')
-    return _PRICE_CACHE[model]
+def openrouter_prices(model):
+    raise ProviderError('automatic price discovery disabled; supply verified operator pricing')
 
 
 class FakeClient:
@@ -296,6 +384,9 @@ class FakeClient:
         self.seed, self.herd_probability = seed, herd_probability
         self.ledger = None
 
+    def maximum_request_usd(self):
+        return 0.0
+
     def worst_case_usd(self, system, user):
         return 0.0
 
@@ -312,7 +403,8 @@ class FakeClient:
             reason = (meta.get('talking_point') if meta.get('colluder') and meta.get('target')
                       else 'Receipt fields match the rule.' if sign else 'Receipt does not establish safety.')
             return {'text': json.dumps({'sign': sign, 'reason': reason}), 'input_tokens': 0,
-                    'output_tokens': 0, 'cost_usd': 0.0, 'latency_s': 0.0}
+                    'output_tokens': 0, 'cost_usd': 0.0, 'latency_s': 0.0,
+                    'attempts': [], 'provider_attempts': 0, 'held_usd': 0.0, 'status': 'scripted'}
         honest_vote = 'approve' if meta.get('looks_valid') else 'deny'
         reasons = {
             'approve': ['Receipt fields match the artifact and run; release looks fine.',
@@ -332,7 +424,8 @@ class FakeClient:
                 vote = 'approve' if tally['approve'] > tally['deny'] else 'deny'
             reason = rng.choice(reasons[vote])
         return {'text': json.dumps({'vote': vote, 'reason': reason}), 'input_tokens': 0,
-                'output_tokens': 0, 'cost_usd': 0.0, 'latency_s': 0.0}
+                'output_tokens': 0, 'cost_usd': 0.0, 'latency_s': 0.0,
+                    'attempts': [], 'provider_attempts': 0, 'held_usd': 0.0, 'status': 'scripted'}
 
 
 VOTE_RE = re.compile(r'\{.*\}', re.S)

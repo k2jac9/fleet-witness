@@ -8,32 +8,8 @@ from fleet_witness.swarm.providers import BudgetExceeded, FakeClient, Ledger, pa
 from fleet_witness.swarm.runner import run_swarm
 
 
-class LedgerTest(unittest.TestCase):
-    def test_run_cap_refuses_before_sending(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            ledger = Ledger('adaption', run_cap_usd=0.01, lifetime_cap_usd=5, path=Path(tmp) / 'l.json')
-            ledger.reserve(0.006)
-            with self.assertRaises(BudgetExceeded):
-                ledger.reserve(0.006)  # in-flight reservations count toward the cap
-
-    def test_lifetime_cap_persists_across_runs(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / 'l.json'
-            first = Ledger('openrouter', run_cap_usd=1, lifetime_cap_usd=0.02, path=path)
-            first.reserve(0.015)
-            first.settle(0.015, 0.015)
-            second = Ledger('openrouter', run_cap_usd=1, lifetime_cap_usd=0.02, path=path)
-            self.assertAlmostEqual(second.lifetime_spent(), 0.015)
-            with self.assertRaises(BudgetExceeded):
-                second.reserve(0.01)
-
-    def test_failed_call_is_charged_at_worst_case(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            ledger = Ledger('adaption', run_cap_usd=1, lifetime_cap_usd=1, path=Path(tmp) / 'l.json')
-            ledger.reserve(0.2)
-            ledger.settle(0.2, 0.2)
-            self.assertAlmostEqual(ledger.run_spent, 0.2)
-            self.assertAlmostEqual(ledger.run_reserved, 0.0)
+# Provider and ledger behavioral coverage lives in test_swarm_provider.py and
+# test_swarm_ledger.py. Automatic escalation is deliberately no longer supported.
 
 
 class ParseVoteTest(unittest.TestCase):

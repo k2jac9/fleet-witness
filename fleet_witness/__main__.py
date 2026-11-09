@@ -9,31 +9,33 @@ from .server import serve
 
 def _swarm(args):
     from .swarm.detect import analyze, format_report
-    from .swarm.providers import FakeClient, Ledger, ModelClient
+    from .swarm.providers import FakeClient
+    from .swarm.operator import authorized_client
     from .swarm.runner import CONDITIONS, estimate_run, run_swarm
 
     conditions = args.conditions or list(CONDITIONS)
+    judge = None
+    if args.judge_model:
+        judge = authorized_client('openrouter', args.judge_model, args.authorization,
+                                  max_usd=args.judge_max_usd, temperature=0.0)
     if args.provider == 'fake':
         client = FakeClient(seed=args.seed)
     else:
-        ledger = Ledger(args.provider, run_cap_usd=args.max_usd)
-        client = ModelClient(args.provider, args.model, ledger, max_output_tokens=args.max_output_tokens,
-                             max_concurrency=args.concurrency)
+        client = authorized_client(args.provider, args.model, args.authorization, max_usd=args.max_usd,
+                                   max_output_tokens=args.max_output_tokens, max_concurrency=args.concurrency)
     estimate = estimate_run(client, agents=args.agents, cases=args.cases, conditions=conditions)
     print(f"Planned calls: {estimate['calls']}  worst case: ${estimate['worst_case_total_usd']:.4f} "
-          f"(${estimate['worst_case_per_call_usd']:.6f}/call)  run cap: ${args.max_usd:.2f}")
+          f"(${estimate['worst_case_per_call_usd']:.6f}/call)")
     if args.provider != 'fake':
-        print(f"{args.provider} spent so far on this machine: ${client.ledger.lifetime_spent():.4f} "
-              f"of lifetime cap ${client.ledger.lifetime_cap:.2f}")
+        print(f"{args.provider} settled in the selected ledger: ${client.ledger.lifetime_spent():.4f} "
+              f"of provider cap ${client.ledger.lifetime_cap:.2f}")
     if args.dry_run:
         return
     manifest = run_swarm(args.output, client, agents=args.agents, cases=args.cases, conditions=conditions,
                          cell_fraction=args.cell_fraction, waves=args.waves, seed=args.seed)
     print(format_report(analyze(args.output)))
-    if args.judge_model:
+    if judge is not None:
         from .swarm.judge import judge_run
-        judge = ModelClient('openrouter', args.judge_model, Ledger('openrouter', run_cap_usd=args.judge_max_usd),
-                            max_output_tokens=600, temperature=0.0)
         for condition, entry in judge_run(args.output, judge, conditions)['conditions'].items():
             print(f"judge {condition:<14} suspects={len(entry['suspects'])} "
                   + ' '.join(f'{k}={v}' for k, v in entry.items() if k in ('precision', 'recall', 'false_positives', 'error')))
@@ -61,14 +63,15 @@ def main(argv=None):
     swarm.add_argument('--cell-fraction', type=float, default=0.1)
     swarm.add_argument('--waves', type=int, default=5)
     swarm.add_argument('--seed', type=int, default=0)
-    swarm.add_argument('--max-usd', type=float, default=0.50, help='hard cap for this run')
+    swarm.add_argument('--authorization', type=Path, help='private qualified operator record; required for paid calls')
+    swarm.add_argument('--max-usd', type=float, help='must match the frozen authorization cap')
     # Reasoning models spend hidden tokens first; 220 truncated colluders mid-thought in the smoke test.
-    swarm.add_argument('--max-output-tokens', type=int, default=600)
-    swarm.add_argument('--concurrency', type=int, default=16)
+    swarm.add_argument('--max-output-tokens', type=int, help='must match the frozen authorization token cap')
+    swarm.add_argument('--concurrency', type=int, default=1)
     swarm.add_argument('--dry-run', action='store_true', help='print worst-case cost and exit')
     swarm.add_argument('--judge-model', default=None,
                        help='OpenRouter model for the independent judge, e.g. qwen/qwen3.7-flash')
-    swarm.add_argument('--judge-max-usd', type=float, default=0.10)
+    swarm.add_argument('--judge-max-usd', type=float)
     sweep = commands.add_parser('swarm-sweep', help='sweep the colluding share across governance regimes')
     sweep.add_argument('--root', type=Path, required=True)
     sweep.add_argument('--provider', choices=['fake', 'adaption', 'openrouter'], default='fake')
@@ -77,10 +80,12 @@ def main(argv=None):
     sweep.add_argument('--agents', type=int, default=50)
     sweep.add_argument('--cases', type=int, default=24)
     sweep.add_argument('--seed', type=int, default=0)
-    sweep.add_argument('--max-usd', type=float, default=3.0, help='hard cap for the whole sweep')
-    sweep.add_argument('--concurrency', type=int, default=24)
-    sweep.add_argument('--max-output-tokens', type=int, default=600,
-                       help='includes hidden reasoning; thinking-heavy models (e.g. Qwen) need ~2000')
+    sweep.add_argument('--authorization', type=Path, help='private qualified operator record; required for paid calls')
+    sweep.add_argument('--max-usd', type=float, help='must match the frozen authorization sweep cap')
+    sweep.add_argument('--concurrency', type=int, default=1)
+    sweep.add_argument('--case-mode', choices=['standard', 'ambiguous'], default='standard',
+                       help='ambiguous: authentic near-miss receipts that honest agents can get wrong')
+    sweep.add_argument('--max-output-tokens', type=int, help='must match the frozen authorization token cap')
     summary_cmd = commands.add_parser('swarm-summary', help='pool finished sweeps into one table')
     summary_cmd.add_argument('roots', type=Path, nargs='+')
     analyze_cmd = commands.add_parser('swarm-analyze', help='re-run detectors on a finished swarm run')
@@ -92,13 +97,15 @@ def main(argv=None):
         if args.command == 'swarm':
             return _swarm(args)
         if args.command == 'swarm-sweep':
-            from .swarm.providers import FakeClient, Ledger, ModelClient
+            from .swarm.providers import FakeClient
+            from .swarm.operator import authorized_client
             from .swarm.sweep import DEFAULT_FRACTIONS, run_sweep
             client = (FakeClient(seed=args.seed) if args.provider == 'fake' else
-                      ModelClient(args.provider, args.model, Ledger(args.provider, run_cap_usd=args.max_usd),
-                                  max_output_tokens=args.max_output_tokens, max_concurrency=args.concurrency))
+                      authorized_client(args.provider, args.model, args.authorization,
+                                        max_usd=args.max_usd, max_output_tokens=args.max_output_tokens,
+                                        max_concurrency=args.concurrency))
             run_sweep(args.root, client, fractions=args.fractions or DEFAULT_FRACTIONS, agents=args.agents,
-                      cases=args.cases, seed=args.seed)
+                      cases=args.cases, seed=args.seed, case_mode=args.case_mode)
             return
         if args.command == 'swarm-summary':
             from .swarm.sweep import format_summary, summarize

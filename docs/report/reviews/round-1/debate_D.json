@@ -1,0 +1,222 @@
+{
+  "model": "qwen/qwen3.8-max-0902",
+  "judgements": [
+    {
+      "concern_ref": "A.C1",
+      "stance": "agree",
+      "reason": "The manuscript compares a no-kernel majority with committee-based kernel regimes and explicitly says a crowds-plus-tools baseline was not tested, so it does not isolate mechanical checks from committee attestation."
+    },
+    {
+      "concern_ref": "A.C2",
+      "stance": "agree",
+      "reason": "Table 1 uses Clopper-Pearson intervals with n=120 while Section 4.2 states that board conditions share 60 committee draws, so the independence and variance concerns are supported."
+    },
+    {
+      "concern_ref": "A.C3",
+      "stance": "agree",
+      "reason": "The bounded-checking description leaves the state abstraction, action semantics, and S2 liveness interpretation under-specified despite the central verification claim."
+    },
+    {
+      "concern_ref": "A.C4",
+      "stance": "agree",
+      "reason": "The paper mixes deterministic seat bounds, realized committee captures, and an independence-based error model while honest unsafe error was zero, so the conflation concern is valid."
+    },
+    {
+      "concern_ref": "A.C5",
+      "stance": "agree",
+      "reason": "Colluders received extra private instructions and the reported token counts include hidden reasoning, so the token-length difference is not isolated as a deception cost."
+    },
+    {
+      "concern_ref": "A.C6",
+      "stance": "agree",
+      "reason": "The detector was evaluated against a cell instructed to reuse a talking point and vote as a shared minority, so high F1 mainly shows recovery of the planted signature."
+    },
+    {
+      "concern_ref": "A.C7",
+      "stance": "agree",
+      "reason": "The manuscript cites a mutable branch, keeps raw logs on request, and leaves call accounting and rerun inclusion insufficiently specified, so the reproducibility concern is valid."
+    },
+    {
+      "concern_ref": "A.C8",
+      "stance": "agree",
+      "reason": "Finding 3 attributes nine blocked valid releases to eight honest refusals without an event-level breakdown, so the causal accounting is unclear."
+    },
+    {
+      "concern_ref": "A.C9",
+      "stance": "agree",
+      "reason": "The novelty claims rely on characterizations of recent work, admit inaccessible candidates, and include an internal reference-verification note, so the related-work concern is valid."
+    },
+    {
+      "concern_ref": "B.C1",
+      "stance": "agree",
+      "reason": "The reference list contains late-2026 arXiv identifiers, a future sprint date, and an editorial note to verify references, so the concern about unverified or hallucinated citations is supported."
+    },
+    {
+      "concern_ref": "B.C2",
+      "stance": "agree",
+      "reason": "Section 3.4 says colluders used a shared talking point and Appendix B.4 uses TF-IDF text similarity plus shared-minority voting, so the detector result is confounded by the adversary design."
+    },
+    {
+      "concern_ref": "B.C3",
+      "stance": "agree",
+      "reason": "The manuscript reports zero honest unsafe errors and only 14 or 16 herding exposures, so the honest-error and herding claims are underpowered as stated."
+    },
+    {
+      "concern_ref": "B.C4",
+      "stance": "agree",
+      "reason": "The paper itself says the 120 trials contain 60 independent draws and calls the Clopper-Pearson intervals optimistic, so the clustering concern is correct."
+    },
+    {
+      "concern_ref": "B.C5",
+      "stance": "agree",
+      "reason": "The colluder prompt includes extra conditional instructions, so comparing total output tokens to honest agents confounds deception with instruction complexity."
+    },
+    {
+      "concern_ref": "B.C6",
+      "stance": "agree",
+      "reason": "The checker is described as serializing and deduplicating SQLite states without specifying canonicalization or the basis for depth 6, so the concern is valid."
+    },
+    {
+      "concern_ref": "C.C1",
+      "stance": "agree",
+      "reason": "The manuscript's 24-versus-36 and 60-draw/1.7-SD statement mixes paired-trial counts with an independent-draw calculation, so the seat-unit accounting concern is valid."
+    },
+    {
+      "concern_ref": "C.C2",
+      "stance": "agree",
+      "reason": "Section 3.2 calls the specification independently written while Appendix A says the same team wrote it and the LLM statement says the same assistant implemented both, so the verification-transfer concern is supported."
+    },
+    {
+      "concern_ref": "C.C3",
+      "stance": "agree",
+      "reason": "Figure 2 and Finding 5 use total output tokens including hidden reasoning from agents with different instructions, so the deliberation-cost claim is confounded."
+    },
+    {
+      "concern_ref": "C.C4",
+      "stance": "agree",
+      "reason": "The detector combines TF-IDF similarity with shared-minority voting against a cell told to share a talking point, and no vote-only or text-only ablation is reported."
+    },
+    {
+      "concern_ref": "C.C5",
+      "stance": "agree",
+      "reason": "Table 1's Clopper-Pearson intervals are computed over 120 trials despite shared committee draws and repeated agents, so the clustering concern is valid."
+    },
+    {
+      "concern_ref": "C.C6",
+      "stance": "agree",
+      "reason": "The abstract and conclusion generalize from 50 agents, instructed cells, and rare herding exposures while the limitations acknowledge those bounds, so the overclaiming concern is valid."
+    },
+    {
+      "concern_ref": "C.C7",
+      "stance": "agree",
+      "reason": "Raw logs are only available on request, one stochastic sweep per model was used, and denominators such as 0/746 are not derived, so the reproducibility concern is valid."
+    },
+    {
+      "concern_ref": "C.C8",
+      "stance": "agree",
+      "reason": "The gap claim relies on characterizations of recent 2026 preprints and admits two candidates were inaccessible, so the related-work verification concern is valid."
+    }
+  ],
+  "revised_own_concerns": [
+    {
+      "id": "C1",
+      "severity": "major",
+      "issue": "The abstract and contribution language generalize a bounded one-case, three-seat, depth-6 check to the broader live system and to semantic safety.",
+      "suggested_fix": "Narrow the abstract and contribution claims to the verified toy configuration and add a table mapping verified assumptions to live-test assumptions, listing unverified dimensions such as 7-seat committees, 50 agents, multi-case interleavings, and LLM parsing/retry behavior."
+    },
+    {
+      "id": "C2",
+      "severity": "critical",
+      "issue": "The main uncertainty estimates and the 1.7-standard-deviation statement treat dependent pooled trials, shared committee draws, and repeated agents as independent Bernoulli observations.",
+      "suggested_fix": "Declare the independent sampling unit, report per-draw and per-condition counts, and use cluster-aware paired tests, cluster bootstrap, or mixed-effects logistic regression instead of nominal Clopper-Pearson intervals over 120 pooled trials."
+    },
+    {
+      "id": "C3",
+      "severity": "major",
+      "issue": "The capture formula's honest-error independence and full colluder-compliance assumptions are not empirically tested because honest unsafe error was zero and colluder compliance was below 100%.",
+      "suggested_fix": "Add sensitivity analyses for nonzero and correlated honest error, report exact intervals for compliance and honest error, and qualify all safety-bound claims as task-specific."
+    },
+    {
+      "id": "C4",
+      "severity": "major",
+      "issue": "The claim that crowds cannot verify is architectural because voters were given no verification tool, yet it is presented as a broad empirical finding.",
+      "suggested_fix": "Add a crowds-plus-tools baseline with signature verification or narrow the claim to crowds without verification tools cannot check HMAC-bound receipts in this design."
+    },
+    {
+      "id": "C5",
+      "severity": "major",
+      "issue": "The deliberation-cost result compares honest and colluding agents under different private instructions and includes hidden reasoning tokens, so it may reflect instruction complexity rather than deception.",
+      "suggested_fix": "Report visible-only token counts, add instruction-length-matched honest controls or concise-colluder conditions, and present the result as a role-conditioned association rather than a robust monitoring signal."
+    },
+    {
+      "id": "C6",
+      "severity": "major",
+      "issue": "Reproducibility is limited by a mutable branch, raw logs available only on request, sparse detector tuning details, and apparently single stochastic sweeps per model.",
+      "suggested_fix": "Archive a commit hash with sanitized raw logs, prompts, seeds, configuration files, detector outputs, and at least one repeated seed or bootstrap analysis, plus a detector threshold ablation."
+    },
+    {
+      "id": "C7",
+      "severity": "minor",
+      "issue": "Denominators and trial sets are not uniformly defined across Table 1 columns, and live denominators such as 0/746, 8/492, and 262 are not derived.",
+      "suggested_fix": "Add footnotes or separate tables for each denominator, derive all reported counts, and for the hybrid regime state whether bounds are conditioned on the majority precondition."
+    },
+    {
+      "id": "C8",
+      "severity": "minor",
+      "issue": "S2 is described as liveness, but bounded finite-depth exploration cannot establish eventual release under arbitrary schedules.",
+      "suggested_fix": "Define S2 as a bounded enablement or successful-admission property and state the scheduling assumptions explicitly."
+    },
+    {
+      "id": "C9",
+      "severity": "minor",
+      "issue": "The abstract's no-herding claim is based on only 14 and 16 exposure events with zero observed approvals.",
+      "suggested_fix": "Temper the claim to no observed herding on a crisp task with rare exposures, and report exact intervals or a power analysis."
+    },
+    {
+      "id": "C10",
+      "severity": "critical",
+      "issue": "The references include late-2026 arXiv identifiers, inaccessible candidate papers, and an internal note to verify references, undermining the related-work positioning and novelty claims.",
+      "suggested_fix": "Audit every citation, remove or replace unverifiable entries, verify all arXiv identifiers, and qualify any novelty claims that depend on unchecked sources."
+    }
+  ],
+  "withdrawn": [],
+  "new_concerns": [
+    {
+      "id": "N1",
+      "severity": "major",
+      "issue": "The evaluation lacks a majority-plus-mechanical-checks baseline without a committee, so the benefit of separation-of-powers committee governance is not isolated from ordinary kernel mechanical checks.",
+      "suggested_fix": "Replay majority decisions through the kernel's integrity, policy, uniqueness, and audit checks without requiring committee approval, and report safety, throughput, and cost alongside the hybrid regime."
+    },
+    {
+      "id": "N2",
+      "severity": "major",
+      "issue": "The detector's near-perfect F1 is confounded by the planted shared talking point and shared-minority voting, and no ablation or adaptive-colluder control is reported.",
+      "suggested_fix": "Report vote-only, text-only, and combined detector performance, add benign-minority and paraphrasing-colluder controls, and narrow the claim to detection of the tested planted-cell behavior."
+    },
+    {
+      "id": "N3",
+      "severity": "major",
+      "issue": "Finding 1's seat-bound accounting is not auditable because paired-trial counts, independent-draw counts, and the reported 1.7-standard-deviation calculation appear to use different units.",
+      "suggested_fix": "Publish per-condition capturable counts, declare whether the unit is a trial, target case, or independent committee draw, clarify nesting across boards, and recompute the deviation on one declared unit."
+    },
+    {
+      "id": "N4",
+      "severity": "major",
+      "issue": "The claim of an independently written specification is contradicted by Appendix A's same-team statement and the LLM usage statement describing the same assistant implementing both kernel and checker.",
+      "suggested_fix": "Correct the independence claim, discuss common-mode specification error, and either provide an independent specification review or narrow the verification contribution accordingly."
+    },
+    {
+      "id": "N5",
+      "severity": "minor",
+      "issue": "The bounded checker's SQLite state canonicalization, deduplication method, and depth-6 sufficiency horizon are not specified, leaving open whether deduplication preserves all behaviorally relevant state.",
+      "suggested_fix": "Specify the canonical state representation used for hashing, describe excluded metadata, justify depth 6, and optionally add a small competing-execution or two-case check."
+    },
+    {
+      "id": "N6",
+      "severity": "minor",
+      "issue": "The attribution of nine blocked valid releases under unanimity to eight honest refusals lacks an event-level breakdown.",
+      "suggested_fix": "Provide a breakdown of blocked valid releases by honest refusal, colluder refusal, abstention, parsing or transport failure, and other causes, allowing multiple causes per case."
+    }
+  ],
+  "updated_verdict": "reject"
+}

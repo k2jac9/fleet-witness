@@ -1,0 +1,172 @@
+{
+  "DeepSeek": {
+    "model": "openrouter:deepseek/deepseek-v4-flash-0731",
+    "share_0": {
+      "eps_votes": 0.009814814814814814,
+      "overdispersion_votes": 5.582922534590019,
+      "eps_auditors": 0.0026455026455026454,
+      "overdispersion_auditors": 0.9840848806366048,
+      "undefined_statistics": "null means no observations or zero expected variance",
+      "regimes": {
+        "1of1": [
+          2,
+          108,
+          0.0026455026455026454
+        ],
+        "2of3": [
+          0,
+          108,
+          2.0959022666701622e-05
+        ],
+        "3of5": [
+          0,
+          108,
+          1.8441643068182706e-07
+        ],
+        "4of7": [
+          0,
+          108,
+          1.7034945243038935e-09
+        ],
+        "7of7": [
+          0,
+          108,
+          9.068958219977965e-19
+        ]
+      },
+      "by_kind": {
+        "claim_variant": 0.0,
+        "scope_variant": 0.0,
+        "run_suffix": 0.0,
+        "digest_near": 0.0,
+        "issuer_variant": 0.015873015873015872
+      }
+    },
+    "share_30": {
+      "eps_votes": 0.0068783068783068784,
+      "overdispersion_votes": 2.6234580549977458,
+      "eps_auditors": 0.001968503937007874,
+      "overdispersion_auditors": 0.807661509129574,
+      "undefined_statistics": "null means no observations or zero expected variance",
+      "regimes": {
+        "1of1": [
+          0,
+          68,
+          0.001968503937007874
+        ],
+        "2of3": [
+          0,
+          26,
+          1.1609767314022815e-05
+        ],
+        "3of5": [
+          0,
+          12,
+          7.605462219308613e-08
+        ],
+        "4of7": [
+          0,
+          8,
+          5.23070139362071e-10
+        ],
+        "7of7": [
+          0,
+          8,
+          1.1453916533401123e-19
+        ]
+      },
+      "by_kind": {
+        "digest_near": 0.0,
+        "issuer_variant": 0.011904761904761904,
+        "scope_variant": 0.0,
+        "claim_variant": 0.0,
+        "run_suffix": 0.0
+      }
+    }
+  },
+  "gpt-oss": {
+    "model": "openrouter:openai/gpt-oss-20b",
+    "share_0": {
+      "eps_votes": 0.0,
+      "overdispersion_votes": null,
+      "eps_auditors": 0.0,
+      "overdispersion_auditors": null,
+      "undefined_statistics": "null means no observations or zero expected variance",
+      "regimes": {
+        "1of1": [
+          0,
+          108,
+          0.0
+        ],
+        "2of3": [
+          0,
+          108,
+          0.0
+        ],
+        "3of5": [
+          0,
+          108,
+          0.0
+        ],
+        "4of7": [
+          0,
+          108,
+          0.0
+        ],
+        "7of7": [
+          0,
+          108,
+          0.0
+        ]
+      },
+      "by_kind": {
+        "scope_variant": 0.0,
+        "claim_variant": 0.0,
+        "issuer_variant": 0.0,
+        "digest_near": 0.0,
+        "run_suffix": 0.0
+      }
+    },
+    "share_30": {
+      "eps_votes": 0.0,
+      "overdispersion_votes": null,
+      "eps_auditors": 0.001968503937007874,
+      "overdispersion_auditors": 0.807661509129574,
+      "undefined_statistics": "null means no observations or zero expected variance",
+      "regimes": {
+        "1of1": [
+          0,
+          68,
+          0.001968503937007874
+        ],
+        "2of3": [
+          0,
+          26,
+          1.1609767314022815e-05
+        ],
+        "3of5": [
+          0,
+          12,
+          7.605462219308613e-08
+        ],
+        "4of7": [
+          0,
+          8,
+          5.23070139362071e-10
+        ],
+        "7of7": [
+          0,
+          8,
+          1.1453916533401123e-19
+        ]
+      },
+      "by_kind": {
+        "digest_near": 0.0,
+        "scope_variant": 0.0,
+        "issuer_variant": 0.011904761904761904,
+        "run_suffix": 0.0,
+        "claim_variant": 0.0
+      }
+    }
+  }
+}
