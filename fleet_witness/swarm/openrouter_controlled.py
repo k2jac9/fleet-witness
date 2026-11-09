@@ -7,12 +7,15 @@ from .ledger import decimal_usd, units
 
 
 SCHEMA = 'controlled-openrouter-v1'
+PILOT_SCHEMA = 'controlled-openrouter-pilot-v1'
+SCHEMAS = (SCHEMA, PILOT_SCHEMA)
 
 
 def validate_profile(record):
     profile = record.get('openrouter')
-    if (record.get('provider') != 'openrouter' or record.get('purpose') != 'calibration' or
-            record.get('request_limit') != 1 or not 0 < units(record['run_cap_usd'], exact=True) <= units(15) or
+    pilot = record.get('schema_version') == PILOT_SCHEMA
+    if (record.get('provider') != 'openrouter' or record.get('purpose') != ('exploratory' if pilot else 'calibration') or
+            record.get('request_limit') != (160 if pilot else 1) or not 0 < units(record['run_cap_usd'], exact=True) <= units(15) or
             not 0 < units(record['provider_cap_usd'], exact=True) <= units(50) or
             not 1 <= record['max_output_tokens'] <= 256):
         raise ValueError('controlled OpenRouter envelope refused')
@@ -32,6 +35,24 @@ def validate_profile(record):
     if profile['output_token_parameter'] not in ('max_tokens', 'max_completion_tokens'):
         raise ValueError('unsupported controlled token parameter')
     secure_transport.validate_profile(profile['transport'])
+    if pilot:
+        from ..pilot_design import design_sha256, MODEL
+        study = record.get('study')
+        if (not isinstance(study, dict) or set(study) != {'design_sha256', 'calibration_evidence_sha256'} or
+                study['design_sha256'] != design_sha256() or
+                not isinstance(study['calibration_evidence_sha256'], str) or
+                not re.fullmatch(r'[0-9a-f]{64}', study['calibration_evidence_sha256']) or
+                record['model'] != MODEL or profile['response_model'] != MODEL or
+                profile['provider_slug'] != 'azure/us' or profile['provider_name'] != 'Azure' or
+                profile['reasoning_effort'] != 'low' or profile['output_token_parameter'] != 'max_completion_tokens' or
+                record['max_input_bytes'] != 4096 or record['max_output_tokens'] != 256 or
+                record['timeout_s'] != 30 or record['expires_at'] - record['issued_at'] > 7200):
+            raise ValueError('frozen pilot profile mismatch')
+        pricing = record['pricing']
+        bound = ((6 * 4096 + 4096) * decimal_usd(pricing['input_per_million']) +
+                 256 * decimal_usd(pricing['output_per_million'])) / Decimal(1000000)
+        if units(bound) * 160 > units(record['run_cap_usd'], exact=True):
+            raise ValueError('complete pilot schedule exceeds authorized cap')
 
 
 def request_fields(profile, pricing):

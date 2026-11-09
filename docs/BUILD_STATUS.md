@@ -1,3 +1,49 @@
+# Paired exploratory pilot preparation — November 9, 2026
+
+Task `paired-pilot-20261109` extends source `d0dae65491bf7c8204ca71dbde4114f08901123e`.
+A new calibration on that corrected, reviewed main source succeeded and its
+response charge, generation charge and original-key usage delta agreed at
+$0.0014344. The sponsored key then reported $49.997074 remaining. The preceding
+failed calibration remains failed and reconciled separately. These are dated
+observations, not a claim about future balance.
+
+The additive runner preserves the shared ledger and introduces a one-use cohort
+claim, atomic schedule/attempt links, explicit calibration acceptance, private
+partial-run export and live-supervisor event labels. Its scope and limitations
+are in [CONTROLLED_PILOT.md](CONTROLLED_PILOT.md). The ledger adds two tables;
+existing accounting rows, caps, authorities and historical receipts are retained.
+Keep a private SQLite backup before first use of this source on the live ledger.
+
+Observed local checks: the existing 279-test Python baseline passed on pinned
+Python 3.15.2; design/profile implementation passed 287 tests. Behavioral RED
+receipts precede the new design, controlled profile and runner implementation.
+Five viewer checks passed. The complete final suite, independent implementation
+review, exact-source hosted matrix, green integration and actual paired collection
+are still pending at this preparation snapshot. No new GCP or Adaption action
+occurred. No claim of public-web observation or live dashboard is made here.
+
+The first implementation candidate `da45d3b4c30c463a9aa4eead311ac3af6c4a42e6`
+passed 297 local Python tests and the complete selector plus 11 hosted runtime
+lanes in run `42582477044`. Independent review then reproduced an authorization
+reload race and three report-consistency gaps (provider ledger binding,
+effect/audit identity, and frozen paired allocation). Those findings block that
+candidate despite its passing suite. The fix pass adds failing regressions and
+uses the already validated authorization without reloading; validates canonical
+provider evidence and unique attempt identity; checks release/attempt/event
+bijections; and independently verifies the frozen schedule. Final fix-source
+verification and collection evidence follow in the retained task packet.
+
+Baseline and full-suite logs contain pre-existing SQLite ResourceWarnings in the
+institution mutation tests; they are retained, not suppressed. The focused new
+pilot tests have no such warnings. This task does not claim to repair that
+separate test-hygiene issue.
+
+Private task evidence: `/home/neo/Projects/fleet-witness-artifacts/paired-pilot-20261109/`.
+The complete calibration result/reconciliation and later integration/collection
+receipts are retained there; credentials are excluded. Historical status follows.
+
+---
+
 # Build and deployment verification
 
 ## First real calibration and schema correction: 2026-11-09
