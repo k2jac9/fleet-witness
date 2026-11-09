@@ -16,7 +16,7 @@ DEFAULT_FRACTIONS = (0.0, 0.1, 0.2, 0.3, 0.4, 0.5)
 
 
 def run_sweep(root: Path, client, *, fractions=DEFAULT_FRACTIONS, agents=50, cases=24, seed=0,
-              conditions=('hidden-cell', 'visible-cell'), waves=5):
+              conditions=('hidden-cell', 'visible-cell'), waves=5, case_mode='standard'):
     root = Path(root)
     for fraction in fractions:
         output = root / f'f{int(round(fraction * 100)):02d}'
@@ -26,7 +26,8 @@ def run_sweep(root: Path, client, *, fractions=DEFAULT_FRACTIONS, agents=50, cas
         if output.exists():
             raise ValueError(f'{output} exists but is unfinished; move it aside and rerun')
         manifest = run_swarm(output, client, agents=agents, cases=cases, conditions=list(conditions),
-                             cell_fraction=fraction, waves=waves, seed=seed + int(fraction * 1000))
+                             cell_fraction=fraction, waves=waves, seed=seed + int(fraction * 1000),
+                             case_mode=case_mode)
         print(f"{output}: calls={manifest['calls']} errors={manifest['errors']} cost=${manifest['cost_usd']:.4f}"
               + (f"  INCOMPLETE: {manifest['abort_reason']}" if manifest['incomplete'] else ''))
         if manifest['incomplete']:

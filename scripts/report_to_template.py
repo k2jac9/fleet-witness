@@ -29,7 +29,7 @@ EXTRA_CSS = """
 .fw th,.fw td{border:1px solid #999;padding:2pt 5pt;font-size:9.5pt;vertical-align:top}
 .fw th{background:#f3f3f3;text-align:left}
 .fw td.num,.fw th.num{text-align:right}
-.fw img{max-width:100%;max-height:3.3in;display:block;margin:6pt auto 2pt;page-break-inside:avoid}
+.fw img{max-width:100%;max-height:3.0in;display:block;margin:6pt auto 2pt;page-break-inside:avoid}
 .fw em.caption{display:block;font-size:9.5pt;font-style:italic;margin:0 0 8pt;text-align:left}
 .fw blockquote{margin:4pt 18pt;padding:2pt 8pt;border-left:2px solid #888}
 .fw code{font-family:Consolas,monospace;font-size:9pt}

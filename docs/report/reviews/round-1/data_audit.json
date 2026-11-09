@@ -1,0 +1,31 @@
+{
+  "model": "google/gemini-4-argon",
+  "checked_claims": 148,
+  "issues": [
+    {
+      "location": "Section 4.1 (Verification) & Appendix B.2",
+      "claim": "All seven mutants were caught, each with a shortest counterexample of four to six steps (Appendix B). / Mutant: skip policy recheck: Caught, S1 (4 steps) / Mutant: skip integrity: Caught, S1 (tampered evidence, 5 steps)",
+      "data_says": "Bounded verification output shows 5 transitions/actions for skip_policy_recheck (`evidence-intact > propose+ > att:s1 > att:s2 > exec:a1`), 6 transitions for skip_integrity (`evidence-tampered > propose+ > policy+ > att:s1 > att:s2 > exec:a1`), and 7 transitions for skip_uniqueness (`evidence-intact > propose+ > policy+ > att:s1 > att:s2 > exec:a1 > exec:a2`). Even if the initial `evidence-*` setup is not counted as a step (yielding 4, 5, and 6 action steps respectively), `skip_uniqueness` shouldn't require 'depth 6 (missed at depth 5)' if depth counts only the 6 post-setup steps vs 7 total trace elements\u2014the definition of 'step' vs 'depth' is inconsistent with the trace lengths.",
+      "severity": "minor"
+    },
+    {
+      "location": "Abstract, Section 3.4, & Table 1",
+      "claim": "Majority voting ... approved every forged-signature release (48/48 per model); every kernel regime blocked them (0/0 in Table 1).",
+      "data_says": "Not present in the provided raw data summary (which only tabulates the 120 target releases and 96 valid releases per sweep, omitting the 4 forged cases per run / 48 per sweep).",
+      "severity": "minor"
+    },
+    {
+      "location": "Appendix B.2 (Table)",
+      "claim": "Committee-only mode, depth 4: 3,188 states; all hold / Hybrid mode, depth 4: 2,906 states; all hold",
+      "data_says": "Only depth 6 verification output (23,376 states, 105,708 transitions) is included in the provided raw data; depth 4 state counts are not in the raw data excerpt.",
+      "severity": "minor"
+    },
+    {
+      "location": "Appendix A (Limitations - Models)",
+      "claim": "Qwen 3.7 Flash spent its entire 600-token budget on hidden reasoning in 39% of responses.",
+      "data_says": "Not present in the provided raw data.",
+      "severity": "minor"
+    }
+  ],
+  "notes": "The numerical consistency between the manuscript and the raw data is exceptionally high. All pooled counts, per-cell rates, Clopper-Pearson 95% confidence intervals, seated bounds, a-priori expectations, token medians, deliberation ratios (1.9x-2.8x), escalation smoke-test retry rates (7/72 = 9.7% ~ 10%, 12/30 = 40%), run costs ($1.376 + $0.807 = $2.183), call counts (16,415 * 2 = 32,830 successful calls out of 16,416 * 2 attempted), and F1 scores match the raw outputs exactly."
+}

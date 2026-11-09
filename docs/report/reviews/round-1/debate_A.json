@@ -1,0 +1,203 @@
+{
+  "model": "openai/gpt-6.1-sol",
+  "judgements": [
+    {
+      "concern_ref": "B.C1",
+      "stance": "disagree",
+      "reason": "The reference audit is warranted, but the manuscript dates the sprint to November 2026, after all listed arXiv months, so the supplied chronology does not establish impossible identifiers or hallucinated citations."
+    },
+    {
+      "concern_ref": "B.C2",
+      "stance": "agree",
+      "reason": "Section 3.4 explicitly plants a shared talking point, and Appendix B.4 uses text similarity and shared-minority voting, making Finding 6's general detection claim unsupported without feature ablations and adversarial controls."
+    },
+    {
+      "concern_ref": "B.C3",
+      "stance": "agree",
+      "reason": "Finding 1 reports zero unsafe honest attestations and Finding 4 only 14 and 16 herding exposures, so the live results do not validate the nonzero-error independence model or establish general resistance to herding."
+    },
+    {
+      "concern_ref": "B.C4",
+      "stance": "agree",
+      "reason": "Table 1 explicitly acknowledges only 60 independent seating draws within 120 pooled outcomes, invalidating its stated binomial coverage, although averaging paired outcomes would not itself justify Clopper\u2013Pearson intervals."
+    },
+    {
+      "concern_ref": "B.C5",
+      "stance": "agree",
+      "reason": "Section 3.4 gives colluders additional conditional instructions, so Finding 5 needs prompt-matched controls and target versus non-target comparisons before attributing extra tokens to deception."
+    },
+    {
+      "concern_ref": "B.C6",
+      "stance": "agree",
+      "reason": "Section 3.2 and Appendix B.1 describe serialized SQLite deduplication without specifying its canonical state representation, leaving both state equivalence and the scope of depth-6 coverage unclear."
+    },
+    {
+      "concern_ref": "C.C1",
+      "stance": "factually_wrong",
+      "reason": "The asserted parity contradiction misreads Table 1 because 26 is even and compatible with shared paired draws, although the separate request to reconcile the pooled 24-versus-36 counts with a 60-draw standard deviation is valid."
+    },
+    {
+      "concern_ref": "C.C2",
+      "stance": "agree",
+      "reason": "Appendix A limits verification to one case and three seats and acknowledges same-team specification risk, so Contribution 4 needs an explicit transfer argument rather than treating the larger live configuration as verified."
+    },
+    {
+      "concern_ref": "C.C3",
+      "stance": "agree",
+      "reason": "Figure 2 includes hidden reasoning and Section 3.4 changes private instructions by role, so neither a causal collusion cost nor availability of the signal to a public-log monitor follows from the reported medians."
+    },
+    {
+      "concern_ref": "C.C4",
+      "stance": "agree",
+      "reason": "Appendix B.4 combines voting and text features while Section 3.4 instructs common wording, so Finding 6 supports detection of this planted signature rather than collusion with diverse cover stories."
+    },
+    {
+      "concern_ref": "C.C5",
+      "stance": "agree",
+      "reason": "Table 1 applies binomial intervals to paired, heterogeneous outcomes without establishing independent Bernoulli sampling, although any replacement bootstrap must respect the actual randomization units rather than arbitrarily resampling agents or cases."
+    },
+    {
+      "concern_ref": "C.C6",
+      "stance": "agree",
+      "reason": "Section 6 extrapolates to scaling despite fixed N=50, and the abstract's unqualified herding statement omits the 14 and 16 exposure denominators reported in Finding 4."
+    },
+    {
+      "concern_ref": "C.C7",
+      "stance": "agree",
+      "reason": "Code and Data makes the reported raw logs available only on request, while Sections 3.4 and 4.2 do not derive the audit denominators or establish replicated stochastic sweeps."
+    },
+    {
+      "concern_ref": "C.C8",
+      "stance": "agree",
+      "reason": "Section 2 makes categorical novelty comparisons while acknowledging two inaccessible candidates, so the source-dependent gap claims require verification and qualification."
+    },
+    {
+      "concern_ref": "D.C1",
+      "stance": "agree",
+      "reason": "The abstract says safety and liveness hold without stating the one-case, three-seat, depth-6 scope supplied in Appendix A, leaving the distinction between bounded mechanical checks and live semantic safety insufficiently explicit."
+    },
+    {
+      "concern_ref": "D.C2",
+      "stance": "agree",
+      "reason": "Table 1 acknowledges paired seating but still presents n=120 Clopper\u2013Pearson intervals, so corrected uncertainty requires the actual sampling hierarchy and disaggregated outcomes."
+    },
+    {
+      "concern_ref": "D.C3",
+      "stance": "agree",
+      "reason": "Section 3.3 explicitly assumes independent honest errors and full colluder compliance while Finding 1 observes zero unsafe honest errors, so correlated-error sensitivity is needed, although imperfect colluder compliance alone makes the full-compliance prediction conservative."
+    },
+    {
+      "concern_ref": "D.C4",
+      "stance": "agree",
+      "reason": "Finding 2 explicitly attributes the forgery result to withholding HMAC verification from voters, so the abstract and institutional comparison need a mechanically gated majority baseline or narrower claims."
+    },
+    {
+      "concern_ref": "D.C5",
+      "stance": "agree",
+      "reason": "Section 3.4 varies role instructions and Figure 2 includes hidden reasoning, so Finding 5 does not isolate deception cost or establish an observable, adaptation-resistant monitoring signal."
+    },
+    {
+      "concern_ref": "D.C6",
+      "stance": "agree",
+      "reason": "Code and Data withholds reported logs from the public artifact and Appendix B.4 supplies fixed detector thresholds without sensitivity results, limiting independent reconstruction and assessment of stochastic variability."
+    },
+    {
+      "concern_ref": "D.C7",
+      "stance": "agree",
+      "reason": "Table 1 pools 120 positive-share target trials but reports 96 valid and 48 forged trials consistent with including zero-share conditions, and its hybrid bound deliberately omits the majority gate."
+    },
+    {
+      "concern_ref": "D.C8",
+      "stance": "agree",
+      "reason": "Section 3.2 defines S2 as release whenever preconditions hold without a temporal formula or scheduler assumptions, so the evidence supports an execution-transition property rather than unrestricted eventual progress."
+    },
+    {
+      "concern_ref": "D.C9",
+      "stance": "agree",
+      "reason": "Finding 4 correctly calls 0/14 and 0/16 weak evidence of absence, whereas the abstract's statement that honest agents never herded omits that exposure limitation."
+    },
+    {
+      "concern_ref": "D.C10",
+      "stance": "agree",
+      "reason": "Section 2 acknowledges inaccessible papers and the References retain a verification reminder, warranting a source audit even though the supplied manuscript chronology does not establish that the identifiers are future-dated."
+    }
+  ],
+  "revised_own_concerns": [
+    {
+      "id": "C1",
+      "severity": "major",
+      "issue": "Sections 3.4, 4.2 Finding 2, and 5 bundle mechanical gating with committee governance: direct majority lacks integrity verification while all kernel regimes receive it, so the hybrid's claimed institutional advantage is not isolated from a simpler majority-plus-mechanical-checks design.",
+      "suggested_fix": "Replay existing majority decisions through integrity, policy, uniqueness, and audit checks without committee approval; compare safety, throughput, and decision costs, and attribute forgery rejection to mechanical gating rather than committee governance."
+    },
+    {
+      "id": "C2",
+      "severity": "major",
+      "issue": "Table 1's n=120 Clopper\u2013Pearson intervals lack their required sampling justification because conditions share seating draws and pooled shares have different capture probabilities; repeated agents and cases also require clarification before interpreting uncertainty beyond these fixed evaluations.",
+      "suggested_fix": "Identify the independent randomization and response-sampling units, report outcomes by share and board condition, and use design-appropriate paired or cluster-aware uncertainty where supported; do not assume that reducing n to 60, averaging paired outcomes, or dropping the word 'exact' repairs binomial coverage."
+    },
+    {
+      "id": "C3",
+      "severity": "major",
+      "issue": "Sections 3.2 and 4.1 and Appendix B leave the depth-6 mode, canonical state abstraction, action coverage, and transfer to larger live configurations unclear; S2 is not established as temporal liveness, and same-team, AI-assisted specification development does not provide independent assurance against shared conceptual errors.",
+      "suggested_fix": "Provide executable state fingerprints, actions, predicates, and per-mode depth results; clarify the development independence of the specification; distinguish eligible-execution success from temporal progress and bounded sequential checks from crash, concurrency, and multi-case guarantees; give an explicit argument for any size-independent properties."
+    },
+    {
+      "id": "C4",
+      "severity": "major",
+      "issue": "Sections 3.1, 3.3, 4.2 Finding 1, and 5 blur the deterministic requirement for k false attestations, the realized colluder-seat bound valid under zero honest unsafe error, and the probabilistic model requiring independent honest errors and compliant colluders.",
+      "suggested_fix": "State these three claims separately with their assumptions; explain that imperfect colluder compliance alone lowers capture relative to the full-compliance prediction, whereas correlated honest errors can raise it; restrict empirical validation to the exercised assumptions and add nonzero or correlated-error sensitivity analyses."
+    },
+    {
+      "id": "C5",
+      "severity": "major",
+      "issue": "The abstract, Finding 5, and proposed deadline defense infer a deliberation cost and monitoring utility from role-conditioned token medians despite different private instructions; Figure 2 also includes hidden reasoning, which may not be accessible to the public-log monitor.",
+      "suggested_fix": "Reframe the result as a role-conditioned length association; report target and non-target comparisons, visible versus reasoning tokens where available, and within-case differences; add prompt-matched benign and concise-colluder controls before claiming causal cost, and evaluate held-out detection and honest-agent false positives before proposing a defense."
+    },
+    {
+      "id": "C6",
+      "severity": "major",
+      "issue": "Finding 6 and Appendix B.4 evaluate detection against colluders instructed to share a talking point on targets with zero honest unsafe error, making both features closely aligned with the planted signature; F1 aggregation and inclusion of the zero-colluder false-positive cluster remain unclear.",
+      "suggested_fix": "Report voting-only, text-only, and combined performance, per-condition agent-level confusion matrices including zero-share runs, aggregation rules, and threshold sensitivity; add benign shared-argument minorities and colluders avoiding common wording, or narrow the finding to this planted-cell setting."
+    },
+    {
+      "id": "C7",
+      "severity": "major",
+      "issue": "Sections 3.4 and 4.2, Code and Data, and Appendix B.3 do not provide an immutable public artifact containing the reported stochastic outputs, full configurations, seed mappings, and both versions of the superseded run; call and cost accounting also needs reconciliation.",
+      "suggested_fix": "Archive a commit and sanitized prompts, responses, ground truth, detector outputs, model/provider settings, and original and replacement logs; provide an offline table-regeneration command, derive audit denominators, and distinguish attempted, successful, retried, superseded, and analyzed calls and costs."
+    },
+    {
+      "id": "C8",
+      "severity": "minor",
+      "issue": "Finding 3 attributes nine blocked valid releases under gpt-oss unanimity to eight honest refusals without event-level accounting; these counts may be compatible but do not by themselves establish the stated explanation.",
+      "suggested_fix": "Break down the nine blocked cases by honest refusal, colluder refusal, abstention, parsing or transport failure, and other causes, permitting overlapping causes and specifying the relevant denominators."
+    },
+    {
+      "id": "C9",
+      "severity": "minor",
+      "issue": "Sections 1\u20132 make categorical comparisons and a novelty-gap claim while acknowledging inaccessible candidates and retaining a reference-verification note; the supplied dates do not independently establish fabricated or impossible citations.",
+      "suggested_fix": "Verify every source and identifier, identify which candidates were inaccessible, qualify unsupported comparisons, and summarize the closest verified systems' implementation, verification scope, committee authority, and live adversarial evaluation."
+    }
+  ],
+  "withdrawn": [],
+  "new_concerns": [
+    {
+      "id": "N1",
+      "severity": "minor",
+      "issue": "Finding 1 reports 24 versus 36 capturable 1-of-1 outcomes alongside approximately 1.7 standard deviations on 60 independent draws, mixing pooled paired counts with an unspecified variance calculation; Table 1's 3-of-5 count of 26 is even and presents no parity contradiction.",
+      "suggested_fix": "Publish per-share and per-condition seating counts, clarify committee nesting, and compute the deviation on one consistent unit, such as 12 versus 18 on the 60 unique draws with variance derived from the actual stratified sampling design."
+    },
+    {
+      "id": "N2",
+      "severity": "minor",
+      "issue": "The abstract's herding statement and Section 6's scaling claim extend beyond a fixed 50-agent experiment with only 14 and 16 observed approving-majority exposures; Finding 4 and Appendix A already acknowledge the narrower evidential scope.",
+      "suggested_fix": "State that no herding was observed in those exposures on this crisp task, avoid unsupported population-level uncertainty from dependent exposures, and describe scaling as a proposed architectural property rather than an empirically demonstrated result."
+    },
+    {
+      "id": "N3",
+      "severity": "minor",
+      "issue": "Table 1 combines positive-share target trials with valid and forged denominators apparently including zero-share conditions, and presents a committee-only bound and expectation for a hybrid whose majority gate rejected every target.",
+      "suggested_fix": "Label the inclusion rules for every column, provide matched-denominator summaries, and distinguish the committee-only upper bound from the observed and model-based effects of the hybrid majority precondition."
+    }
+  ],
+  "updated_verdict": "weak reject"
+}

@@ -79,6 +79,8 @@ def main(argv=None):
     sweep.add_argument('--seed', type=int, default=0)
     sweep.add_argument('--max-usd', type=float, default=3.0, help='hard cap for the whole sweep')
     sweep.add_argument('--concurrency', type=int, default=24)
+    sweep.add_argument('--case-mode', choices=['standard', 'ambiguous'], default='standard',
+                       help='ambiguous: authentic near-miss receipts that honest agents can get wrong')
     sweep.add_argument('--max-output-tokens', type=int, default=600,
                        help='includes hidden reasoning; thinking-heavy models (e.g. Qwen) need ~2000')
     summary_cmd = commands.add_parser('swarm-summary', help='pool finished sweeps into one table')
@@ -98,7 +100,7 @@ def main(argv=None):
                       ModelClient(args.provider, args.model, Ledger(args.provider, run_cap_usd=args.max_usd),
                                   max_output_tokens=args.max_output_tokens, max_concurrency=args.concurrency))
             run_sweep(args.root, client, fractions=args.fractions or DEFAULT_FRACTIONS, agents=args.agents,
-                      cases=args.cases, seed=args.seed)
+                      cases=args.cases, seed=args.seed, case_mode=args.case_mode)
             return
         if args.command == 'swarm-summary':
             from .swarm.sweep import format_summary, summarize

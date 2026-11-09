@@ -125,7 +125,8 @@ def estimate_run(client, *, agents: int, cases: int, conditions: list[str]) -> d
 
 
 def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditions=None,
-              cell_fraction: float = 0.1, waves: int = 5, recent_comments: int = 6, seed: int = 0) -> dict:
+              cell_fraction: float = 0.1, waves: int = 5, recent_comments: int = 6, seed: int = 0,
+              case_mode: str = 'standard') -> dict:
     conditions = list(conditions or CONDITIONS)
     unknown = set(conditions) - set(CONDITIONS)
     if unknown:
@@ -139,7 +140,7 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
 
     rng = random.Random(seed)
     key = secrets.token_bytes(32)  # controller-only; never written out
-    world = make_cases(cases, seed, key)
+    world = make_cases(cases, seed, key, mode=case_mode)
     agent_ids = [f'A{index:03d}' for index in range(agents)]
     colluders = sorted(rng.sample(agent_ids, round(agents * cell_fraction)))
     talking_point = rng.choice(TALKING_POINTS)
@@ -307,7 +308,7 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
         'project': 'Fleet Witness', 'mode': 'live-swarm' if client.label != 'fake:scripted' else 'fake-swarm',
         'model': client.label, 'seed': seed, 'agents': agents, 'cases': cases, 'conditions': conditions,
         'waves': waves, 'recent_comments': recent_comments, 'cell_size': len(colluders),
-        'cell_fraction': cell_fraction, 'regimes': {'direct': None, **REGIMES},
+        'cell_fraction': cell_fraction, 'case_mode': case_mode, 'regimes': {'direct': None, **REGIMES},
         'max_output_tokens': client.max_output_tokens, 'started_at': started,
         'finished_at': datetime.now(timezone.utc).isoformat(),
         'incomplete': abort.is_set(), 'abort_reason': abort_reason[0] if abort_reason else None,

@@ -1,0 +1,17 @@
+{
+  "reviewers": {
+    "A": "openai/gpt-6.1-sol",
+    "B": "google/gemini-4-argon",
+    "C": "x-ai/grok-4.7",
+    "D": "qwen/qwen3.8-max-0902"
+  },
+  "auditor": "google/gemini-4-argon",
+  "chair": "openai/gpt-6.1-sol-pro",
+  "verdicts_after_debate": {
+    "A": "weak reject",
+    "B": "weak reject",
+    "C": "weak reject",
+    "D": "reject"
+  },
+  "cost_usd": 1.281
+}

@@ -207,6 +207,7 @@ class ModelClient:
         self.max_output_tokens, self.temperature, self.timeout = max_output_tokens, temperature, timeout
         self._gate = threading.Semaphore(max_concurrency)
         self._rate = _RateGate()
+        self.extra_body = {}  # provider-specific request fields, e.g. {'reasoning': {'effort': 'high'}}
         self._key = _env_key('ADAPTION_API_KEY' if provider == 'adaption' else 'OPENROUTER_API_KEY')
         if provider == 'adaption':
             if model not in ADAPTION_PRICES:
@@ -270,7 +271,8 @@ class ModelClient:
                         'model': self.model, 'max_tokens': cap,
                         'temperature': self.temperature, 'usage': {'include': True},
                         'messages': [{'role': 'system', 'content': system},
-                                     {'role': 'user', 'content': user}]}, self.timeout, self._rate,
+                                     {'role': 'user', 'content': user}], **getattr(self, 'extra_body', {})},
+                        self.timeout, self._rate,
                         {'X-Title': 'Fleet Witness hackathon'})
                     if 'error' in data:
                         raise ProviderError(str(data['error'])[:300])

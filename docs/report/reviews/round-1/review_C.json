@@ -1,0 +1,87 @@
+{
+  "model": "x-ai/grok-4.7",
+  "summary": "The paper specifies a separation-of-powers release kernel, checks four invariants by bounded exploration of the implementation (23,376 states; seven mutants), and compares seven governance regimes on two reasoning models (32,830 calls) with planted colluders. Table 1 supports the main qualitative contrast: every kernel regime blocks all forged-signature releases that majority accepts (48/48), and reported target captures stay within the stated seat bounds when honest auditors do not sign. The seat-bound arithmetic is internally inconsistent, the verified world does not match the evaluated committees, and the deliberation-cost and detector headlines are confounded by the colluder instruction.",
+  "strengths": [
+    "The guarantee is explicitly conditional (unsafe release iff at least k seated false attestations), and Finding 1 evaluates the seat-conditional bound rather than treating the a-priori curve as the result.",
+    "Regimes are scored on the same votes and attestations, committee seeds are shared across models, and the truncation re-run rule was pre-declared (Appendix B.3).",
+    "Mutation testing is non-vacuous: Appendix B.2 shows the uniqueness mutant is missed at depth 5 and caught at depth 6, and limitations correctly flag \u03b5=0, same-team specification, and instructed rather than emergent collusion.",
+    "The forgery contrast in Table 1 is unambiguous and correctly labeled architectural in Finding 2, not as evidence that crowds cannot use tools they were never given.",
+    "Reported sweep size reconciles with the design: 6 shares \u00d7 2 board conditions \u00d7 (50\u00d724 votes + 7\u00d724 audits) = 16,416 calls per model."
+  ],
+  "concerns": [
+    {
+      "id": "C1",
+      "severity": "major",
+      "category": "statistics",
+      "location": "Table 1 and \u00a74.2 Finding 1",
+      "issue": "Seat-bound units do not cohere. Methods \u00a73.4 say each case's committee is shared across visible and hidden boards, so pooled bounds over 5\u00d72\u00d712=120 trials must be even, but the 3-of-5 bound is 26. The prose compares '24 vs 36 expected ... on 60 independent draws' at ~1.7 SD, yet 36 equals the 120-trial sum (mean colluder share 0.3), while ~1.7 SD matches a deduplicated 12 vs 18 contrast on 60 draws, not 24 vs 36.",
+      "why_it_matters": "Finding 1's claim that capture never exceeded the seats actually drawn is the paper's tightest empirical check. If the bound column mixes paired and unpaired counts, that check and the 'favourable draws' explanation of Figure 1 are not yet auditable.",
+      "suggested_fix": "From the existing logs, publish per-condition capturable counts (they must match if draws are shared), state whether 1-of-1/2-of-3/3-of-5 are nested in the same 7-seat draw, and recompute the z-score on one declared unit. Replace the 24-vs-36 sentence so the numerator, denominator, and SD refer to the same set of draws."
+    },
+    {
+      "id": "C2",
+      "severity": "major",
+      "category": "validity",
+      "location": "\u00a73.2, Appendix B.1, contribution 4, abstract",
+      "issue": "Bounded checking covers one case, three seats, quorum 2, and depth 6. The live regimes use up to 7 seats, 24 cases, and hybrid mode at sizes never explored. \u00a73.2 calls the specification 'independently written', but Appendix A says the same team wrote it and the LLM usage statement says the same assistant implemented both kernel and checker. Mutants only delete checks; they do not catch a shared mistaken invariant.",
+      "why_it_matters": "Contribution 4 says live failures are exactly those the verified rules permit. That transfer is an argument, not a result of the 23,376-state run. A co-generated spec and implementation can agree on a wrong property and still kill all seven mutants.",
+      "suggested_fix": "Narrow the abstract and contribution 4 to 'verified for the Appendix B world; m=7 results are empirical.' Add a short argument for which checks are per-attestation and therefore size-independent, and name any state the depth-6 fingerprint does not include. Drop 'independently written' or state who wrote the spec without seeing the kernel."
+    },
+    {
+      "id": "C3",
+      "severity": "major",
+      "category": "confound",
+      "location": "\u00a74.2 Finding 5, Figure 2, abstract",
+      "issue": "Colluders receive a longer private instruction (shared talking point, push targets, sign when seated) and the token totals include hidden reasoning. There is no control with an equally long honest instruction, nor a split of visible completion tokens vs reasoning tokens. A 150-token and 600-token pilot is cited as corroboration of the same confound.",
+      "why_it_matters": "The abstract presents 1.9\u20132.8\u00d7 tokens as a property of collusion and a cheap detection signal. The data only show that agents given this deception brief emitted more tokens, which may be prompt load, and the signal may be invisible to a public-log monitor.",
+      "suggested_fix": "Recompute Figure 2 on visible output only from retained logs. Reframe the claim as descriptive of this instruction unless an equal-length honest control is run. Do not call it content-free monitoring if it needs hidden reasoning tokens."
+    },
+    {
+      "id": "C4",
+      "severity": "major",
+      "category": "confound",
+      "location": "\u00a74.2 Finding 6 and Appendix B.4",
+      "issue": "The detector links agents using TF-IDF cosine of reasons, while the cell is instructed to reuse one talking point. Thresholds were fixed on scripted runs of that same style. Vote-only vs text-only ablation is not reported. F1\u22481 from 10\u201350% is therefore partly built into the adversary.",
+      "why_it_matters": "Finding 6 is stated as detection being easy below a majority. That does not support a claim about collusion detection when cover stories differ, which is the adversary future work itself flags.",
+      "suggested_fix": "On existing public logs, report F1 for shared-minority alone, text alone, and the combined rule, and retitle Finding 6 as detection under a shared talking point. No new LLM calls are required."
+    },
+    {
+      "id": "C5",
+      "severity": "major",
+      "category": "statistics",
+      "location": "Table 1 note, \u00a74.2",
+      "issue": "Clopper\u2013Pearson intervals are labeled exact at n=120, then called optimistic because board conditions share draws. The same 50 agents also vote all 12 targets, so trials are clustered within swarm, not Bernoulli. No significance tests are claimed, but the intervals and the 1.7 SD statement are still the inferential results.",
+      "why_it_matters": "Reported interval widths understate uncertainty for the capture rates a reader will compare across regimes and to the a-priori curve.",
+      "suggested_fix": "Drop 'exact'. Report rates per independent committee draw (n=60 if pairing holds) or a cluster bootstrap that resamples agents or cases. Keep the seat-conditional comparison, which does not need these intervals."
+    },
+    {
+      "id": "C6",
+      "severity": "minor",
+      "category": "overclaiming",
+      "location": "Abstract, \u00a76, Finding 4",
+      "issue": "The conclusion says the institution is a path to oversight that scales with swarm size, and the abstract says honest agents never herded. N is fixed at 50, colluders are instructed with no covert channel, herding exposures are 0/14 and 0/16, and at \u226450% a final approving majority on a target cannot form unless honest agents approve or drop out. Limitations already say this; the conclusion does not.",
+      "why_it_matters": "Readers can take a single-sweep toy task with \u03b5=0 as evidence about swarm-scale collusion and crowd dynamics. The seat-conditional kernel result does not need that extrapolation.",
+      "suggested_fix": "Replace the scaling sentence with the conditional claim actually tested. In the abstract, qualify herding as 'no approvals in 14 and 16 exposures on this crisp task'."
+    },
+    {
+      "id": "C7",
+      "severity": "minor",
+      "category": "reproducibility",
+      "location": "Code and Data; \u00a74.1",
+      "issue": "The draft says every number comes from the repository, but raw sweep logs are on request. LLM sampling is temperature 0.7 with one sweep per model; only seating seeds are shared. Denominators such as 0/746 and 8/492 are not derived in the text.",
+      "why_it_matters": "Table 1 cannot be recomputed from the manuscript, and a second sample at the same seats could move compliance and the unanimity liveness gap.",
+      "suggested_fix": "Archive the two sweep logs with the repo, add a one-line derivation of 746, 492, and 262, and note that LLM tokens are not seed-deterministic even when committees are."
+    },
+    {
+      "id": "C8",
+      "severity": "minor",
+      "category": "related-work",
+      "location": "\u00a72",
+      "issue": "The gap claim\u2014that no prior work combines bounded verification of a committee institution with a live colluding-cell capture test\u2014rests on characterizations of several 2026 preprints, two of which the authors say were inaccessible. This review does not assert those characterizations are false.",
+      "why_it_matters": "If any cited system already measures seat capture under a verified quorum, contribution 4's novelty claim is overstated.",
+      "suggested_fix": "Verify each arXiv id against its source, as the manuscript already warns, and quote the specific limitation used for the gap. Do not add uncited comparisons."
+    }
+  ],
+  "verdict": "borderline",
+  "confidence": 4
+}

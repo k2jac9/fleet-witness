@@ -1,0 +1,67 @@
+{
+  "model": "google/gemini-4-argon",
+  "summary": "This paper presents a separation-of-powers kernel for multi-agent oversight, verified via bounded model checking of the actual SQLite implementation (23,376 states) and stress-tested against 50-agent LLM swarms containing instructed colluding subsets (32,830 API calls across two reasoning models). The authors show that committee capture in the live runs stays strictly within the theoretical hypergeometric bounds dictated by random seat draws, and they highlight an empirical deliberation-token overhead (1.9\u20132.8x) for colluding agents. The work is unusually transparent about its limitations, confounds, and experimental mechanics, though several design artifacts (shared Talking Points, task simplicity, and single-seed sampling variance) limit the generalizability of its secondary claims.",
+  "strengths": [
+    "Methodological rigor and transparency: The authors explicitly identify and neutralize a critical token-cap truncation confound (Section 3.4, Appendix B.3), clearly distinguish between architectural properties by construction (HMAC verification) and behavioral findings (Finding 2), and avoid overclaiming on null results.",
+    "Bounded model checking on the actual implementation: Rather than checking an abstract specification in isolation, Section 3.2 and Appendix B verify the real SQLite-backed implementation via state serialization and validate the checker's sensitivity using 7 mutation tests.",
+    "Clear decomposition of institutional vs. behavioral guarantees: The framing in Section 3.3 and Section 5 cleanly isolates mechanical invariants from empirical agent parameters (honest error rate, error independence, and colluder compliance)."
+  ],
+  "concerns": [
+    {
+      "id": "C1",
+      "severity": "major",
+      "category": "related-work",
+      "location": "References & Section 2",
+      "issue": "Multiple cited references contain impossible future arXiv identifiers (e.g., arXiv:2605.20704, arXiv:2607.23532, arXiv:2608.15888, arXiv:2609.04170) or future sprint dates (2026-11-08 in Appendix A), alongside an editorial note left in the text: '*(Verify every reference against its source before submission; do not add uncited claims.)*'.",
+      "why_it_matters": "Since arXiv identifiers encode YYMM, IDs from 2605 to 2609 cannot exist prior to May\u2013September 2026. This strongly indicates LLM-hallucinated citations or broken placeholders, which violates basic scientific validity and accurate positioning against prior work.",
+      "suggested_fix": "Audit every entry in the References section and Section 2. Remove all hallucinated citations, verify the actual arXiv IDs and publication years of real papers, and delete the internal prompt note at the end of the References section."
+    },
+    {
+      "id": "C2",
+      "severity": "major",
+      "category": "confound",
+      "location": "Section 3.4 & Section 4.2 (Finding 6)",
+      "issue": "Colluding agents were explicitly instructed to 'push the targets using a shared talking point' (Section 3.4), and the blue-team detector relies on TF-IDF cosine similarity of the public reasons alongside shared-minority voting (Appendix B.4).",
+      "why_it_matters": "Achieving F1 = 0.97\u20131.0 on collusion detection (Finding 6) is heavily confounded by the prompt design. Forcing colluders to repeat a shared talking point artificially inflates text similarity; furthermore, because honest error is 0%, *any* agent voting to approve an invalid target is guaranteed to be in the minority and a colluder.",
+      "suggested_fix": "Temper the claim in Finding 6 ('detection is easy below a majority'). Explicitly report an ablation in Appendix B.4 showing detector F1 using *only* the voting matrix (`z_minority`) vs. *only* text similarity (`z_text`), and clarify that text-similarity detection is an artifact of the injected shared talking point."
+    },
+    {
+      "id": "C3",
+      "severity": "major",
+      "category": "validity",
+      "location": "Section 4.2 (Finding 1, Finding 4) & Section 5",
+      "issue": "The evaluation task is so unambiguous that the honest unsafe error rate is exactly zero (0/746 in both models), and honest voters exposed to an approving majority Prior only occurred 14 and 16 times across the entire sweep.",
+      "why_it_matters": "As the authors candidly admit, having epsilon = 0 leaves the binomial error term in Section 3.3 and the critical N-version programming independence assumption (Knight & Leveson, 1986) completely untested. It also renders the non-herding result (Finding 4) statistically underpowered (n=14, n=16).",
+      "suggested_fix": "If running a small additional sweep on 4\u20136 genuinely ambiguous boundary cases (where honest error epsilon > 0) is not feasible within the timeframe, revise the Abstract and Introduction Contribution 4/5 to explicitly state that only the hypergeometric *colluder-seating* component of the capture bound was empirically exercised, not the honest-error independence component."
+    },
+    {
+      "id": "C4",
+      "severity": "minor",
+      "category": "statistics",
+      "location": "Section 4.2 (Table 1 & Finding 1)",
+      "issue": "All conditions and both models share a single set of pseudo-random committee draws (60 independent draws across the 120 pooled trials), which happened to under-seat colluders by ~1.7 standard deviations (24 capturable 1-of-1 draws vs. 36.0 expected).",
+      "why_it_matters": "While sharing seeds across models is good practice for paired comparisons, relying on a single realization of 60 random draws creates a noticeable gap between the empirical results and the theoretical curve in Figure 1, and violates the independence assumption of the reported n=120 Clopper-Pearson confidence intervals.",
+      "suggested_fix": "Report the Clopper-Pearson confidence intervals in Table 1 at the level of independent committee draws (n=60, averaging or taking the worst-case across the paired visible/hidden conditions), or report cluster-bootstrapped CIs clustered by `(share, case_id)`."
+    },
+    {
+      "id": "C5",
+      "severity": "minor",
+      "category": "confound",
+      "location": "Section 4.2 (Finding 5, Table 2)",
+      "issue": "The 1.9\u20132.8x output token deliberation overhead for colluders is attributed to the cognitive/reasoning cost of deception, but the colluder system prompt is longer and adds conditional instructions ('push targets using a shared talking point, and vote honestly elsewhere').",
+      "why_it_matters": "Reasoning models often spend chain-of-thought tokens parsing additional prompt constraints, checking whether the current case matches the target condition, and formatting the required talking point, which confounds 'deception deliberation' with 'conditional instruction-following overhead'.",
+      "suggested_fix": "Compare output token lengths of colluders vs. honest agents on *non-target* (valid) cases, where colluders have the same system prompt but vote honestly. If colluders also use more tokens on valid cases, the overhead is partly prompt-parsing; if the spike is isolated to target cases, the deception-cost claim is much stronger."
+    },
+    {
+      "id": "C6",
+      "severity": "minor",
+      "category": "reproducibility",
+      "location": "Section 3.2 & Appendix B.1",
+      "issue": "The bounded model checking state representation and deduplication abstraction are only briefly summarized ('SQLite serialized and cloned at each state, states deduplicated').",
+      "why_it_matters": "Raw SQLite database files or dumps often contain non-deterministic or monotonically increasing metadata (e.g., auto-increment rowids, timestamps, or page layout variations) that can either prevent state deduplication or, if over-abstracted, mask state differences.",
+      "suggested_fix": "In Appendix B.1, briefly specify the canonical state representation used for hashing/deduplication during BFS exploration and clarify how depth 6 was chosen as the sufficiency horizon."
+    }
+  ],
+  "verdict": "weak accept",
+  "confidence": 4
+}

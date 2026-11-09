@@ -1,0 +1,208 @@
+{
+  "model": "x-ai/grok-4.7",
+  "judgements": [
+    {
+      "concern_ref": "A.C1",
+      "stance": "agree",
+      "reason": "Finding 2 and Table 1 give direct majority no HMAC check while every kernel regime has one, and with 0 target captures, ties failing, and 96/96 valid approvals, a majority-plus-mechanical-checks replay without a committee is not reported and could match the hybrid's safety and throughput."
+    },
+    {
+      "concern_ref": "A.C2",
+      "stance": "agree",
+      "reason": "Table 1 labels Clopper\u2013Pearson intervals exact at n=120 even though the note says visible and hidden boards share draws (60 per regime), and Finding 1's 1.7 SD statement does not name a sampling unit consistent with that dependence or with pooling 10\u201350% shares."
+    },
+    {
+      "concern_ref": "A.C3",
+      "stance": "agree",
+      "reason": "Appendix B.2 reports 23,376 states for an unsplitted 'Kernel, depth 6' while only depth 4 is split by mode, S2 is 'a release whenever preconditions hold' rather than scheduler progress, and the checked world is one case and three seats."
+    },
+    {
+      "concern_ref": "A.C4",
+      "stance": "agree",
+      "reason": "Section 3.3's formula assumes independent \u03b5 and compliant colluders, whereas Finding 1's seated-colluder bound and the 0/746 honest-error result only exercise the zero-error colluder-seat case."
+    },
+    {
+      "concern_ref": "A.C5",
+      "stance": "agree",
+      "reason": "Finding 5 and Figure 2 compare agents given different private instructions and count hidden reasoning tokens, with no length-matched benign role and no held-out token-only detector."
+    },
+    {
+      "concern_ref": "A.C6",
+      "stance": "agree",
+      "reason": "Section 3.4 tells the cell to reuse one talking point and vote for targets that honest agents never approve (0/746), so Appendix B.4's TF-IDF and shared-minority features recover that planted signature."
+    },
+    {
+      "concern_ref": "A.C7",
+      "stance": "agree",
+      "reason": "Code and Data cites a mutable branch and logs only on request, and Appendix B.3's pre-declared re-run, which changed the 4-of-7 hidden cell, is not tied to an accounting of which calls enter the 16,415-call totals or Table 1."
+    },
+    {
+      "concern_ref": "A.C8",
+      "stance": "agree",
+      "reason": "Finding 3 cites 8/492 honest valid-release refusals as the cause of unanimity blocking 9/96 valid releases for gpt-oss, and the text never accounts for the ninth blocked case."
+    },
+    {
+      "concern_ref": "A.C9",
+      "stance": "agree",
+      "reason": "Section 2's gap, including that arXiv:2603.25100 implements and measures nothing, rests on characterizations the manuscript itself marks as unchecked, with two candidate papers inaccessible."
+    },
+    {
+      "concern_ref": "B.C1",
+      "stance": "factually_wrong",
+      "reason": "Appendix A states the repository was created on 2026-11-08, after the YYMM months encoded in the cited arXiv IDs, so those identifiers and the sprint date are not future on the manuscript's timeline."
+    },
+    {
+      "concern_ref": "B.C2",
+      "stance": "agree",
+      "reason": "Section 3.4 requires a shared talking point and honest unsafe error is 0/746, so Finding 6's F1 is measured on a detector whose vote and TF-IDF features match instructions the cell was given."
+    },
+    {
+      "concern_ref": "B.C3",
+      "stance": "agree",
+      "reason": "Findings 1 and 4 and the abstract rest on 0/746 honest unsafe errors and only 14 and 16 herding exposures, which Section 5 already says leaves the \u03b5 term and independence untested."
+    },
+    {
+      "concern_ref": "B.C4",
+      "stance": "agree",
+      "reason": "Table 1 and Finding 1 use one shared committee-draw realization and still display n=120 Clopper\u2013Pearson intervals that the table note calls optimistic because the two board conditions are paired."
+    },
+    {
+      "concern_ref": "B.C5",
+      "stance": "agree",
+      "reason": "Finding 5 attributes the token ratio to collusion, but Section 3.4's colluder prompt adds a shared talking point and a conditional target rule, and no non-target token split is reported."
+    },
+    {
+      "concern_ref": "B.C6",
+      "stance": "agree",
+      "reason": "Appendix B.1 says exploration deduplicates serialized SQLite clones but does not specify the canonical hash, so whether rowids or timestamps enter the 23,376-state count is not auditable."
+    },
+    {
+      "concern_ref": "D.C1",
+      "stance": "agree",
+      "reason": "The abstract says bounded exploration shows safety and liveness hold, but Section 3.2 and Appendix B.1 check only one case, three auditors, and depth 6, and Appendix A says the same team wrote the specification."
+    },
+    {
+      "concern_ref": "D.C2",
+      "stance": "agree",
+      "reason": "Table 1 pools 120 target trials across shared committee draws and unequal colluder shares, and the Clopper\u2013Pearson intervals remain the displayed uncertainty after the note calls them optimistic."
+    },
+    {
+      "concern_ref": "D.C3",
+      "stance": "agree",
+      "reason": "Section 3.3 assumes independent honest error and full colluder compliance, but Finding 1 reports 0/746 unsafe honest errors and only 234/262 and 242/262 colluder compliance."
+    },
+    {
+      "concern_ref": "D.C4",
+      "stance": "agree",
+      "reason": "Finding 2 states the 48/48 forged approvals are architectural because voters had no HMAC tool, yet the finding title, contribution 5, and the abstract still present that result as an empirical crowd-versus-institution finding."
+    },
+    {
+      "concern_ref": "D.C5",
+      "stance": "agree",
+      "reason": "Figure 2 and Finding 5 compare token totals that include hidden reasoning under unequal private instructions, so the 1.9\u20132.8\u00d7 ratio is not isolated as a cost of collusion."
+    },
+    {
+      "concern_ref": "D.C6",
+      "stance": "agree",
+      "reason": "Code and Data withholds the reported sweep logs except on request, each model is one temperature-0.7 sweep, and Appendix B.4 fixes detector thresholds on scripted runs without a sensitivity check."
+    },
+    {
+      "concern_ref": "D.C7",
+      "stance": "agree",
+      "reason": "Table 1's target pool is share>0 (5\u00d72\u00d712=120) while valid-of-96 and forged-of-48 match six shares including zero, and the hybrid bound of 22 repeats the 4-of-7 seat bound despite the majority precondition."
+    },
+    {
+      "concern_ref": "D.C8",
+      "stance": "agree",
+      "reason": "S2 is defined as a release whenever preconditions hold, and Appendix B.1's finite BFS over sequential SQLite states does not establish eventual release under a scheduler."
+    },
+    {
+      "concern_ref": "D.C9",
+      "stance": "agree",
+      "reason": "The abstract says honest agents never herded, but Finding 4's denominators are only 0/14 and 0/16 and the finding itself calls that weak evidence of absence."
+    },
+    {
+      "concern_ref": "D.C10",
+      "stance": "agree",
+      "reason": "Section 2's novelty gap depends on 2026 preprints the manuscript says were partly inaccessible and still need source checks, including the leftover verification note after the references."
+    }
+  ],
+  "revised_own_concerns": [
+    {
+      "id": "C1",
+      "severity": "major",
+      "issue": "Finding 1's deviation sentence is not on one sampling unit: the 1-of-1 bound 24 and a-priori 36.0 are the 120-trial (two-board) sums, while ~1.7 SD matches a deduplicated contrast of about 12 vs 18 on 60 draws with heterogeneous share, not 24 vs 36. The bound column is even (24, 24, 26, 22, 0, 22), so it is consistent with visible/hidden sharing; the earlier evenness objection to 26 is withdrawn.",
+      "suggested_fix": "From the logs, publish per-condition capturable counts, state whether 1-of-1/2-of-3/3-of-5 are nested in the same 7-seat draw, and recompute the z-score so the numerator, denominator, and SD refer to one declared set of draws."
+    },
+    {
+      "id": "C2",
+      "severity": "major",
+      "issue": "Bounded checking covers one case, three seats, quorum 2, and depth 6; Appendix B.2 does not say which mode produced the 23,376-state total, and S2 is enablement on an explored execution attempt, not temporal liveness. Section 3.2 calls the specification independently written, but Appendix A says the same team wrote it and the LLM statement says the same assistant implemented kernel and checker. Mutants only delete checks. Live regimes use up to 7 seats, 24 cases, and hybrid mode.",
+      "suggested_fix": "Narrow the abstract and contribution 4 to the Appendix B world, with m=7 results labeled empirical. Name the depth-6 mode, the hashed state, and which checks are per-attestation. Drop 'independently written' or state who wrote the spec without seeing the kernel. Label S2 as bounded enablement."
+    },
+    {
+      "id": "C3",
+      "severity": "major",
+      "issue": "Colluders receive a longer private instruction (shared talking point, push targets, sign when seated) and Figure 2's token totals include hidden reasoning. There is no equal-length honest control, no non-target split, and no visible-only split. The 150-token and 600-token pilots are the same confound.",
+      "suggested_fix": "Recompute Figure 2 on visible tokens and, from retained logs, compare colluders vs honest agents on non-target cases. Reframe Finding 5 as a role-conditioned length association unless a matched control is run. Do not call it content-free monitoring if it needs hidden reasoning."
+    },
+    {
+      "id": "C4",
+      "severity": "major",
+      "issue": "The detector links agents by TF-IDF cosine of reasons plus shared-minority votes, while the cell is instructed to reuse one talking point and honest agents never approve targets (0/746), so any target approval is a colluder minority vote. Thresholds were fixed on scripted runs of that style. Vote-only vs text-only ablation is not reported.",
+      "suggested_fix": "On existing public logs, report F1 for shared-minority alone, text alone, and the combined rule, include the 0% false-positive cluster in the denominator, and retitle Finding 6 as detection under a shared talking point."
+    },
+    {
+      "id": "C5",
+      "severity": "major",
+      "issue": "Clopper\u2013Pearson intervals are labeled exact at n=120, then called optimistic because board conditions share draws. The same agents also vote all targets, so trials are clustered within swarm and case, not Bernoulli, and pooling 10\u201350% shares does not estimate one rate. The intervals and the 1.7 SD statement are still the inferential results.",
+      "suggested_fix": "Drop 'exact'. Report rates per independent committee draw or a cluster bootstrap that resamples draws, agents, or cases, stratified by share. Keep the seat-conditional comparison, which does not need these intervals."
+    },
+    {
+      "id": "C6",
+      "severity": "minor",
+      "issue": "Section 6 says the institution is a path to oversight that scales with swarm size, and the abstract says honest agents never herded and presents 48/48 forged approvals as a crowd result. N is fixed at 50, colluders have no covert channel, herding exposures are 0/14 and 0/16, and Finding 2 itself says the forgery result is architectural. Limitations already say this; the abstract and conclusion do not.",
+      "suggested_fix": "Replace the scaling sentence with the seat-conditional claim actually tested. Qualify herding as no approvals in 14 and 16 exposures on this crisp task, and carry Finding 2's architectural caveat into the abstract and contribution 5."
+    },
+    {
+      "id": "C7",
+      "severity": "major",
+      "issue": "The draft says every number comes from the repository, but raw sweep logs are on request, the repo is a mutable branch, and LLM sampling is temperature 0.7 with one sweep per model. Appendix B.3's re-run changed one capture cell and is the version in the main results, but call totals, costs, and denominators such as 0/746, 8/492, and 8/262-style compliance counts are not derived or separated from the superseded run.",
+      "suggested_fix": "Archive a commit hash and both sweep logs, add a one-line derivation of 746, 492, 262, 96, and 48, and publish an accounting table that separates attempted, transport-failed, superseded, and analyzed calls. Note that tokens are not seed-deterministic."
+    },
+    {
+      "id": "C8",
+      "severity": "minor",
+      "issue": "The gap claim rests on characterizations of several 2026 preprints, two of which the authors say were inaccessible, and the references still end with an internal instruction to verify every source. This review does not assert those characterizations are false or that the arXiv IDs are impossible on the manuscript's 2026-11-08 timeline.",
+      "suggested_fix": "Verify each arXiv id against its source, quote the specific limitation used for the gap, identify the inaccessible candidates, and delete the internal verification note. Do not add uncited comparisons."
+    }
+  ],
+  "withdrawn": [],
+  "new_concerns": [
+    {
+      "id": "N1",
+      "severity": "major",
+      "issue": "The hybrid's 'best profile' in Finding 2 and Section 5 is not isolated from mechanical gating. Direct majority is denied signature checks that every kernel regime receives, and no majority-plus-integrity/policy/uniqueness/audit baseline without a committee is reported. With honest voters rejecting every target and ties failing, that simpler baseline would match the hybrid's 0 unsafe targets, 0 forgeries, and 96/96 valid releases on these cases.",
+      "suggested_fix": "Replay existing majority decisions through the kernel's mechanical checks without committee approval, report outcomes and call cost next to the hybrid, and separate benefits of mechanical gating from benefits of committee attestation."
+    },
+    {
+      "id": "N2",
+      "severity": "minor",
+      "issue": "Finding 3 attributes gpt-oss unanimity's 9/96 blocked valid releases to 8/492 honest valid-release refusals. Those counts can be compatible only if another cause (colluder refusal, abstention, parse failure) supplies the ninth block, which is not shown.",
+      "suggested_fix": "Break the nine blocked valid cases into honest refusal, colluder refusal, abstention, transport/parsing failure, and other, allowing multiple causes per case."
+    },
+    {
+      "id": "N3",
+      "severity": "minor",
+      "issue": "Table 1 denominators are not one trial set: targets pool share>0 (120), while valid (96) and forged (48) include the 0% share, and the hybrid 'bound from seats drawn' of 22 ignores the majority precondition that, on this task, never approved a target.",
+      "suggested_fix": "Footnote each denominator. For hybrid, also report a bound conditioned on the majority rule, or the observed rate at which the majority precondition fails."
+    },
+    {
+      "id": "N4",
+      "severity": "major",
+      "issue": "The manuscript blends three different objects: the deterministic need for k false attestations, the realized count of committees with at least k colluders, and the Section 3.3 model with independent honest errors and full colluder compliance. The seat bound does not need independence and is not generally valid if honest auditors err; compliance was 89.3% and 92.4%, not 100%, so the a-priori curve is not only a seat-draw comparison.",
+      "suggested_fix": "State the deterministic invariant, the zero-honest-error seat bound, and the independence-based formula separately, and restrict Figure 1 and contribution 4 to the component actually exercised."
+    }
+  ],
+  "updated_verdict": "weak reject"
+}

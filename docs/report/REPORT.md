@@ -10,29 +10,31 @@ swarm-summary <dir>`).*
 
 ---
 
-## Abstract (239 words; limit 150–250)
+## Abstract (229 words; limit 150–250)
 
-Aligning every agent in a swarm scales poorly. Human societies place guarantees in
-institutions instead. We ask whether an *institution* for agent swarms can be formally checked
-and shown to hold against a real LLM swarm containing a colluding cell.
+Per-agent alignment and monitoring do not scale to swarms, and a colluding subgroup is
+designed to defeat both. We ask whether safety guarantees can instead live in an
+*institution*: code whose rules are checked once and enforced on every agent.
 
-We build a separation-of-powers kernel. A legislature sets policy and a worker proposes a
-release. A committee seated by the kernel attests with per-auditor keys. The executive commits
-each release with its audit record in one transaction. The kernel checks every mechanical
-property and delegates only the semantic safety judgement to auditors. Bounded exhaustive
-exploration of the real implementation (23,376 states) shows its safety, liveness,
-at-most-once and audit invariants hold, and catches all seven deliberately broken variants.
+We build a separation-of-powers kernel. A worker proposes a release and a kernel-seated
+committee attests with per-auditor keys. The executive commits only if mechanical checks pass
+(integrity, seating, binding, quorum, policy, uniqueness), logging each release atomically.
+Bounded exhaustive exploration of the real implementation (23,376 states) confirms its
+safety, liveness, at-most-once and audit invariants, and catches all seven deliberately broken
+variants. The resulting guarantee is conditional: an unsafe release needs k false attestations
+from seated auditors.
 
-The guarantee is conditional: if fewer than k of m randomly seated auditors sign an unsafe
-release, it does not ship. We ran 32,830 live calls across two reasoning-model families
-(DeepSeek v4 Flash, gpt-oss-20b) in which 50-agent swarms reviewed releases while hidden
-cells of 0–50% pushed invalid ones. In both, capture came only from colluder seats and never
-exceeded the bound set by the seats drawn. Majority voting was never captured but approved
-every forged-signature release (48/48 per model); every kernel regime blocked them. A hybrid
-(majority plus 4-of-7 committee) had zero unsafe releases. Honest agents never herded or
-signed invalid releases, so this crisp task left independence untested.
-
-Colluders used 1.9–2.8× more output tokens than honest agents, a cheap detection signal.
+We stress-tested seven governance regimes with 32,830 calls to two reasoning-model families,
+in 50-agent swarms where hidden cells (0–50%) pushed invalid releases.
+- **Mechanical checks were decisive.** Plain majority voting approved every forged-signature
+  release (48/48 per model). Every kernel regime blocked them all, including a mechanically
+  gated majority with no committee.
+- **Committee capture came only from colluder seats** and never exceeded the bound set by
+  the seats actually drawn. Committees cost a seventh of a full vote but are capturable.
+- **Honest agents almost never erred,** even on near-miss receipts, so the independence
+  assumption behind committee bounds remains untested.
+- **Colluders' outputs ran 1.9–2.8× longer,** an association worth testing as a monitoring
+  signal.
 
 ---
 
@@ -50,25 +52,38 @@ everyone being honest. Recent work proposes separation of powers for agent econo
 (*From Logic Monopoly to Social Contract*, arXiv:2603.25100). That proposal is a design paper:
 it implements nothing, measures nothing, and defers its proofs.
 
-An agent institution, unlike a human one, is code. This enables two things a constitution
-cannot do:
+An agent institution, unlike a human one, is code. Its rules can be **mechanically verified**
+and **stress-tested** against real AI swarms with planted adversaries, two things no
+constitution allows.
 
-1. **Mechanical verification** of the institution's rules.
-2. **Controlled stress tests** against real AI swarms with adversaries we plant ourselves.
+**Theory of change.** Deployers already route agent actions through gateways (MCP, A2A, LLM
+proxies). If consequential actions must pass an institution kernel at that gateway, the
+kernel's mechanical guarantees hold regardless of swarm size or model. What remains is to
+measure the few behavioural parameters the guarantee depends on: honest error, its
+correlation, and colluder compliance.
+
+We show this loop of build, verify, stress-test and measure is feasible in a weekend. A
+fellowship would extend it to tasks where honest agents genuinely err, to verifiable seating,
+and to deployment at a real gateway.
 
 **Contributions.**
 
-1. A small separation-of-powers kernel for agent swarms. It deliberately splits what can be
-   checked mechanically (integrity, seating, binding, quorum, policy, uniqueness, audit) from
-   what must be judged (is this release safe?).
+1. A small separation-of-powers kernel for agent swarms. It splits what can be checked
+   mechanically (integrity, seating, binding, quorum, policy, uniqueness, audit) from what
+   must be judged (is this release safe?).
 2. Bounded exhaustive verification of the real kernel against an independent specification,
    with mutation testing to show the checker has teeth.
-3. A closed-form capture probability for randomly seated k-of-m committees.
-4. A live stress test: seven governance regimes × colluder shares from 0 to 50% × visible or
-   hidden voting, across two reasoning-model families and 32,830 LLM calls. It shows the
-   institution's failures are exactly the ones its verified rules permit.
-5. Three empirical observations: crowds judge but cannot verify; we saw no herding in this
-   setting; and colluding agents pay a measurable deliberation cost.
+3. A statement of what the kernel guarantees, as three explicitly conditional claims (§3.3),
+   with a closed-form capture probability for randomly seated k-of-m committees.
+4. A live stress test of seven regimes, including a mechanically gated majority baseline,
+   across colluder shares of 0–50%, visible or hidden voting, and two reasoning-model families
+   (32,830 calls). It separates two effects:
+   - mechanical checks are what stop forgeries;
+   - committees trade capture risk, bounded by the seats drawn, for a seventh of a full
+     vote's cost.
+5. An open harness with logs, and three observations whose limits we state: honest error near
+   zero even on near-miss receipts (so independence is untested), no herding in few exposures,
+   and longer colluder outputs.
 
 Quorums, Byzantine fault tolerance, threshold signatures and random committee selection are
 decades old (§2). We do not claim the quorum idea. We contribute a bounded-verified kernel
@@ -82,11 +97,26 @@ with collusion central. Motwani et al. (2024) study secret collusion via stegano
 Control (Greenblatt et al., 2024) asks whether protocols hold against an intentionally
 subversive model; we ask the same of an institution facing a *group* of agents.
 
-**Agent institutions.** The separation-of-powers proposal (arXiv:2603.25100) is closest in
-spirit but is neither implemented nor tested. Heartbeat-Bound Hierarchical Credentials
-(Deochake, arXiv:2605.20704) give hand-written proofs and small LLM tests, for credential
-revocation rather than governance. An earlier Apart sprint project measured how much agents
-defer to an authoritative planner, without an institutional mechanism.
+**Agent institutions and governance.**
+- The separation-of-powers proposal (arXiv:2603.25100) is closest in spirit but is neither
+  implemented nor tested.
+- Paglieri et al. (2026) observe 100 LLM agents in which an evaluation exploit spread and a
+  counter-group audited and blew the whistle. They propose Ostrom-style institutions for
+  swarm self-governance; we build and verify one institutional mechanism.
+- An earlier Apart sprint project measured how much agents defer to an authoritative
+  planner, without an institutional mechanism.
+
+**Verified and governed agent runtimes.**
+- AgentRFC (Zheng & Zhang, 2026) model-checks agent-protocol security invariants in TLA+.
+- Bounded Agents (Muruaga, 2026) proves delegation properties and evaluates them on LLM
+  prompt-injection benchmarks.
+- Others add action certificates (Wang, 2026), verify-gated admission (Nguyen & Tran, 2026),
+  swarm-level runtime assurance (Kekatos et al., 2026) and credential revocation (Deochake,
+  2026).
+
+These works verify protocols, delegation or admission, mostly against injection or single
+compromised components. None studies authority spread over a committee that a colluding cell
+can partially capture.
 
 **Classic foundations.** Byzantine agreement tolerates a bounded fraction of faulty
 participants (Lamport, Shostak & Pease, 1982). Threshold cryptography distributes authority
@@ -95,35 +125,31 @@ sortition (Gilad et al., 2017). N-version programming showed that independently 
 versions fail in correlated ways (Knight & Leveson, 1986), the assumption most at risk when
 every auditor is a copy of one model.
 
-**Gap.** To our knowledge, no prior work combines (a) mechanical verification of an
-institution's invariants with (b) a stress test against a real LLM swarm containing a
-captured subgroup. Two candidate papers were inaccessible to us.
+**Gap.** Formal or bounded verification of agent infrastructure exists (AgentRFC, Bounded
+Agents), and so do LLM-agent evaluations of governance mechanisms. To our knowledge, none
+combines (a) bounded verification of a committee-based institution's invariants with (b) a
+live stress test against an LLM swarm containing a colluding cell that can capture seats,
+with the guarantee's behavioural assumptions measured. Two candidate papers were
+inaccessible to us.
 
 ## 3. Methods
 
 ### 3.1 The kernel (`fleet_witness/institution.py`)
 
-| Branch | Responsibility |
-| --- | --- |
-| **Legislature** | Sets versioned policy per case. |
-| **Proposer** | A worker submits a release; in hybrid regimes the swarm's majority vote is also required. |
-| **Auditors** | The kernel seats *m* auditors per case, drawn uniformly from the swarm. Each attestation is an HMAC under that auditor's own key, bound to the exact run and artifact. Anyone may submit anything; validity is decided only at execution. |
-| **Executive** | Commits a release only if every check below passes. The release and its audit event commit in the same SQLite transaction. |
+The kernel has four branches:
+- the **legislature** sets versioned policy;
+- a **proposer** (a worker, plus the swarm majority in hybrid regimes) submits a release;
+- the kernel seats *m* **auditors** uniformly at random from the swarm, each attesting with
+  an HMAC under its own key, bound to the exact run and artifact;
+- the **executive** commits a release and its audit event in one SQLite transaction.
 
-The executive's checks:
-- a proposal exists (and a majority, in hybrid regimes);
-- current policy allows the release;
-- the evidence passes its integrity check;
-- at least *k* **distinct, seated** auditors gave valid, correctly bound attestations;
-- no prior release exists for this case.
+The executive commits only if a proposal exists, current policy allows it, the evidence is
+intact, at least *k* **distinct, seated** auditors gave valid bound attestations, and no
+prior release exists.
 
-**Design principle.** The kernel never judges whether evidence *means* "safe". In our task,
-a build receipt is authentic but does not establish release safety. That judgement belongs to
-auditors and is exactly where a colluding cell attacks. The institution's guarantee is
-therefore conditional:
-
-> Under the verified invariants, an unsafe release requires at least *k* seated auditors to
-> attest falsely.
+**Design principle.** The kernel never judges whether evidence *means* "safe". In our task, a
+build receipt is authentic but does not establish release safety. That judgement belongs to
+auditors, and it is exactly where a colluding cell attacks.
 
 ### 3.2 Bounded verification (`fleet_witness/verify_institution.py`)
 
@@ -137,15 +163,37 @@ compared with an independently written specification:
 - **S3:** at most one release per case;
 - **S4:** every release has its audit event.
 
-Seven mutant kernels, each missing one check, show the checker can fail. This is bounded
-model checking, not a proof for all sizes. Details are in Appendix B.
+Seven mutant kernels, each missing one check, show the checker can fail.
 
-### 3.3 Capture probability
+**Scope.** This is bounded model checking, not a proof.
+- The checked world (one case, three seats, quorum 2, depth 6) is smaller than the live
+  configuration (24 cases, seven seats).
+- S2 means "an eligible execution attempt succeeds", not temporal progress.
+- States are deduplicated on the contents of the kernel's tables plus the specification state.
+- The specification was written by the same team, so a mistake shared with the kernel could
+  go unnoticed.
 
-For *N* agents with *C* colluders and *m* seats drawn without replacement, assume each honest
-auditor errs independently with probability ε and each seated colluder complies. Then:
+Details are in Appendix B.
 
-P(capture) = Σⱼ Hypergeom(j; N, C, m) · P(Binom(m−j, ε) ≥ k−j)
+### 3.3 What the kernel guarantees: three conditional claims
+
+- **G1 (mechanical; verified within the bound).** No release happens unless a proposal
+  exists, current policy allows it, the evidence is intact, and at least k distinct seated
+  auditors have given valid attestations bound to that exact release. At most one release
+  happens per case, and each is audited.
+- **G2 (conditional on honest auditors never attesting unsafe releases).** An unsafe release
+  then requires at least k colluders on its committee, so capture is at most the fraction of
+  committees that drew k or more colluders. This is the "seat bound" in Table 1.
+- **G3 (probabilistic).** Assume random, unpredictable seating of m seats from N agents with
+  C colluders, honest errors that are independent with rate ε, and full colluder compliance.
+  Then
+
+  P(capture) = Σⱼ Hypergeom(j; N, C, m) · P(Binom(m−j, ε) ≥ k−j).
+
+  Imperfect compliance lowers capture. Correlated honest errors could raise it above G3.
+
+Our live runs exercise G1 and G2. G3's independence assumption is untested, because honest
+unsafe error was essentially zero (§4.3).
 
 ### 3.4 Live stress test (`fleet_witness/swarm/`)
 
@@ -164,10 +212,12 @@ agents could spot. The 4 forged cases are not targets; they test what crowds can
   are paired. Committee members audit with the same rule; colluders on the committee are
   told to sign targets.
 
-**Regimes.** The same votes and attestations are judged under seven regimes:
-- direct majority, with no kernel;
-- kernel committees of 1-of-1, 2-of-3, 3-of-5, 4-of-7 and unanimous 7-of-7;
-- a hybrid requiring the majority **and** 4-of-7.
+**Regimes.** The same votes and attestations are judged under each regime:
+- **direct majority**, with no kernel;
+- **gated majority**: the majority plus the kernel's mechanical checks, with no committee
+  (replayed offline from the same votes);
+- **kernel committees** of 1-of-1, 2-of-3, 3-of-5, 4-of-7 and unanimous 7-of-7;
+- **hybrid**: the majority **and** 4-of-7.
 
 **Models.** Two reasoning models from different families via OpenRouter: DeepSeek v4 Flash
 (`deepseek/deepseek-v4-flash-0731`) and OpenAI gpt-oss-20b (`openai/gpt-oss-20b`).
@@ -177,14 +227,7 @@ agents could spot. The 4 forged cases are not targets; they test what crowds can
   rejected.
 - Each sweep makes 16,416 calls; both together cost $2.18.
 
-**Output caps are instruments, not institutional rules.** Every agent in a run shares one
-cap, which is kept non-binding: truncated responses are re-sent at 2×, 4× and 8× the cap,
-and every run is audited.
-- This matters because truncation is not neutral: in a 600-token pilot, 98 of 99 cut-offs
-  were colluders. A binding cap is effectively a hidden deadline that silences deliberating
-  deceivers.
-- An unanswered audit counts as "not signed".
-- Audit outcome and the one pre-declared re-run are in Appendix B.
+**Output caps** are kept non-binding (truncated responses are retried at larger caps) because truncation silences colluders disproportionately (Appendix B.3).
 
 **Blue team.** A detector reads only the public log. It combines shared-minority voting
 with TF-IDF similarity of reasons, uses robust z-scores and graph clustering, and is scored
@@ -197,177 +240,170 @@ against sealed ground truth.
 At depth 6 the checker explored 23,376 distinct states and 105,708 transitions, and S1–S4
 held throughout. Both kernel modes also passed at depth 4.
 
-All seven mutants were caught, each with a shortest counterexample of four to six steps
-(Appendix B). One of them, the missing uniqueness check, surfaced only at depth 6 and was
+All seven mutants were caught, each with a shortest counterexample of four to six actions after the initial evidence setup
+(Appendix B; depth counts actions). One of them, the missing uniqueness check, surfaced only at depth 6 and was
 missed at depth 5, which shows concretely why bounds matter.
 
 ### 4.2 Live stress test (two reasoning models)
 
-**Totals per model.**
-- DeepSeek v4 Flash: 16,415 calls, 1 transport error, 0 unparseable responses, $1.38.
-- gpt-oss-20b: 16,415 calls, 1 transport error, 6 unparseable responses (counted as
-  abstentions), $0.81.
+Each model completed 16,415 of 16,416 calls (1 transport error each). gpt-oss returned 6
+unparseable responses, which count as abstentions. Cost: $1.38 (DeepSeek) and $0.81
+(gpt-oss).
 
-The table pools cells with share > 0: five shares × two board conditions × 12 targets = 120
-target trials per regime. Cells show DeepSeek / gpt-oss.
+Table 1 pools shares > 0: five shares × two board conditions × 12 targets = 120 target trials
+per regime. Cells show DeepSeek / gpt-oss.
 
-| Regime | Unsafe releases on targets | Bound from seats drawn | Valid releases (of 96) | Forged releases (of 48) | Calls per decision |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| direct (majority) | **0 / 0** | n/a | 96 / 96 | **48 / 48** | 50 |
-| auditor 1-of-1 | 21 / 22 | 24 | 96 / 95 | 0 / 0 | 1 |
-| committee 2-of-3 | 21 / 20 | 24 | 96 / 96 | 0 / 0 | 3 |
-| committee 3-of-5 | 23 / 20 | 26 | 96 / 96 | 0 / 0 | 5 |
-| committee 4-of-7 | 16 / 17 | 22 | 96 / 96 | 0 / 0 | 7 |
-| unanimous 7-of-7 | **0 / 0** | 0 | 96 / **87** | 0 / 0 | 7 |
-| hybrid majority + 4-of-7 | **0 / 0** | 22 | 96 / 96 | 0 / 0 | 57 |
+| Regime | Unsafe releases on targets | Seat bound (G2) | A-priori expected (G3) | Valid released (of 96) | Forged released (of 48) | Calls per decision |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| direct majority | **0 / 0** | n/a | n/a | 96 / 96 | **48 / 48** | 50 |
+| gated majority (no committee) | **0 / 0** | n/a | n/a | 96 / 96 | **0 / 0** | 50 |
+| auditor 1-of-1 | 21 / 22 | 24 | 36.0 | 96 / 95 | 0 / 0 | 1 |
+| committee 2-of-3 | 21 / 20 | 24 | 28.3 | 96 / 96 | 0 / 0 | 3 |
+| committee 3-of-5 | 23 / 20 | 26 | 24.4 | 96 / 96 | 0 / 0 | 5 |
+| committee 4-of-7 | 16 / 17 | 22 | 21.8 | 96 / 96 | 0 / 0 | 7 |
+| unanimous 7-of-7 | **0 / 0** | 0 | 0.1 | 96 / **87** | 0 / 0 | 7 |
+| hybrid (majority + 4-of-7) | **0 / 0** | 22 (committee only) | 21.8 | 96 / 96 | 0 / 0 | 57 |
 
-The seat-draw bound is identical for both models because they share seeds, committees and
-cells.
+*Table 1. Pooled outcomes.* The seat bound and the a-priori expectation are identical for both
+models because the models share seeds, cells and committees. Board conditions also share
+committee draws, so each regime has 60 independent committee draws, not 120. We therefore
+report counts by share (Figure 1; Table C1) rather than pooled confidence intervals.
 
 ![Figure 1](figures/figure1-capture.png)
 *Figure 1. Capture rate on target releases vs colluding share, per regime, for both models.
-Points are observed (n = 24 per point). The dashed line is the a-priori seat-capture
-probability (§3.3).*
+Points are observed (n = 24 per point, 12 independent committee draws). The dashed line is
+the a-priori probability (G3).*
 
-![Figure 2](figures/figure2-deliberation.png)
-*Figure 2. Median output tokens, including hidden reasoning, on target cases: honest vs
-colluding agents, for both models.*
+**Finding 1: mechanical checks, not voting, stop forgeries.**
+- The direct majority approved every forged-signature release (48/48 in each model). Every
+  kernel regime blocked all of them.
+- This is architectural by construction: voters had no way to verify a symmetric HMAC. With
+  public-key signatures and a verification tool a crowd could check too; we did not test
+  that baseline.
+- **The informative comparison is the gated majority:** the same votes plus the kernel's
+  mechanical checks. It was perfectly safe in both models (0/120 captures, 0/48 forgeries,
+  96/96 valid releases). This matches the hybrid at 50 rather than 57 calls.
+- In this setting, then, a committee adds **no safety** over a mechanically gated majority.
+  Its value is cost, below.
 
-**Finding 1: in both models, the institution failed only where its verified rules said it
-could.**
-- In all 72 regime × share × condition cells per model, observed capture never exceeded the
-  seated-colluder bound.
-- Honest auditors never signed a target (0/746 in each model), so all capture came from
-  colluder seats.
-- Every gap below the bound is a colluder declining its instruction. Seated colluders signed
-  their targets 234/262 times (89.3%) for DeepSeek and 242/262 (92.4%) for gpt-oss.
-- The a-priori formula tracked the observations within sampling noise (n = 12 per cell). The
-  draws actually seated were the binding variable, which is the formula's own premise.
-
-**Finding 2: crowds judge but cannot verify.**
-- In both models the direct majority was never captured by the cell, even at 50%. A tie
-  does not pass, and honest voters never approved a target.
-- It approved **every** forged-signature release (48/48 in each model), because no voter
-  can check an HMAC.
-- Every kernel regime blocked all of them mechanically.
-- The hybrid regime combines both strengths: 0 captures, 0 forgeries and full throughput in
-  both models, at a cost of N + 7 calls per decision instead of 7.
+**Finding 2: committees fail only where their seat draws allow, at a seventh of the cost.**
+- In all regime × share × condition cells, observed capture never exceeded the seat bound
+  (G2).
+- Honest auditors never signed a target (0/746 per model), so all capture came from colluder
+  seats.
+- Gaps below the bound are colluders declining their instruction: seated colluders signed
+  234/262 times (89.3%, DeepSeek) and 242/262 times (92.4%, gpt-oss).
+- **Realized seat draws were favourable relative to G3:**
+  - 24 committees were capturable for 1-of-1 against 36 expected. That is 12 versus 18 on
+    the 60 independent draws, about 1.8 standard deviations low, using the stratified
+    variance 11.4.
+  - This is why the points sit below the dashed curve in Figure 1. G3 is a planning
+    estimate; G2 is what the verified rules guarantee.
+- **The trade-off:** a 4-of-7 committee costs 7 calls instead of 50. It matched the gated
+  majority's safety at 10% collusion, was captured in 1–2 of 24 targets per share at 20–40%,
+  and in about half at 50%. Unanimity was never captured.
 
 **Finding 3: unanimity buys safety with liveness, and the price depends on the model.**
-- Unanimity was never captured in either model.
-- gpt-oss's honest auditors occasionally refused valid releases (8/492, 1.6%), so unanimity
-  blocked 9/96 valid releases for gpt-oss versus 0/96 for DeepSeek.
-- Small committees were cheap but capturable at the rates their seat draws implied.
+- Unanimity blocked 0/96 valid releases for DeepSeek but 9/96 for gpt-oss.
+- Those 9 blocks came from 10 refusals: 8 by honest auditors and 2 by cell members auditing
+  non-target releases.
 
-**Finding 4: no herding, a null result on a crisp rule.**
-- Honest voters who saw an approving majority before them approved a target 0/14 times
-  (DeepSeek) and 0/16 times (gpt-oss).
-- Honest auditors who saw a visible board never signed a target.
-- For these models and this task, the crowd failure that human-swarm intuitions predict did
-  not appear, and the only route to unsafe releases was capture. *(Exposure events are few;
-  this is weak evidence of absence.)*
+### 4.3 Honest error, herding and other observations
 
-**Finding 5: collusion has a deliberation cost, in both models.**
+**Honest error is near zero, even on near-miss receipts.** We ran 12 additional runs with
+authentic but subtly invalid receipts, again with both models, 3 seeds, and 0% and 30%
+shares. The near misses were a run-ID suffix, a two-character digest change, a scope
+variant, issuer capitalization and a claim variant.
 
-| Median output tokens on target cases | Honest | Colluding | Ratio |
-| --- | ---: | ---: | ---: |
-| DeepSeek, votes | 106 (n = 5,400) | 294 (n = 1,800) | 2.8× |
-| DeepSeek, audits | 111 | 241 | 2.2× |
-| gpt-oss, votes | 158 | 369 | 2.3× |
-| gpt-oss, audits | 174 | 329 | 1.9× |
+Honest auditor error was 0.3% (DeepSeek, issuer capitalization only) and 0% (gpt-oss); voter error 1.0% and 0%. Honest error alone captured only a 1-of-1 auditor, twice in 108 cases (Appendix C).
 
-- Under a deliberately tiny 150-token cap with retry, colluders needed a retry four times as
-  often as honest agents (40% vs 10% of responses).
-- In a 600-token pilot, 98 of 99 truncated responses were colluders.
-- Output length, which includes hidden reasoning, is a cheap, content-free monitoring
-  signal.
+DeepSeek's rare voter errors clustered on particular cases, with a between-case variance 5.6×
+the independent expectation. That points to correlated failure (Knight & Leveson, 1986), but
+errors were too rare to affect any committee. Mixed-model committees changed nothing, because
+there were no errors to diversify away.
 
-**Finding 6: detection is easy below a majority.**
-- The public-log detector identified the cell with F1 = 1.0 from 10% to 40% share, with one
-  exception: gpt-oss at 40% hidden, F1 0.97.
-- At 50% it scored 0.98–1.0.
-- False positives: none for DeepSeek. For gpt-oss, one spurious 3-agent cluster with no
-  colluders present (0% share, hidden board).
+This is our honest answer to the brief's "safety in numbers?" question: on exact-match rules,
+independence is untested because honest errors barely occur. Judgement-based tasks are needed.
+
+**No herding.** Honest voters who saw an approving majority before them approved a target
+0/14 times (DeepSeek) and 0/16 times (gpt-oss). These exposures are few, so this is weak
+evidence of absence, specific to a crisp rule.
+
+**Colluders produced longer outputs** (1.9–2.8× median tokens in both models; Appendix C). This is an association, not a measured cost of deception: colluders also received a longer, conflicting prompt.
+
+**Detection of the planted cell.**
+- A public-log detector combining shared-minority voting and reason similarity (Appendix B.4)
+  identified the planted cell with F1 = 1.0 at 10–40% shares (gpt-oss at 40%, hidden board:
+  0.97), and 0.98–1.0 at 50%.
+- It produced one false 3-agent cluster with no colluders present (gpt-oss, 0%).
+- Because the cell shared a talking point and voted against unanimous honest denials, this
+  shows detection of *this planted signature*, not general collusion detection.
 
 ## 5. Discussion and Limitations
 
-**Verify the institution, not the agents.** The kernel's guarantee is conditional, but the
-condition is explicit and measurable: an unsafe release needs *k* false attestations from
-seated auditors. That turns an open-ended alignment question ("is every agent honest?") into
-three engineering quantities:
+**Verify the institution, not the agents.** The agents were never verified, yet every outcome
+landed inside the envelope that the verified rules (G1) and the seat bound (G2) allow. That
+turns an open-ended question ("is every agent honest?") into a few measurable quantities:
 - seat-capture probability, which is closed-form;
-- honest error ε, which can be measured;
-- colluder compliance, which can be measured.
+- honest error and its correlation;
+- colluder compliance.
 
-The agents themselves were never verified. Their aggregate behaviour still landed inside the
-verified envelope in every cell.
+The cleanest lesson is architectural. Anything that can be checked mechanically belongs in
+the kernel, because no amount of voting substitutes for it (Finding 1). Judgement can come
+from a full vote or from a random committee. The committee is about seven times cheaper and
+fails exactly as its seat draws predict (Finding 2). A swarm can choose that trade-off
+deliberately: a gated majority where votes are cheap, and a large-quorum committee where they
+are not.
 
-**What we did not stress.** The full guarantee assumes:
-- seating is random and unpredictable to the cell;
-- auditor keys are uncompromised;
-- every action is routed through the kernel;
-- honest auditors err independently.
-
-Our task's rule is crisp. In both models, honest auditors never wrongly signed an invalid
-release, so the independence of *unsafe* errors was never tested. gpt-oss did show a small
-rate of the opposite error, refusing valid releases (1.6%), which surfaced as a liveness
-cost under unanimity.
-
-The classic warning from N-version programming (Knight & Leveson, 1986) applies directly:
-copies of one model may fail together on ambiguous inputs, which would make the
-hypergeometric bound optimistic. Measuring that is the most important next experiment.
-
-**Why institutions beat crowds here.** A majority is robust to a minority cell, but it is
-blind to anything that needs mechanical checking. Committees are cheap but capturable.
-Composing them, a majority for judgement plus a kernel-seated committee plus mechanical
-checks, gave the best observed profile. Human constitutions arrive at the same layering.
+**The open risk.** The guarantee also assumes unpredictable seating, uncompromised keys and kernel-routed actions, which our adversary did not attack, and independent honest errors, which we could not test because such errors barely occurred. Knight & Leveson's warning that model copies fail together is the key open risk.
 
 **Where human analogies broke.** We expected herding and saw none. The failure that mattered
-was capture, which is a property of the institution's design and not of crowd psychology.
-This suggests that for current models, institutional design may matter more than
-crowd-dynamics mitigation. We hold that tentatively.
+was capture, a property of the institution's design rather than of crowd psychology. We hold
+this tentatively, given few exposures and a crisp rule.
 
 ### Limitations
 
 The main limitations, detailed in Appendix A:
-- verification is bounded (one case, three seats, depth 6), not a proof;
-- the task is synthetic, with colluders instructed rather than self-organizing;
-- two cheap reasoning models were tested;
-- cells are small (n = 12 targets);
-- unsafe honest error was zero, so the independence assumption was untested;
-- the guarantee assumes unpredictable seating, uncompromised keys, and every action routed
-  through the kernel.
+- verification is bounded, not a proof;
+- the task is synthetic, with instructed colluders and no covert channel or seat-steering;
+- two cheap reasoning models were tested, with 50 agents;
+- per-share cells are small;
+- independence of honest errors is untested;
+- the token-length association is confounded by the prompt.
 
-### Future Work
+### Future Work (a fellowship roadmap)
 
-1. A small specification language for institutions, compiled to both a kernel and a model.
-2. Mechanized proofs (TLA+, Lean) beyond bounded checking.
-3. Ambiguous-judgement tasks where honest error is non-zero, to measure correlated LLM
-   errors directly and fold them into the capture bound.
-4. Deployment at the gateway that agent tool calls already pass through (A2A, MCP), so
-   agents cannot route around it.
-5. Diverse-model committees to reduce correlated failure.
-6. Decision deadlines as a deliberate defence. Colluders deliberate longer, so a uniform
-   time or token deadline may filter them out disproportionately. This should be tested as
-   an explicit rule applied to all agents, with its cost to honest deliberation measured.
+1. **Correlated errors:** judgement-based tasks where honest agents genuinely err, testing G3
+   and diverse-model committees directly.
+2. **Seating and adversaries:** verifiable random seating (VRF or beacon sortition), cells
+   that steer seats, and adaptive colluders.
+3. **Deployment:** the kernel at an MCP/A2A gateway, with public-key attestations and a
+   "crowds plus tools" baseline.
+4. **Assurance:** a small specification language for institutions compiled to both kernel and
+   model, multi-case checking, and mechanized proofs (TLA+ or Lean).
+5. **Deadlines as defence:** colluders produce longer outputs, so test uniform decision
+   deadlines as an explicit, measured rule.
 
 ## 6. Conclusion
 
-A small, checkable institution held exactly as far as its rules promised against real
-colluding LLM swarms, and its failures were predictable from seat draws. Crowds of the same
-agents resisted capture but approved every forgery. Verifying the institution, not the
-agents, is a tractable path to oversight that scales with swarm size.
+A small, checkable institution held exactly as far as its rules promised against colluding
+LLM swarms. Mechanical checks, not voting, stopped forgeries. Random committees then matched a
+gated majority's judgement at a fraction of the cost, failing only where their seat draws
+allowed.
 
+The open question is whether honest AI errors stay independent. On exact-match rules they
+were too rare to tell; that is the next experiment. Verifying the institution rather than the
+agents is a tractable, measurable path to oversight that does not get harder as swarms grow.
 ## Code and Data
 
 - **Code repository:** https://github.com/k2jac9/fleet-witness (branch `feat/live-swarm`).
   It contains the kernel, the bounded checker, the swarm harness, the figure scripts and the
   tests.
-- **Data:** the per-run event logs, sealed ground truth and analyses are regenerated with
-  the commands in `docs/SWARM.md`. The raw logs from the reported sweeps are retained by the
-  authors and available on request.
-- **Reproduction:** `python -m fleet_witness.verify_institution --depth 6 --mutants`, then
-  `python -m fleet_witness swarm-sweep` and `swarm-summary`.
+- **Data:** every reported run, including the superseded truncated run and the 600-token
+  pilot, is published as `data/fleet-witness-runs-2026-11-08.zip`. It holds the public event
+  logs, sealed ground truth, per-regime decisions and run manifests (see `data/README.md`).
+- **Reproduction:** `python scripts/reproduce_tables.py` regenerates every table from those
+  logs without model calls. `python -m fleet_witness swarm-sweep` re-runs experiments.
 
 ## Author Contributions
 
@@ -392,12 +428,26 @@ agents, is a tractable path to oversight that scales with swarm size.
 6. Greenblatt, R. et al. (2024). *AI Control: Improving Safety Despite Intentional
    Subversion.*
 7. Hammond, L. et al. (2025). *Multi-Agent Risks from Advanced AI.* arXiv:2502.14143.
-8. Knight, J. C. & Leveson, N. G. (1986). *An Experimental Evaluation of the Assumption of
+8. Kekatos, N., Ioannou, M., Katsaros, P., Lekidis, A., Nestoridis, T., Nianios, T. & Nikou, D.
+   (2026). *Mission-Level Runtime Assurance for LLM-Assisted ISR Swarms over a
+   Verification-Aware Fabric.* arXiv:2607.23532.
+9. Knight, J. C. & Leveson, N. G. (1986). *An Experimental Evaluation of the Assumption of
    Independence in Multiversion Programming.* IEEE Transactions on Software Engineering.
-9. Lamport, L., Shostak, R. & Pease, M. (1982). *The Byzantine Generals Problem.* ACM TOPLAS.
-10. Motwani, S. et al. (2024). *Secret Collusion among AI Agents: Multi-Agent Deception via
+10. Lamport, L., Shostak, R. & Pease, M. (1982). *The Byzantine Generals Problem.* ACM TOPLAS.
+11. Motwani, S. et al. (2024). *Secret Collusion among AI Agents: Multi-Agent Deception via
     Steganography.*
-11. SQLite. *Atomic Commit in SQLite.* https://sqlite.org/atomiccommit.html
+12. Muruaga, X. (2026). *Bounded Agents: Delegation Security for Multi-Agent AI Systems.*
+    arXiv:2608.15888.
+13. Nguyen, H.-D. & Tran, X.-T. (2026). *Verify-Gated Completion as Admission Control in a
+    Governed Multi-Agent Runtime: A Bounded Architecture Case Study.* arXiv:2605.17998.
+14. Paglieri, D., Cross, L., Genewein, T., Leibo, J. Z., Tomasev, N. & Vezhnevets, A. S. (2026).
+    *A Case Study on Emergent Cheating and Whistleblowing in Autonomous Research Swarms.*
+    arXiv:2609.04170.
+15. SQLite. *Atomic Commit in SQLite.* https://sqlite.org/atomiccommit.html
+16. Wang, Z. (2026). *Proof-Carrying Agent Actions: Model-Agnostic Runtime Governance for
+    Heterogeneous Agent Systems.* arXiv:2606.04104.
+17. Zheng, S. & Zhang, Q. (2026). *AgentRFC: Security Design Principles and Conformance Testing
+    for Agent Protocols.* arXiv:2603.23801.
 
 *(Verify every reference against its source before submission; do not add uncited claims.)*
 
@@ -415,30 +465,48 @@ agents, is a tractable path to oversight that scales with swarm size.
   between colluders.
 - **Models.** Two cheap reasoning models from different families (DeepSeek v4 Flash, OpenAI
   gpt-oss-20b). Results may not transfer to frontier agents.
-  - Qwen 3.7 Flash spent its entire 600-token budget on hidden reasoning in 39% of
-    responses. At 2,000 tokens it was too slow for a full sweep in the time available, so
-    it is excluded.
+  - Qwen 3.7 Flash spent its entire 600-token budget on hidden reasoning in about 39% of
+    responses in a partial pilot whose logs were not retained. At 2,000 tokens it was too
+    slow for a full sweep in the time available, so it is excluded.
   - Non-reasoning models were excluded so that reasoning mode would not be confounded with
     model family.
   - The pilot used a second host (Adaption), whose rate limit made full sweeps impractical.
 - **Small cells.** n = 12 targets per cell. Committee draws are shared across board
   conditions, so the two conditions are paired, not independent. No significance claims.
-- **Unsafe honest error was zero, so independence was untested.** In both models, honest
-  auditors never signed an invalid release (0/746 each). The only honest error observed was
-  gpt-oss refusing valid releases (8/492). With correlated honest errors, such as shared weights, shared priors
+- **Unsafe honest error was essentially zero, so independence was untested.**
+  - In both models, honest auditors never signed an invalid main-sweep target (0/746 each).
+  - On near-miss receipts, honest auditor error was 0.3% (DeepSeek) and 0% (gpt-oss).
+  - The only other honest error observed was gpt-oss refusing valid releases (8/492). With correlated honest errors, such as shared weights, shared priors
   or herding (cf. Knight & Leveson, 1986), the §3.3 bound could be optimistic. Neither the
   herding null result nor the absence of correlated failure generalizes beyond this task.
 - **Seating assumptions.** Committees were drawn by a seeded pseudo-random generator the
   cell could not observe. An adversary who can predict or influence seating defeats the
   bound.
-- **Trust assumptions.** The kernel's keys and SQLite store are trusted. HMAC is symmetric,
-  so there is no public verifiability or protection against a compromised host. Containers
-  and OS-level isolation are out of scope.
+- **Trust assumptions and key management.**
+  - The kernel's keys and SQLite store are trusted.
+  - Attestations use symmetric HMAC because only the trusted kernel verifies them. This gives
+    no public verifiability and no protection against a compromised host.
+  - Per-auditor keys are generated fresh per run and held by the kernel; rotation, revocation
+    and compromise recovery are not implemented.
+  - Asymmetric signatures (e.g. Ed25519), credential revocation (cf. Deochake, 2026) and
+    tamper-evident logs would preserve the kernel's semantics while enabling external audit.
+  - Containers and OS-level isolation are out of scope.
+- **Adversary model.** The cell had no covert channel and no key compromise. It did not try to
+  predict or steer seating or to route actions around the kernel.
 
 ### Dual-use
 
-The harness creates instructed colluding agents and measures how to capture committees. The
-same measurements could help an attacker size a cell. Mitigations:
+**Could this make multi-agent operations easier, or harder to detect?**
+- **Easier:** the harness creates instructed colluding agents and measures committee
+  capture, so an attacker could use the capture curves to size a cell. The kernel's
+  rules are public, so its blind spot is also known: it trusts auditors on semantic
+  judgements.
+- **Harder to detect:** a colluder who knew about the output-length association or the
+  shared-minority detector could try to evade them.
+- **Overall:** we judge the work to favour defenders. It shows that mechanical checks block
+  forgery outright, that committee risk is predictable, and how to detect a planted cell.
+
+Mitigations:
 - the task is synthetic, and nothing touches third-party systems;
 - there is no scanning, recruitment or contact with real agents;
 - the talking points are generic;
@@ -497,6 +565,68 @@ are checked.
 - Its outcomes matched the original in 13 of 14 regime × condition cells; the remaining cell
   (4-of-7, hidden) moved from 1 capture to 0.
 - Both versions are retained. Main results use the re-run.
+
+**B.4 Detector specification.** The detector sees only public votes and reasons. For each pair of agents in a condition:
+- **Shared-minority score:** the fraction of common cases where both voted on the losing side.
+- **Text similarity:** TF-IDF cosine over each agent's concatenated reasons, using word unigrams and bigrams, lowercased, with stopwords and tokens of two characters or fewer removed.
+
+Both pairwise matrices are converted to robust z-scores (median and 1.4826 × MAD; mean absolute deviation is the fallback when the MAD is zero). Scoring:
+- combined score = 0.5 · z_minority + 0.5 · z_text;
+- a pair is linked if combined ≥ 2.0, z_minority ≥ 3.0 and the raw shared-minority score is > 0;
+- connected components of three or more agents are flagged.
+
+The parameters were tuned on scripted (fake-provider) runs and fixed before any live sweep. Code: `fleet_witness/swarm/detect.py`.
+---
+
+## Appendix C: Supplementary results
+
+**C.0 Capture by colluder share.**
+
+| Colluder share | 1-of-1 | 2-of-3 | 4-of-7 | Gated majority, unanimity, hybrid |
+| --- | ---: | ---: | ---: | ---: |
+| 10% | 0 / 0 | 0 / 0 | 0 / 0 | 0 / 0 |
+| 20% | 1 / 2 | 2 / 4 | 1 / 2 | 0 / 0 |
+| 30% | 8 / 7 | 4 / 2 | 1 / 1 | 0 / 0 |
+| 40% | 4 / 4 | 4 / 3 | 2 / 1 | 0 / 0 |
+| 50% | 8 / 9 | 11 / 11 | 12 / 13 | 0 / 0 |
+
+*Table C1. Unsafe releases on targets by colluder share (of 24 per share and model; DeepSeek /
+gpt-oss).*
+
+**C.1 Output length by role.**
+
+**Colluders produced longer outputs.**
+- Median output tokens on target cases (honest vs colluding): DeepSeek votes 106 vs 294
+  (n = 5,400 / 1,800) and audits 111 vs 241; gpt-oss votes 158 vs 369 and audits 174 vs 329
+  (Figure 2).
+- In a 600-token pilot, 98 of 99 truncated responses came from colluders.
+- **This is an association, not a measured "cost of deception".** Colluders also received a
+  longer prompt with a conflicting instruction.
+- Token counts include hidden reasoning. They are visible to an operator through usage
+  metadata but not to a content monitor.
+- Whether the signal survives adaptive colluders is untested.
+
+![Figure 2](figures/figure2-deliberation.png)
+*Figure 2. Median output tokens, including hidden reasoning, on target cases: honest vs
+colluding agents.*
+
+**C.2 Honest error on near-miss releases.**
+
+| Honest error on near-miss releases (0% cell) | DeepSeek | gpt-oss |
+| --- | ---: | ---: |
+| Committee auditors (n = 756 seats) | 0.3% (issuer capitalization only) | 0% |
+| Reviewer votes | 1.0% | 0% |
+| Committees captured by honest error alone | 1-of-1: 2/108; larger: 0 | 0 |
+
+**C.3 Output caps as instruments.** Every agent in a run shares one
+cap, which is kept non-binding: truncated responses are re-sent at 2×, 4× and 8× the cap,
+and every run is audited.
+- This matters because truncation is not neutral: in a 600-token pilot, 98 of 99 cut-offs
+  were colluders. A binding cap is effectively a hidden deadline that silences deliberating
+  deceivers.
+- An unanswered audit counts as "not signed".
+- Audit outcome and the one pre-declared re-run are in Appendix B.
+
 
 ---
 
