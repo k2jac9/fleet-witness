@@ -1,3 +1,27 @@
+# Completed real-model paired pilot — November 9, 2026
+
+The controlled cohort on `8f589dcfb62ddde090d59dcbc9b03688a6e41e44` completed
+160 calls / 80 pairs. The response, generation and account totals reconcile at
+$0.2605526; the sponsored key reported $49.7334348 remaining and no ledger hold.
+All failed runs and initial delayed account observations remain preserved.
+
+Raw presentation made 18 invalid approvals; explicit presentation denied all
+80 cases, including 40 valid at the decision snapshot. The controller blocked
+all invalid approvals and ten revoked approvals. Thirty local releases and ten
+duplicate no-ops occurred, with zero invalid-evidence or revoked releases.
+This is exploratory evidence with synthetic workers/reviewers and one real
+supervisor model. It does not establish public-web fleet observation or a safe
+production model. The proposed verifier-result follow-up remains unimplemented.
+
+PR #11's exact tree passed independent source review, 304 Python tests, five
+viewer checks and all eleven hosted runtime lanes. Full-suite logs retain
+pre-existing SQLite ResourceWarnings. No GCP/Adaption action or hosted dashboard
+was added by this work. See the [complete experiment record](experiments/2026-11-09-openrouter-paired-pilot.md)
+for denominators, intervals, charges, source and evidence hashes. Historical
+preparation checkpoints below retain their original pending statements.
+
+---
+
 # First cohort stop and compatibility iteration — November 9, 2026
 
 PR #10 merged as `92754a906aa6618034abd5b3886800550a4c67ed`, with the exact tree

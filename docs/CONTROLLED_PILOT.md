@@ -1,3 +1,14 @@
+# Observed paired-pilot evidence — November 9, 2026
+
+The [completed experiment record](experiments/2026-11-09-openrouter-paired-pilot.md)
+reports 160 calls / 80 pairs, controller effects, failures retained separately,
+account reconciliation and limitations. Explicit presentation denied all cases;
+zero invalid approvals alone is not a useful release-selection result. A trusted
+verifier-result follow-up is proposed there, with no new interface or cohort
+claimed. The runbook and historical qualification record follow.
+
+---
+
 # Azure opaque metadata compatibility — November 9, 2026
 
 The first exploratory cohort at `92754a9` stopped after one response carried
