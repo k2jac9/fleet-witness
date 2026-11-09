@@ -16,6 +16,14 @@ fallbacks/tools/streaming/storage, requests data-collection denial and ZDR
 routing, and requires strict JSON output. Unknown identities, tool content,
 unqualified BYOK or invalid/missing reported cost retain the reservation.
 An exhausted token budget with no visible text is an accounted invalid proposal.
+The request also caps provider input/output prices at the reviewed rates and
+per-request fees at zero. The initial authorization identity is retained;
+valid-looking configuration changes after client construction are refused before
+key access, reservation or dispatch. Usage fields and prompt/completion details
+have separate closed schemas. Contradictory upstream cost details halt the run
+while preserving any larger known monetary liability. Encoded credential echoes
+are redacted from HTTP-error receipts too; unsafe malformed echoes are replaced
+by a digest-bearing marker.
 
 Transport binds exact Python executable/hash, OpenSSL version, CA bundle/hash,
 and root-certificate hashes. It verifies hostname and chain without loading

@@ -68,7 +68,8 @@ class OpenRouterControlledTests(SyntheticSourceTestCase):
         request, receipt = json.loads(row[0]), json.loads(row[1])
         self.assertEqual(json.loads(request['messages'][1]['content']), facts())
         self.assertEqual(request['provider'], {'only': ['fixture/standard'], 'order': ['fixture/standard'], 'allow_fallbacks': False,
-                         'require_parameters': True, 'data_collection': 'deny', 'zdr': True})
+                         'require_parameters': True, 'data_collection': 'deny', 'zdr': True,
+                         'max_price': {'prompt': 1, 'completion': 1, 'request': 0}})
         self.assertEqual(request['service_tier'], 'default')
         self.assertEqual(request['reasoning'], {'effort': 'low', 'exclude': True})
         self.assertEqual(request['max_completion_tokens'], 100)
@@ -152,6 +153,72 @@ class OpenRouterControlledTests(SyntheticSourceTestCase):
             outcome=client.recommend(facts(),'raw')
         self.assertEqual(outcome['cost_usd'],0.00003)
         self.assertEqual(outcome['attempts'][0]['provider_reported_cost_usd'],'0')
+
+    def test_valid_looking_authorization_changes_refused_before_credentials_or_reservation(self):
+        variants = [('openrouter', 'provider_slug', 'unreviewed/route'),
+                    ('openrouter', 'reasoning_effort', 'none'),
+                    ('pricing', 'input_per_million', '0'),
+                    ('pricing', 'output_per_million', '0')]
+        for section, field, value in variants:
+            with self.subTest(field=field):
+                client = self.client()
+                client.authorization[section][field] = value
+                with patch.object(secure, 'read_key') as key, patch.object(p, '_post') as post:
+                    with self.assertRaises(p.ProviderError): client.recommend(facts(), 'raw')
+                    key.assert_not_called(); post.assert_not_called()
+                self.assertEqual(self.ledger.calls, 0)
+
+    def test_encoded_credential_echo_is_removed_from_http_and_partial_receipts(self):
+        key = 'synthetic-private-openrouter-key'
+        encoded = ''.join('\\u%04x' % ord(char) for char in key)
+        mixed = ''.join('\\u%04X' % ord(char) if i % 2 else char for i, char in enumerate(key))
+        for index, value in enumerate((encoded, mixed, encoded + '"BROKEN')):
+            with self.subTest(index=index):
+                self.ledger = p.Ledger('openrouter', 15, 50, self.root/f'echo-{index}.sqlite3', run_id=f'echo-{index}')
+                self.record.update(ledger_path=str(self.ledger.path), run_id=self.ledger.run_id)
+                raw = ('{"error":{"message":"' + value + '"}}').encode()
+                with patch.object(p, '_post', side_effect=p.TransportFailure('http_error', raw=raw, http_status=500)):
+                    with self.assertRaises(p.ProviderError) as caught: self.client().recommend(facts(), 'raw')
+                with closing(sqlite3.connect(self.ledger.path)) as db:
+                    stored = db.execute('SELECT response_raw FROM requests').fetchone()[0]
+                self.assertTrue(caught.exception.attempts[0].get('response_redacted'))
+                self.assertNotEqual(stored, raw)
+                self.assertNotIn(key.encode(), stored)
+                if index < 2: self.assertNotIn(key, json.dumps(json.loads(stored)))
+                self.assertEqual(self.ledger.run_reserved, 15)
+
+    def test_unqualified_usage_and_cost_details_hold_best_known_liability(self):
+        variants = [('audio_tokens', 1, 15), ('server_tool_use', {'web_search_requests': 1}, 15),
+                    ('reasoning_tokens', 100000, 15),
+                    ('completion_tokens_details', {'cache_write_tokens': 20}, 15),
+                    ('prompt_tokens_details', {'reasoning_tokens': 1}, 15),
+                    ('cost_details', {'upstream_inference_cost': 20}, 20),
+                    ('cost_details', {'upstream_inference_prompt_cost': 12, 'upstream_inference_completions_cost': 9}, 21),
+                    ('cost_details', {'upstream_inference_cost': -1}, 15),
+                    ('cost_details', {'unknown_fee': 1}, 15),
+                    ('cost_details', {'upstream_inference_cost': True}, 15)]
+        for index, (field, value, hold) in enumerate(variants):
+            with self.subTest(index=index):
+                self.ledger = p.Ledger('openrouter', 15, 50, self.root/f'usage-{index}.sqlite3', run_id=f'usage-{index}')
+                self.record.update(ledger_path=str(self.ledger.path), run_id=self.ledger.run_id)
+                item = response(); item['usage'][field] = value
+                with self.assertRaises(p.ProviderError): self.attempt(item)
+                self.assertEqual(self.ledger.run_spent, 0)
+                self.assertEqual(self.ledger.run_reserved, hold)
+                self.assertTrue(self.ledger.snapshot()['halted'])
+
+    def test_http_error_cost_breakdown_preserves_larger_liability(self):
+        item = response(); item['usage']['cost_details'] = {'upstream_inference_cost': 20}
+        with patch.object(p, '_post', side_effect=p.TransportFailure('http_error', raw=json.dumps(item).encode(), http_status=500)):
+            with self.assertRaises(p.ProviderError): self.client().recommend(facts(), 'raw')
+        self.assertEqual(self.ledger.run_reserved, 20)
+
+    def test_consistent_known_cost_breakdown_and_zero_nontext_details_accepted(self):
+        item = response()
+        item['usage']['cost_details'] = {'upstream_inference_cost': 0.00003,
+            'upstream_inference_prompt_cost': 0.00001, 'upstream_inference_completions_cost': 0.00002}
+        item['usage']['prompt_tokens_details'] = {'cached_tokens': 2, 'cache_write_tokens': 0, 'audio_tokens': 0}
+        self.assertEqual(self.attempt(item)['status'], 'succeeded')
 
     def test_invalid_proposal_and_truncation_are_accounted_without_invented_denial(self):
         item=response('{"recommendation":"deny","reason":"x","extra":true}')

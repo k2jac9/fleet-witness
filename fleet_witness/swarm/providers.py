@@ -150,7 +150,23 @@ def _parse_json(raw, limit):
 
 
 def _redact(raw, key):
-    return raw.replace(key.encode(), b'[REDACTED]').replace(canonical_json(key)[1:-1].encode(), b'[REDACTED]')
+    literal, escaped = key.encode(), canonical_json(key)[1:-1].encode()
+    # Decode JSON unicode escapes also for incomplete/invalid bodies. This
+    # detection covers mixed literal/escaped ASCII credentials without making
+    # acceptance of malformed JSON a prerequisite for secret protection.
+    decoded = re.sub(rb'\\u([0-9a-fA-F]{4})',
+                     lambda match: chr(int(match[1], 16)).encode('utf-8', errors='surrogatepass'), raw)
+    try:
+        normalized = json.dumps(json.loads(raw), ensure_ascii=True, default=str).encode()
+    except (ValueError, TypeError, UnicodeError, RecursionError):
+        normalized = None
+    if normalized is not None and (literal in normalized or escaped in normalized):
+        return normalized.replace(literal, b'[REDACTED]').replace(escaped, b'[REDACTED]')
+    if literal in decoded or escaped in decoded:
+        # A malformed escaped echo cannot safely be kept as raw text. Preserve
+        # its identity, never the reversible secret-bearing representation.
+        return b'[REDACTED unsafe response; sha256=' + hashlib.sha256(raw).hexdigest().encode() + b']'
+    return raw.replace(literal, b'[REDACTED]').replace(escaped, b'[REDACTED]')
 
 
 class ModelClient:
@@ -162,6 +178,7 @@ class ModelClient:
         self.max_output_tokens, self.temperature, self.timeout = max_output_tokens, temperature, timeout
         self.authorization = validate_authorization(authorization, provider=provider, model=model, ledger=ledger,
                                                    max_output_tokens=max_output_tokens, timeout=timeout)
+        self._initial_authorization_json = canonical_json(self.authorization)
         if type(max_concurrency) is not int or max_concurrency != 1:
             raise ProviderError('exactly one in-flight request is permitted')
         if isinstance(temperature, bool) or not isinstance(temperature, (int, float)) or not 0 <= temperature <= 2:
@@ -218,7 +235,7 @@ class ModelClient:
             body.pop('temperature')
             body.pop('max_tokens')
             body[profile['output_token_parameter']] = cap
-            body.update(request_fields(profile))
+            body.update(request_fields(profile, authorization['pricing']))
         return body
 
     def complete(self, system, user, meta=None):
@@ -244,6 +261,8 @@ class ModelClient:
         started = time.monotonic()
         authorization = validate_authorization(self.authorization, provider=self.provider, model=self.model,
                 ledger=self.ledger, max_output_tokens=cap, timeout=self.timeout)
+        if canonical_json(authorization) != self._initial_authorization_json:
+            raise ProviderError('authorization changed after client construction')
         self.prices = tuple(Decimal(str(authorization['pricing'][name]))
                             for name in ('input_per_million', 'output_per_million'))
         body = self._body(system, user, cap, authorization=authorization)
@@ -294,10 +313,14 @@ class ModelClient:
             # Excess tokens remain billable even though they invalidate the outcome.
             usage = data.get('usage')
             if isinstance(usage, dict):
+                if authorization['schema_version'] == 'controlled-openrouter-v1':
+                    from .openrouter_controlled import known_cost_liability
+                    liability = known_cost_liability(usage)
                 names = ('input_tokens', 'output_tokens') if self.provider == 'adaption' else ('prompt_tokens', 'completion_tokens')
                 counts = tuple(usage.get(name) for name in names)
                 if all(type(count) is int and 0 <= count <= 2**53 for count in counts):
-                    liability = (counts[0] * self.prices[0] + counts[1] * self.prices[1]) / Decimal(1000000)
+                    liability = max(liability or Decimal(0),
+                        (counts[0] * self.prices[0] + counts[1] * self.prices[1]) / Decimal(1000000))
                 if 'cost' in usage:
                     liability = max(liability or Decimal(0), decimal_usd(usage['cost'], liability=True))
             canonical_response = json.dumps(data, sort_keys=True, separators=(',', ':'), ensure_ascii=True,
@@ -354,6 +377,9 @@ class ModelClient:
                         self._accounting_identity(failure_data, attempt, key)
                         usage = failure_data.get('usage')
                         if isinstance(usage, dict):
+                            if authorization['schema_version'] == 'controlled-openrouter-v1':
+                                from .openrouter_controlled import known_cost_liability
+                                liability = max(liability or Decimal(0), known_cost_liability(usage))
                             names = ('input_tokens', 'output_tokens') if self.provider == 'adaption' else ('prompt_tokens', 'completion_tokens')
                             counts = tuple(usage.get(name) for name in names)
                             if all(type(count) is int and 0 <= count <= 2**53 for count in counts):

@@ -28,6 +28,18 @@ request has been sent by this task.
 
 Evidence: `/home/neo/Projects/fleet-witness-artifacts/openrouter-calibration-20261109/`.
 
+Independent review of `ee7010f` reproduced three important findings: Unicode-
+escaped credential echoes in HTTP-error receipts, unqualified usage/cost details,
+and valid-looking mutation of an initially accepted authorization. Follow-up
+tests reproduced all three before fixes. The focused suite now passes 17 tests,
+including larger cost holds, field-specific usage validation, immutable initial
+authorization identity and provider price limits. The reviewer's first full-suite
+invocation omitted child-process loader configuration and failed; that evidence
+is preserved separately from the integrator's passing invocation. Re-review and
+CI must bind the corrected commit before integration or inference.
+The corrected full suite passed **277 Python tests and five viewer tests** on
+the pinned Python 3.15.2 launch environment; `git diff --check` passed.
+
 ## Calibration ceiling update: 2026-11-09
 
 Task `calibration-budget-15-20261109` extends the existing isolated PR #7 branch

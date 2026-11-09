@@ -1,5 +1,6 @@
 """Closed OpenRouter supervisor profile; provider assertions are not execution authority."""
 import re
+from decimal import Decimal
 
 from . import secure_transport
 from .ledger import decimal_usd, units
@@ -33,9 +34,11 @@ def validate_profile(record):
     secure_transport.validate_profile(profile['transport'])
 
 
-def request_fields(profile):
+def request_fields(profile, pricing):
     return {'provider': {'only': [profile['provider_slug']], 'order': [profile['provider_slug']], 'allow_fallbacks': False,
-                         'require_parameters': True, 'data_collection': 'deny', 'zdr': True},
+                         'require_parameters': True, 'data_collection': 'deny', 'zdr': True,
+                         'max_price': {'prompt': float(pricing['input_per_million']),
+                                       'completion': float(pricing['output_per_million']), 'request': 0}},
             'service_tier': 'default', 'store': False,
             'reasoning': {'effort': profile['reasoning_effort'], 'exclude': True},
             'response_format': {'type': 'json_schema', 'json_schema': {
@@ -44,6 +47,27 @@ def request_fields(profile):
                     'recommendation': {'type': 'string', 'enum': ['approve', 'deny']},
                     'reason': {'type': 'string', 'minLength': 1, 'maxLength': 2048}},
                     'required': ['recommendation', 'reason'], 'additionalProperties': False}}}}
+
+
+COST_FIELDS = {'upstream_inference_cost', 'upstream_inference_prompt_cost',
+               'upstream_inference_completions_cost'}
+
+
+def known_cost_liability(usage):
+    """Preserve known monetary amounts even when other usage fields are invalid."""
+    amounts = []
+    def amount(value):
+        try:
+            return decimal_usd(value, liability=True)
+        except (ValueError, TypeError):
+            return Decimal(0)
+    amounts.append(amount(usage.get('cost')))
+    details = usage.get('cost_details')
+    if isinstance(details, dict):
+        amounts.append(amount(details.get('upstream_inference_cost')))
+        amounts.append(amount(details.get('upstream_inference_prompt_cost')) +
+                       amount(details.get('upstream_inference_completions_cost')))
+    return max(amounts)
 
 
 def validate_envelope(data, record):
@@ -78,20 +102,42 @@ def validate_envelope(data, record):
             message.get('function_call') is not None or message.get('annotations') not in (None, [])):
         raise ValueError('unexpected controlled message content')
     usage = data.get('usage')
-    if not isinstance(usage, dict) or 'cost' not in usage:
+    if (not isinstance(usage, dict) or not {'cost', 'prompt_tokens', 'completion_tokens', 'total_tokens'} <= set(usage) or
+            set(usage) - {'cost', 'prompt_tokens', 'completion_tokens', 'total_tokens', 'is_byok',
+                         'prompt_tokens_details', 'completion_tokens_details', 'cost_details'}):
         raise ValueError('controlled response requires reported total cost')
-    decimal_usd(usage['cost'], liability=True)
+    cost = decimal_usd(usage['cost'], liability=True)
+    for name in ('prompt_tokens', 'completion_tokens', 'total_tokens'):
+        if type(usage[name]) is not int or not 0 <= usage[name] <= 2**53:
+            raise ValueError('invalid controlled token total')
+    if usage['total_tokens'] != usage['prompt_tokens'] + usage['completion_tokens']:
+        raise ValueError('inconsistent controlled token totals')
     if 'is_byok' in usage and usage['is_byok'] is not False:
         raise ValueError('unqualified BYOK cost source')
-    for field, total_field in (('prompt_tokens_details', 'prompt_tokens'),
-                               ('completion_tokens_details', 'completion_tokens')):
+    details = usage.get('cost_details')
+    if details is not None:
+        if not isinstance(details, dict) or set(details) - COST_FIELDS:
+            raise ValueError('unqualified cost detail')
+        amounts = {name: decimal_usd(value, liability=True) for name, value in details.items() if value is not None}
+        parts = ('upstream_inference_prompt_cost', 'upstream_inference_completions_cost')
+        if all(name in amounts for name in parts) and 'upstream_inference_cost' in amounts:
+            if amounts[parts[0]] + amounts[parts[1]] != amounts['upstream_inference_cost']:
+                raise ValueError('inconsistent upstream cost breakdown')
+        # Discounts/BYOK may explain differences, but this profile has not
+        # qualified a larger upstream liability than the reported total charge.
+        if known_cost_liability(usage) > cost:
+            raise ValueError('upstream liability exceeds reported charge')
+    for field, total_field, billable, zero_only in (
+            ('prompt_tokens_details', 'prompt_tokens', {'cached_tokens', 'cache_write_tokens'}, {'audio_tokens', 'video_tokens'}),
+            ('completion_tokens_details', 'completion_tokens', {'reasoning_tokens'},
+             {'audio_tokens', 'accepted_prediction_tokens', 'rejected_prediction_tokens'})):
         details = usage.get(field)
         if details is None:
             continue
-        if not isinstance(details, dict):
+        if not isinstance(details, dict) or set(details) - billable - zero_only:
             raise ValueError('invalid controlled usage details')
         for name, count in details.items():
             if type(count) is not int or not 0 <= count <= usage[total_field]:
                 raise ValueError('invalid controlled token count')
-            if name not in ('reasoning_tokens', 'cached_tokens', 'cache_write_tokens') and count != 0:
+            if name in zero_only and count != 0:
                 raise ValueError('unqualified nontext usage')
