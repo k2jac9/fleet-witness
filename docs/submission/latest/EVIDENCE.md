@@ -29,7 +29,9 @@ archive is code; checksums alone do not establish its authenticity.
 The verifier rejects unexpected, missing, duplicate, linked and oversized files.
 It checks exact checksum coverage, current provenance hashes, title/author/abstract
 consistency and every public trial's closed scalar schema. It recomputes balanced
-pairs, cell outcomes, effects, attempts, token totals and charges. It makes no
+pairs, cell outcomes, effects, attempts, token totals and charges, then checks the
+immutable public-table digest. Interpretation labels must match the published
+contrast. Only stored and DEFLATE ZIP members are supported. It makes no
 network calls, extracts nothing, executes no bundled code and never repairs inputs.
 Success is JSON on stdout; failure is a nonzero exit with a sanitized message.
 

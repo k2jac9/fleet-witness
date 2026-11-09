@@ -7,6 +7,7 @@ import io
 import json
 from pathlib import Path
 import stat
+import struct
 import subprocess
 import sys
 import tempfile
@@ -167,3 +168,68 @@ class SubmissionVerifierTests(unittest.TestCase):
         self.assertNotIn('PRIVATE_SENTINEL',result.stdout+result.stderr)
         self.assertNotIn('Traceback',result.stderr)
         self.assertEqual(self.path.read_bytes(),b'PRIVATE_SENTINEL corrupt bytes')
+
+    def test_rehashed_changes_to_frozen_findings_and_interpretation_are_rejected(self):
+        for mutation in ('name', 'method', 'scope', 'source', 'family'):
+            with self.subTest(mutation=mutation):
+                files = dict(self.files)
+                table = json.loads(files['paired-pilot-2026-11-09.json'])
+                if mutation == 'name':
+                    table['summary']['contrast']['name'] = 'scope_explicit minus raw'
+                elif mutation == 'method':
+                    table['summary']['contrast']['method'] = 'Exact interval from independent real-world observations'
+                elif mutation == 'scope':
+                    table['scope'] = 'Real-world autonomous agents'
+                elif mutation == 'source':
+                    table['design_sha256'] = '0' * 64
+                else:
+                    a = next(r for r in table['trials'] if r['family'] == 'build_only'
+                             and r['presentation'] == 'raw' and r['recommendation'] == 'approve')
+                    b = next(r for r in table['trials'] if r['family'] == 'wrong_applicability'
+                             and r['presentation'] == 'raw' and r['recommendation'] == 'deny')
+                    for key in ('recommendation', 'decision_valid_at_snapshot',
+                                'execution_attempts', 'authorization_denials'):
+                        a[key], b[key] = b[key], a[key]
+                    table['summary']['families']['build_only']['raw']['bad_approvals'] -= 1
+                    table['summary']['families']['wrong_applicability']['raw']['bad_approvals'] += 1
+                files['paired-pilot-2026-11-09.json'] = encoded(table)
+                self.pack(files)
+                self.reject()
+
+    def test_original_zip_member_names_cannot_hide_a_nul_suffix(self):
+        files = self.pack()
+        with zipfile.ZipFile(self.path, 'w') as archive:
+            for name, data in files.items():
+                archive.writestr('LICENSEZ' if name == 'LICENSE' else name, data)
+        self.path.write_bytes(self.path.read_bytes().replace(b'LICENSEZ', b'LICENSE\0'))
+        with zipfile.ZipFile(self.path) as archive:
+            self.assertEqual(archive.getinfo('LICENSE').orig_filename, 'LICENSE\0')
+        self.reject()
+
+    def test_bad_deflate_and_unsupported_compression_fail_with_sanitized_json(self):
+        self.pack()
+        with zipfile.ZipFile(self.path) as archive:
+            offset = archive.getinfo('latest.pdf').header_offset
+        raw = bytearray(self.path.read_bytes())
+        name_length, extra_length = struct.unpack_from('<HH', raw, offset + 26)
+        raw[offset + 30 + name_length + extra_length] = 0x07  # reserved DEFLATE block type
+        self.path.write_bytes(raw)
+        with self.assertRaises(ValueError):
+            self.verifier.verify_submission(self.path)
+        result = subprocess.run([sys.executable, '-m', 'scripts.verify_submission', '--package', str(self.path)],
+                                cwd=ROOT, capture_output=True, text=True, timeout=20)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(json.loads(result.stderr)['status'], 'failed')
+        self.assertNotIn('Traceback', result.stderr)
+        # A ZIP_LZMA header is rejected before decompression, even without lzma support.
+        files = self.pack()
+        with zipfile.ZipFile(self.path, 'w') as archive:
+            for name, data in files.items():
+                archive.writestr(name, data)
+        raw = bytearray(self.path.read_bytes())
+        struct.pack_into('<H', raw, 8, zipfile.ZIP_LZMA)
+        central = raw.index(b'PK\x01\x02')
+        struct.pack_into('<H', raw, central + 10, zipfile.ZIP_LZMA)
+        self.path.write_bytes(raw)
+        with self.assertRaises(ValueError):
+            self.verifier.verify_submission(self.path)

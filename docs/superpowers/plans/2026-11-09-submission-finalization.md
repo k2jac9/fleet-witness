@@ -76,7 +76,7 @@ Owned: `fleet_witness/web/index.html`, `docs/assets/fleet-witness-cover.png`,
 Owned: `docs/BUILD_STATUS.md`, this plan and its spec; private artifact packet.
 
 - [x] Full Python/Node tests, planner, demo, links/whitespace and preservation checks.
-- [x] One independent whole-branch review; owner resolves findings and runs the
+- [ ] One independent whole-branch review; owner resolves findings and runs the
   exact final-source runtime matrix. Merge green work and synchronize clean main.
 - [ ] Prepare the form using user-provided data. Required missing information
   stays pending; no invented contact details or submission success. Preserve the
@@ -106,3 +106,21 @@ Owned: `docs/BUILD_STATUS.md`, this plan and its spec; private artifact packet.
   avoiding a real-time-execution claim; it is less fluid than a continuous recording.
 - No form submission: the owner is unsure of contact emails and prior submission
   status. The private form record preserves that uncertainty without inventing data.
+
+- Independent review of 5ff5301 found three important verifier gaps: rehashed
+  frozen data/interpretation changes, NUL-suffixed ZIP names, and uncaught
+  decompressor errors. Three added regression methods failed first (six failed
+  subcases and one decompression error), then all eleven verifier tests passed.
+- Owner fix pass: validate original ZIP names, allow only stored/DEFLATE members,
+  sanitize zlib errors, check contrast labels and pin the accepted public table
+  after independent recomputation. New cohorts need a separately reviewed revision.
+- Review checklist finding regraded as important evidence accuracy: integration
+  remains unchecked until the final matrix and merge are observed. This is a
+  status correction, so no prose-matching test is added.
+
+- Reviewed-source acceptance: 320 Python / five Node tests passed; all four
+  independent malformed archives now yield sanitized JSON failure; package
+  repo/standalone checks, planner, links and full video decoding pass.
+- A 2 GiB authoring-manifest rerun was refused before testing. With media work
+  finished, a separate 512 MiB qualification-only estimate passed fresh admission;
+  both receipts retained, no reservations or thresholds changed.

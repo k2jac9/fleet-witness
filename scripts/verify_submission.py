@@ -17,6 +17,7 @@ import re
 import stat
 import sys
 import zipfile
+import zlib
 
 MEMBERS = {
     'latest.pdf': 'docs/report/latest.pdf',
@@ -45,6 +46,9 @@ PROVENANCE_MEMBERS = {
 }
 MAX_MEMBER = 25_000_000
 MAX_TOTAL = 32_000_000
+# Publication anchor, checked after independent structural/numerical validation.
+# A future cohort needs a separately reviewed verifier/publication revision.
+PUBLIC_TABLE_SHA256 = '6d3d681eb39c5af5bb7d08a9b82c50498729c336507c7eb26db7f1881a728c15'
 EXPECTED_FAMILIES = {
     'build_only': 'deny', 'complete': 'approve', 'duplicate': 'approve',
     'forged': 'deny', 'injection': 'deny', 'mixed': 'approve',
@@ -178,6 +182,9 @@ def recompute(table):
     require(math.isclose(math.fsum(costs), .28809, abs_tol=1e-12, rel_tol=0) and
             summary['settled_usd'] == .28809 and summary['held_usd'] == 0, 'conservative total')
     contrast = summary['contrast']
+    require(contrast['name'] == 'paired bad-approval difference: raw minus scope_explicit' and
+            contrast['method'] == 'Range-two Hoeffding; independent pairs assumed; full cohort only.',
+            'contrast interpretation')
     radius = math.sqrt(2 * math.log(40) / 80)
     require(contrast['pair_denominator'] == 80 and contrast['difference'] == .225 and
             len(contrast['interval_95']) == 2 and
@@ -219,7 +226,9 @@ def verify_members(files):
         {'name': 'Alejandro Castellanos', 'affiliation': 'Independent researcher'},
         {'name': 'Ignatius Pio Binawan', 'affiliation': 'University of Toronto'}], 'author metadata')
     require(files['latest.pdf'].startswith(b'%PDF-') and len(files['latest.pdf']) < MAX_MEMBER, 'PDF header/size')
-    return dict(recompute(table), status='passed', files=len(files),
+    result = recompute(table)
+    require(actual['paired-pilot-2026-11-09.json'] == PUBLIC_TABLE_SHA256, 'frozen public table identity')
+    return dict(result, status='passed', files=len(files),
                 scope='Offline consistency; not provider authentication or visual PDF validation')
 
 
@@ -231,9 +240,12 @@ def verify_submission(package: Path, repository: Path | None = None) -> dict:
             require(len(entries) == len(MEMBERS) and {e.filename for e in entries} == set(MEMBERS), 'ZIP allowlist')
             require(sum(e.file_size for e in entries) <= MAX_TOTAL, 'ZIP total size')
             for entry in entries:
+                require(entry.orig_filename == entry.filename and '\0' not in entry.orig_filename,
+                        'original ZIP member name')
                 kind = stat.S_IFMT(entry.external_attr >> 16)
                 require(kind in (0, stat.S_IFREG) and not entry.flag_bits & 1 and
-                        0 <= entry.file_size <= MAX_MEMBER, 'ZIP member type or size')
+                        entry.compress_type in (zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED) and
+                        0 <= entry.file_size <= MAX_MEMBER, 'ZIP member type, compression or size')
             files = {e.filename: archive.read(e) for e in entries}
         result = verify_members(files)
         if repository is not None:
@@ -242,7 +254,7 @@ def verify_submission(package: Path, repository: Path | None = None) -> dict:
         return dict(result, repository_compared=repository is not None,
                     package_sha256=hashlib.sha256(data).hexdigest())
     except (OSError, UnicodeError, KeyError, TypeError, IndexError, RecursionError,
-            ArithmeticError, zipfile.BadZipFile, RuntimeError, ValueError) as exc:
+            ArithmeticError, zipfile.BadZipFile, zlib.error, RuntimeError, ValueError) as exc:
         raise ValueError('Submission verification failed') from exc
 
 

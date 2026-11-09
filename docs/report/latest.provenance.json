@@ -67,7 +67,7 @@
     "docs/report/latest.md": "1c88e2179d2605d7c9e1f574f420632b868651ae6f22a5e1d5649963cc25f304",
     "docs/report/latest.pdf": "7c254ecaa345e472760ed227712386271b9ba8a12eefede7c226f22574b55d4a",
     "docs/report/latest.references.json": "22895e1186dd06758dde9ee7cbac2ca101e87519ff1400c6606c5166a03f57bf",
-    "scripts/verify_submission.py": "5013a4ca44880486e5a06bf8eafacb8380ecede9b4d826f6b031dad93afa6e7a"
+    "scripts/verify_submission.py": "33032af215983e52e1ad14c60645526588933765d1568772b9751ce1f6998df3"
   },
   "publication_base_commit": "2ce59d34f92516cfb6666b891a4b35da2b46c9ba",
   "publication_identity": "The containing Git commit identifies this publication revision; base and experiment source commits are distinct.",

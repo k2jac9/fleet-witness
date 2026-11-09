@@ -11,7 +11,7 @@ both human authors.
 Observed local acceptance:
 
 - Eight new mutation tests failed before verifier implementation, then passed.
-  The full qualified Python 3.15.2 suite passes **317 tests**; retained Node
+  The initial qualified Python 3.15.2 suite passed **317 tests**; retained Node
   26.11.1 passes **five viewer tests**. Pre-existing SQLite ResourceWarnings remain.
 - The verifier passes against the repository ZIP and from its extracted standalone
   copy: **17 explicit members**, balanced 160-trial / 80-pair cohort and all frozen
@@ -34,6 +34,14 @@ video checks and source identities are retained in the sibling
 loopback was included in a DNS block rule; a stale debugging-port retry also
 failed. Fresh isolated profiles and a loopback-only exception resolved capture;
 all recorded page requests were local or data URLs. Failed evidence is preserved.
+
+Independent review found three verifier gaps, reproduced by three additional
+regression tests: changed frozen data/interpretation labels, NUL-suffixed ZIP
+names and decompressor exceptions escaping the sanitized error boundary. The
+owner fixed them in one pass; all eleven verifier tests pass. The reviewed full
+suite passes **320 Python tests**, and all five viewer tests, standalone/repository
+checks and full video decoding pass again. The final hosted matrix is recorded
+with exact identities in the packet.
 
 Independent review and final-source hosted CI are separate gates; the final
 identities and results are recorded in the artifact packet and pull request.
