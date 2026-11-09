@@ -1,6 +1,6 @@
 # Swarm Stabilization Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Repair the reviewed swarm spending, evidence and reproduction defects and prepare one tested integration candidate.
 **Architecture:** Keep historical evidence immutable; separate a transactional private provider ledger from public detector data. Use explicit one-attempt requests and a real kernel baseline replay. No automatic live qualification.
@@ -28,20 +28,20 @@
 **Files:** `fleet_witness/swarm/providers.py`, new `fleet_witness/swarm/ledger.py`, new `fleet_witness/swarm/authorization.py` if needed, `tests/test_swarm.py` provider/ledger sections, new `tests/test_swarm_provider.py`, `tests/test_swarm_ledger.py`.
 **Interfaces:** Preserve imports `Ledger`, `BudgetExceeded`, `ProviderError`, `ModelClient`, `FakeClient`. `ModelClient.complete(system,user,meta=None)` returns final text/usage/cost plus `attempts` (bounded records), `provider_attempts`, `held_usd`, and terminal `status`; failures attach `attempts` to the exception. `Ledger.snapshot()` supplies run/provider settled and held totals. Constructor accepts `authorization` mapping; absent/unqualified records fail before key/network access. Tags never select a budget file. Keep `FakeClient` offline-compatible.
 
-- [ ] Write and run behavioral failures for shared tags/processes, restart holds, cap changes, invalid/overrun charges, no retry on length/429/stop, extension collisions and authorization-before-I/O.
-- [ ] Implement fixed-point transactional reservations/audit and fail-closed legacy detection; retain one-attempt receipts and request identity on failures.
-- [ ] Verify bounded direct transport, protected fields and closed outcomes with synthetic credentials and network doubles only.
-- [ ] Run focused tests then the canonical full Python suite; retain red/green logs and commit owned paths.
+- [x] Write and run behavioral failures for shared tags/processes, restart holds, cap changes, invalid/overrun charges, no retry on length/429/stop, extension collisions and authorization-before-I/O.
+- [x] Implement fixed-point transactional reservations/audit and fail-closed legacy detection; retain one-attempt receipts and request identity on failures.
+- [x] Verify bounded direct transport, protected fields and closed outcomes with synthetic credentials and network doubles only.
+- [x] Run focused tests then the canonical full Python suite; retain red/green logs and commit owned paths.
 
 ## Task 2: Portable evidence and executable baseline
 
 **Files:** `scripts/baselines.py`, `scripts/independence.py`, `scripts/report_stats.py`, `scripts/reproduce_tables.py`, new `scripts/extract_run_archive.py`, `data/README.md`, `fleet_witness/institution.py`, `fleet_witness/swarm/sweep.py`, `tests/test_institution.py`, new `tests/test_reproduction.py`.
 **Interfaces:** Kernel permits `committee_size=quorum=0` only with `require_majority=True`. Baseline reconstruction uses fresh synthetic keys and recorded vote totals, validates regenerated case identities against archived truth, and emits explicit reconstruction provenance. Extraction accepts an archive and fresh destination. Reproduction supports an explicit data/output root and writes strict JSON without mutating raw evidence or historical review files.
 
-- [ ] Write failing archive traversal/collision/overwrite and partial-denominator tests; test zero-committee policy/integrity/majority/uniqueness/audit behavior before kernel change.
-- [ ] Implement portable extractor and actual kernel baseline, dynamic denominators and complete-run validation, all eight regime rows.
-- [ ] Remove inappropriate pooled confidence intervals; output null for undefined statistics and distinguish paired outcomes from seating draws.
-- [ ] Run focused/full tests and offline archive reproduction; retain original archive hash and commit owned paths.
+- [x] Write failing archive traversal/collision/overwrite and partial-denominator tests; test zero-committee policy/integrity/majority/uniqueness/audit behavior before kernel change.
+- [x] Implement portable extractor and actual kernel baseline, dynamic denominators and complete-run validation, all eight regime rows.
+- [x] Remove inappropriate pooled confidence intervals; output null for undefined statistics and distinguish paired outcomes from seating draws.
+- [x] Run focused/full tests and offline archive reproduction; retain original archive hash and commit owned paths.
 
 ## Task 3: Run provenance and current publication
 
@@ -57,11 +57,11 @@ paid entrypoint and adapt raw-input hashing to the new private receipt directory
 No accepted ADR, old review or original dataset is changed. Paid source must be
 clean and committed; review acceptance remains an independently recorded gate.
 
-- [ ] Write failing tests for failed-attempt accounting, public prompt separation, private receipt provenance, source/config identity and a real gated-majority regime.
-- [ ] Wire durable provider outcomes into runner/CLI and review scripts; label logical decisions, attempted requests and held liability separately.
-- [ ] Fix conventional medians with a behavioral fixture; correct prose/encoding/figure labels and regenerate artifacts from retained data.
-- [ ] Record current evidence, pending live qualification and historical-data limits without rewriting accepted decisions or old receipts.
-- [ ] Run full suites, replay reproduction and artifact checks; commit focused changes.
+- [x] Write failing tests for failed-attempt accounting, public prompt separation, private receipt provenance, source/config identity and a real gated-majority regime.
+- [x] Wire durable provider outcomes into runner/CLI and review scripts; label logical decisions, attempted requests and held liability separately.
+- [x] Fix conventional medians with a behavioral fixture; correct prose/encoding/figure labels and regenerate artifacts from retained data.
+- [x] Record current evidence, pending live qualification and historical-data limits without rewriting accepted decisions or old receipts.
+- [x] Run full suites, replay reproduction and artifact checks; commit focused changes.
 
 ## Task 4: Independent review and integration
 

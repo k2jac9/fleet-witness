@@ -14,7 +14,8 @@ python scripts/fleet.py plan
 git diff --check
 ```
 
-The observed baseline is 49 Python tests and 5 Node tests. Record the exact commit,
+The 2026-11-09 stabilization at `5090252` passes 228 Python tests and 5 Node tests.
+The earlier 49-test baseline remains historical evidence. Record the exact commit,
 versions, commands, exit codes, and real results when reporting a new run; counts
 may change as meaningful coverage grows. A green planner is scheduling validation,
 not evidence that task acceptance commands ran.
@@ -32,6 +33,25 @@ Add tests for changed behavior and trust boundaries. For security-sensitive code
 first reproduce the failure with a failing behavioral test, then fix and run the
 full Python suite. Documentation changes need exercised commands and link review;
 tests that merely match document wording do not establish correctness.
+
+## Swarm stabilization checks
+
+`tests/test_swarm_provider.py`, `test_swarm_ledger.py` and
+`test_swarm_provenance.py` exercise real accounting/runner code using temporary
+private ledgers, synthetic credentials and network doubles. They cover restarts,
+competing processes, preserved failure liabilities, one-attempt behavior,
+protected request fields, authorization before I/O, complete-run accounting and
+private/public receipt boundaries. They never qualify a real provider account.
+`test_reproduction.py` covers archive traversal/collisions, complete denominators,
+actual-kernel reconstruction and unchanged raw inputs. Figure tests check
+answered-only populations and conventional even/odd medians.
+
+Use the explicit extraction/reproduction commands in [SWARM.md](SWARM.md) for the
+retained archive. Default reproduction includes the depth-six checker and seven
+mutants; `--skip-checker` must be reported as an omitted check. Source/runtime,
+raw input and derived hashes are retained in `reproduction-provenance.json`.
+Inherited unclosed-SQLite warnings remain visible in the full test logs; a pass
+does not assert warning-free execution or production isolation.
 
 ## Full offline smoke
 

@@ -5,6 +5,7 @@
       "overdispersion_votes": 5.582922534590019,
       "eps_auditors": 0.0026455026455026454,
       "overdispersion_auditors": 0.9840848806366048,
+      "undefined_statistics": "null means no observations or zero expected variance",
       "regimes": {
         "1of1": [
           2,
@@ -45,6 +46,7 @@
       "overdispersion_votes": 2.6234580549977458,
       "eps_auditors": 0.001968503937007874,
       "overdispersion_auditors": 0.807661509129574,
+      "undefined_statistics": "null means no observations or zero expected variance",
       "regimes": {
         "1of1": [
           0,
@@ -84,9 +86,10 @@
   "gpt-oss": {
     "share_0": {
       "eps_votes": 0.0,
-      "overdispersion_votes": NaN,
+      "overdispersion_votes": null,
       "eps_auditors": 0.0,
-      "overdispersion_auditors": NaN,
+      "overdispersion_auditors": null,
+      "undefined_statistics": "null means no observations or zero expected variance",
       "regimes": {
         "1of1": [
           0,
@@ -124,9 +127,10 @@
     },
     "share_30": {
       "eps_votes": 0.0,
-      "overdispersion_votes": NaN,
+      "overdispersion_votes": null,
       "eps_auditors": 0.001968503937007874,
       "overdispersion_auditors": 0.807661509129574,
+      "undefined_statistics": "null means no observations or zero expected variance",
       "regimes": {
         "1of1": [
           0,

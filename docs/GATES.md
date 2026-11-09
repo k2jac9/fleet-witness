@@ -1,7 +1,32 @@
 # Current acceptance gates
 
+## Current checkpoint: 2026-11-09
+
+The swarm stabilization at `5090252` passes 228 local Python tests, five viewer
+tests and full archive reconstruction with the depth-six checker and mutants.
+Its corrected report preserves historical inputs and states their limits.
+Independent whole-candidate review and exact final-source hosted CI remain to
+be recorded before integration. See [BUILD_STATUS.md](BUILD_STATUS.md).
+
+The new shared SQLite provider ledger and single-attempt transport have offline
+security regressions, not live qualification. Production CLI entrypoints require
+clean committed source and a private operator record. No new record was issued.
+Old JSON ledgers and unknown provider liabilities need account reconciliation;
+there is no automatic migration or hold release. Source checks and qualification
+flags cannot establish retention terms, current credit balances, account-specific
+prices, TLS/egress acceptance, billing completeness or calibration success.
+
+The preserved collaborator dataset contains historical model observations. It
+does not close the separately predeclared supervisor pilot or the missing
+provider/host gates below. Controlled colluder instructions are not observation
+of external swarms. New public-web sensors, a live dashboard refresh and paid
+calibration require their applicable evidence; this stabilization performs none
+of those operations. The $100 GCP ceiling remains separate from provider credits.
+
+## Historical checkpoint: 2026-11-08
+
 Owner: Alejandro Castellanos. Updated 2026-11-08 during the authorized push and
-continuation. This is the current index; older BUILD_STATUS.md sections remain
+continuation. This is a retained dated index; older BUILD_STATUS.md sections remain
 historical records. Passing software checks never establishes an unverified
 account fact. The accepted ADRs are unchanged.
 
