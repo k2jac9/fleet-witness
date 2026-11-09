@@ -1,5 +1,34 @@
 # Build and deployment verification
 
+## Controlled calibration integration: 2026-11-09
+
+Task `controlled-live-calibration-20261109`, isolated branch
+`feat/controlled-live-calibration-20261109`, base `b50569e`. Changes are the strict
+supervisor adapter, one-request calibration runner, their regression tests and
+current qualification documentation. Fifteen behavioral tests were observed
+failing before implementation and then passed; 26 existing provider tests also
+passed. New tests use real SQLite and synthetic credentials with mocked HTTPS;
+no paid inference is represented by these results. CLI help and `git diff --check`
+passed. Full-suite and independent whole-diff review are pending in this candidate.
+
+Evidence packet:
+`/home/neo/Projects/fleet-witness-artifacts/live-calibration-20261109/`.
+It retains red/green logs, public provider documents and hashes, the current
+owner-supplied 1,500-credit/$1-per-credit/no-expiry statement, and a host inventory
+without key contents. The protected key exists; the default canonical ledger
+directory does not. No account liability was cleared or migrated. Public terms
+were fully recovered, but all-billed-token bounds and applicable handling remain
+unverified. Local host runtime is Python 3.15.0/OpenSSL 3.5.8, not a newly accepted
+latest-stable live runtime. No host/cloud acceptance, real authorization, paid
+calibration, billing reconciliation or public-web observation has been executed.
+
+For the prior integration, PR #6 merged at
+`b50569e4ae56c6958f5b7f2ceebc9f70e310f246`. Hosted run `42568607211` passed all
+11 pinned Python/Node runtime lanes plus selection. Its tested merge tree
+`46a58d5dcf3160e43b4d1b1b9d57a9d4b8023389` equals merged main's tree; the
+stabilization packet retains all lane artifacts and tree-identity evidence.
+That closes the historical CI gate below, not qualification of the new code.
+
 ## Swarm stabilization: 2026-11-09
 
 The independent review at `8c0c790` found shared request-count, Git-free fixture,
