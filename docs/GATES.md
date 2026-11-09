@@ -3,8 +3,8 @@
 ## Current controlled calibration checkpoint: 2026-11-09
 
 Task `controlled-live-calibration-20261109` adds a strict supervisor interface
-and bounded trusted-host calibration entrypoint. Fifteen new mocked-transport
-tests passed after observed failures; full-suite and independent-review evidence
+and bounded trusted-host calibration entrypoint. Nineteen focused mocked-transport
+tests pass, including review regressions after observed failures; full-suite and independent-review evidence
 is recorded in [BUILD_STATUS](BUILD_STATUS.md). No live authorization was issued,
 no real key read, no inference sent, and no cloud mutation performed.
 
@@ -14,7 +14,7 @@ no real key read, no inference sent, and no cloud mutation performed.
 | Key placement | Existing key is an owner-owned, 0600, regular singly linked file; contents not read | Qualify the actual credential-loading and host isolation path |
 | Canonical accounting | Default `~/.fleet_witness` directory is absent; no local legacy ledger there to migrate | Do not infer zero account liability or attribute collaborator data to this key; reconcile applicable historical usage |
 | Provider documentation | Seven public model IDs/rates and full terms/privacy recovered with hashes | All billed reasoning/fees, served revision and applicable handling still unqualified |
-| Controlled contract | Strict proposal validation, fixed synthetic request and private manifests implemented; tests use mocked HTTPS | Independent diff review, final-source compatibility and live host acceptance |
+| Controlled contract | Strict proposal validation, fixed synthetic request and private manifests implemented; independent review findings fixed; 252 Python and five viewer tests pass | Final-source compatibility evidence in PR checks/task packet and separate live host acceptance |
 | Host/transport | Local Python 3.15.0/OpenSSL 3.5.8 inventoried; provider transport has offline tests | Latest-stable launch qualification, pinned trust and alternate-chain denial, credential/worker denial and recovery on the actual host |
 | Paid calibration | Already authorized by owner: one request, at most one verified credit, 30 seconds, no retry | Close ADR-0010 facts and host gates, issue reviewed source/account record, then dispatch and reconcile |
 

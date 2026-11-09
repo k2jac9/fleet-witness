@@ -141,6 +141,34 @@ class ControlledSupervisorTests(SyntheticSourceTestCase):
         self.assertIsNone(result['proposal'])
         self.assertEqual(post.call_count, 1)
 
+    def test_ambiguous_status_text_or_malformed_message_id_retains_hold(self):
+        variants = []
+        item = response(); item['incomplete_details'] = {'reason':'max_output_tokens'}; variants.append(item)
+        item = response(); item['output_text'] = '{"recommendation":"deny","reason":"conflict"}'; variants.append(item)
+        item = response(); item['output_text'] = None; variants.append(item)
+        item = response(); item['output'][0]['id'] = {'malformed':'id'}; variants.append(item)
+        item = response(); item['output'][0]['id'] = 'x' * 129; variants.append(item)
+        for index, item in enumerate(variants):
+            with self.subTest(index=index):
+                ledger = p.Ledger('adaption', 1, 1, self.root / f'ambiguous-{index}.sqlite3')
+                record = authorization(ledger, provider='adaption'); record['request_limit'] = 1
+                self.client = p.ModelClient('adaption', 'fixture-model', ledger, max_output_tokens=100,
+                                           timeout=1, authorization=record)
+                with self.assertRaises(p.ProviderError) as raised:
+                    self.recommend(item)
+                self.assertIsNone(raised.exception.attempts[0]['proposal'])
+                self.assertEqual(ledger.run_reserved, 1)
+                self.assertEqual(ledger.run_spent, 0)
+                self.assertTrue(ledger.snapshot()['halted'])
+
+    def test_consistent_optional_status_text_and_null_message_id_are_accepted(self):
+        item = response()
+        item['incomplete_details'] = None
+        item['output_text'] = item['output'][0]['content'][0]['text']
+        item['output'][0]['id'] = None
+        result, _ = self.recommend(item)
+        self.assertEqual(result['status'], 'succeeded')
+
     def test_timeout_preserves_hold(self):
         self.assertTrue(hasattr(self.client, 'recommend'), 'strict supervisor interface missing')
         with patch.object(p, '_post', side_effect=TimeoutError('untrusted message')) as post:
@@ -264,6 +292,43 @@ class CalibrationRunnerTests(SyntheticSourceTestCase):
         self.assertEqual(result['outcome']['status'], 'unresolved')
         self.assertTrue(self.ledger.snapshot()['halted'])
         self.assertIsNone(result['outcome'].get('proposal'))
+
+    def test_parent_directory_fsync_precedes_dispatch(self):
+        import os
+        observed = []
+        original = os.fsync
+        parent = self.root.stat()
+        identity = (parent.st_dev, parent.st_ino)
+        def fsync(fd):
+            info = os.fstat(fd)
+            observed.append((info.st_dev, info.st_ino))
+            original(fd)
+        def post(*args, **kwargs):
+            observed.append('dispatch')
+            return json.dumps(response()).encode()
+        with patch('os.fsync', side_effect=fsync), patch.object(p, '_post', side_effect=post):
+            result = self.run_request()
+        self.assertEqual(result['outcome']['status'], 'succeeded')
+        self.assertIn(identity, observed, 'new directory entry must be persisted in parent')
+        self.assertLess(observed.index(identity), observed.index('dispatch'))
+
+    def test_parent_flush_failure_prevents_key_access_and_dispatch(self):
+        import os
+        original = os.fsync
+        parent = self.root.stat()
+        def fail_parent(fd):
+            info = os.fstat(fd)
+            if (info.st_dev, info.st_ino) == (parent.st_dev, parent.st_ino):
+                raise OSError('synthetic parent flush failure')
+            original(fd)
+        with patch('os.fsync', side_effect=fail_parent), \
+                patch.object(p, '_env_key', return_value='synthetic-private-key') as key, \
+                patch.object(p, '_post', return_value=json.dumps(response()).encode()) as post:
+            with self.assertRaises(OSError):
+                self.run_request()
+            key.assert_not_called()
+            post.assert_not_called()
+        self.assertEqual(self.ledger.run_reserved, 0)
 
 
 if __name__ == '__main__':

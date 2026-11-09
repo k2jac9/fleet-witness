@@ -48,6 +48,14 @@ def _record(path):
     return record
 
 
+def _fsync_directory(directory):
+    fd = os.open(directory, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
 def _write_private(directory, name, value):
     # Exclusive files and fsync retain a prepared receipt even when dispatch dies.
     fd = os.open(directory / name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
@@ -55,11 +63,7 @@ def _write_private(directory, name, value):
         handle.write(canonical_json(value) + '\n')
         handle.flush()
         os.fsync(handle.fileno())
-    fd = os.open(directory, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
-    try:
-        os.fsync(fd)
-    finally:
-        os.close(fd)
+    _fsync_directory(directory)
 
 
 def run_calibration(authorization_path, output_dir, *, live=False):
@@ -77,6 +81,7 @@ def run_calibration(authorization_path, output_dir, *, live=False):
     if not output.is_absolute() or str(output) != str(output.resolve()):
         raise ValueError('output must be absolute without symlinks or traversal')
     output.mkdir(mode=0o700, exist_ok=False)
+    _fsync_directory(output.parent)
     visible = provider_input(calibration_facts(), 'scope_explicit')
     manifest = {'schema_version': 'controlled-calibration-v1', 'mode': 'live-calibration',
                 'phase': 'prepared', 'prepared_at': time.time(), 'confirmatory': False,

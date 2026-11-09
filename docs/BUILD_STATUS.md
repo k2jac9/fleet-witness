@@ -6,10 +6,20 @@ Task `controlled-live-calibration-20261109`, isolated branch
 `feat/controlled-live-calibration-20261109`, base `b50569e`. Changes are the strict
 supervisor adapter, one-request calibration runner, their regression tests and
 current qualification documentation. Fifteen behavioral tests were observed
-failing before implementation and then passed; 26 existing provider tests also
-passed. New tests use real SQLite and synthetic credentials with mocked HTTPS;
+failing before implementation and then passed; review added four more focused
+tests. All **252 Python tests and five viewer tests** passed after the review
+fixes, with inherited unclosed-SQLite ResourceWarnings preserved. Commands:
+`python -m unittest discover -s tests -v` and
+`node --test tests/viewer.test.mjs`, run through the storage wrapper, exit 0.
+New tests use real SQLite and synthetic credentials with mocked HTTPS;
 no paid inference is represented by these results. CLI help and `git diff --check`
-passed. Full-suite and independent whole-diff review are pending in this candidate.
+passed. The [independent review](reviews/controlled-calibration-review.md) at
+`ebedd47` found contradictory response-envelope acceptance and a missing parent
+directory flush. Both are fixed with retained RED/GREEN tests; malformed message
+ID validation was included in the strict-envelope fix. The initial candidate
+passed all 11 hosted runtime lanes in run `42570514956`; follow-up source results
+are retained separately in the task packet and PR checks. These checks do not
+qualify the live host or provider.
 
 Evidence packet:
 `/home/neo/Projects/fleet-witness-artifacts/live-calibration-20261109/`.

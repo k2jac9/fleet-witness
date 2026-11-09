@@ -342,6 +342,8 @@ class ModelClient:
         if (data.get('model') != self.model or not isinstance(data.get('id'), str) or
                 not re.fullmatch(r'[A-Za-z0-9_.:-]{1,128}', data['id'])):
             raise ValueError('supervisor response identity mismatch')
+        if data.get('status') == 'completed' and data.get('incomplete_details') is not None:
+            raise ValueError('contradictory supervisor completion details')
         output = data.get('output')
         if not isinstance(output, list) or len(output) != 1:
             raise ValueError('expected one supervisor message')
@@ -353,11 +355,17 @@ class ModelClient:
             raise ValueError('unexpected supervisor message')
         if data['status'] == 'completed' and message['status'] != 'completed':
             raise ValueError('inconsistent supervisor completion')
+        message_id = message.get('id')
+        if message_id is not None and (not isinstance(message_id, str) or
+                not re.fullmatch(r'[A-Za-z0-9_.:-]{1,128}', message_id)):
+            raise ValueError('invalid supervisor message identity')
         parts = message.get('content')
         if (not isinstance(parts, list) or len(parts) != 1 or not isinstance(parts[0], dict) or
                 set(parts[0]) - {'type', 'text', 'annotations', 'logprobs'} or
                 parts[0].get('type') != 'output_text' or not isinstance(parts[0].get('text'), str)):
             raise ValueError('unexpected supervisor content')
+        if 'output_text' in data and data['output_text'] != parts[0]['text']:
+            raise ValueError('conflicting supervisor text representations')
 
     def _outcome(self, data, cap, input_bound):
         if data.get('error') is not None:
