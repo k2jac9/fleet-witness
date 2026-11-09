@@ -22,6 +22,22 @@ review, exact-source hosted matrix, green integration and actual paired collecti
 are still pending at this preparation snapshot. No new GCP or Adaption action
 occurred. No claim of public-web observation or live dashboard is made here.
 
+The first implementation candidate `da45d3b4c30c463a9aa4eead311ac3af6c4a42e6`
+passed 297 local Python tests and the complete selector plus 11 hosted runtime
+lanes in run `42582477044`. Independent review then reproduced an authorization
+reload race and three report-consistency gaps (provider ledger binding,
+effect/audit identity, and frozen paired allocation). Those findings block that
+candidate despite its passing suite. The fix pass adds failing regressions and
+uses the already validated authorization without reloading; validates canonical
+provider evidence and unique attempt identity; checks release/attempt/event
+bijections; and independently verifies the frozen schedule. Final fix-source
+verification and collection evidence follow in the retained task packet.
+
+Baseline and full-suite logs contain pre-existing SQLite ResourceWarnings in the
+institution mutation tests; they are retained, not suppressed. The focused new
+pilot tests have no such warnings. This task does not claim to repair that
+separate test-hygiene issue.
+
 Private task evidence: `/home/neo/Projects/fleet-witness-artifacts/paired-pilot-20261109/`.
 The complete calibration result/reconciliation and later integration/collection
 receipts are retained there; credentials are excluded. Historical status follows.

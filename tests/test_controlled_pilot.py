@@ -261,3 +261,74 @@ class PilotRunnerTests(PilotCase):
             client=self.client()
             with self.assertRaises(p.ProviderError):self.claim(client)
             post.assert_not_called()
+
+    def acceptance_packet(self,record):
+        import hashlib
+        auth=copy.deepcopy(record);auth.update(schema_version='controlled-openrouter-v1',purpose='calibration',request_limit=1);del auth['study']
+        raw=canonical_json({'run_id':auth['run_id'],'outcome':{'status':'succeeded','provider_attempts':1,'response_contract':'supervisor-v1',
+            'attempts':[{'provider_request_id':'gen-cal','provider_reported_cost_usd':'0.01','input_tokens':10,'output_tokens':20}]}})
+        return {'schema_version':'calibration-acceptance-v1','applies_to_source_sha256':record['source_sha256'],
+            'applicability':'Same reviewed transport and model with new runner checks.','reviewed_by':'offline reviewer',
+            'calibration_authorization':auth,'result_raw':raw,'reconciliation':{'result_sha256':hashlib.sha256(raw.encode()).hexdigest(),
+                'accepted':True,'read_only':True,'checks':{'matched':True},'usage_delta':'0.01',
+                'generation':{'id':'gen-cal','model':design.MODEL+'-20260929','provider_name':'Azure','total_cost':'0.01',
+                              'native_tokens_prompt':10,'native_tokens_completion':20}}}
+
+    def test_authorization_replacement_cannot_change_the_calibration_qualified_client(self):
+        from fleet_witness import controlled_pilot
+        from fleet_witness.swarm import operator
+        packet=self.acceptance_packet(self.record)
+        self.record['study']['calibration_evidence_sha256']=design.digest(packet)
+        authpath=self.root/'authorization.json';authpath.write_text(canonical_json(self.record));authpath.chmod(0o600)
+        calpath=self.root/'calibration.json';calpath.write_text(canonical_json(packet));calpath.chmod(0o600)
+        second=copy.deepcopy(self.record);second['study']['calibration_evidence_sha256']='b'*64
+        key2=self.root/'second-key';key2.write_text('second-synthetic-secret');key2.chmod(0o600)
+        second['openrouter']['transport']['key_file']=str(key2)
+        original=operator.load_authorizations;loads=[];used=[]
+        def replace_after_read(path):
+            value=original(path);loads.append(1);authpath.write_text(canonical_json(second));return value
+        def capture(url,key,*args,**kwargs):used.append(key);return self.reply('invalid')
+        with patch.object(operator,'require_committed_source'),patch.object(operator,'load_authorizations',side_effect=replace_after_read),patch.object(p,'_post',side_effect=capture):
+            report=controlled_pilot.run_pilot(authpath,calpath,self.root/'output',live=True)
+        self.assertEqual(len(loads),1)
+        self.assertEqual(used,['synthetic-pilot-secret'])
+        self.assertEqual(report['summary']['invalid_output'],1)
+
+    def test_report_rejects_ledger_effect_and_pair_identity_corruption(self):
+        from fleet_witness import pilot_store
+        report,_=self.run_fixture()
+        variants=[]
+        item=copy.deepcopy(report);item['calls'][0]['ledger_attempt']=None;variants.append(('missing ledger',item))
+        item=copy.deepcopy(report);item['calls'][0]['ledger_attempt']['status']='unresolved';variants.append(('bad status',item))
+        item=copy.deepcopy(report);item['calls'][0]['ledger_attempt']['receipt']['proposal']['recommendation']='deny';variants.append(('different ledger proposal',item))
+        item=copy.deepcopy(report);item['calls'][0]['outcome']['attempts'][0]['attempt_id']='wrong';variants.append(('wrong provider attempt',item))
+        item=copy.deepcopy(report);item['calls'][0]['outcome']['cost_usd']=.5;variants.append(('different accounting',item))
+        item=copy.deepcopy(report);c=next(c for c in item['calls'] if c['releases']);extra=copy.deepcopy(c['releases'][0]);extra['attempt_id']='orphan';extra['id']='extra';c['releases'].append(extra);variants.append(('extra release',item))
+        item=copy.deepcopy(report);c=next(c for c in item['calls'] if c['releases']);c['releases'][0]['artifact_digest']='wrong';variants.append(('wrong effect artifact',item))
+        item=copy.deepcopy(report);c=next(c for c in item['calls'] if c['attempts']);c['attempts'][0]['decision_id']='wrong';variants.append(('wrong decision identity',item))
+        item=copy.deepcopy(report);c=next(c for c in item['calls'] if c['releases']);e=next(e for e in c['events'] if e['kind']=='release_committed');e['actor']='live-supervisor';variants.append(('wrong effect actor',item))
+        item=copy.deepcopy(report);first,second=item['calls'][:2];second['presentation']=first['presentation'];second['supervisor_input']['instruction']=first['supervisor_input']['instruction'];second['decision']['supervisor_input']=copy.deepcopy(second['supervisor_input']);item['plan']['schedule'][1]['presentation']=first['presentation'];item['plan_sha256']=design.digest(item['plan']);variants.append(('duplicate pair presentation',item))
+        item=copy.deepcopy(report);item['source_sha256']='0'*64;variants.append(('wrong source provenance',item))
+        for label,item in variants:
+            item['summary']=pilot_store.summarize(item['calls'],item['stop_reason'])
+            with self.subTest(label=label):
+                with self.assertRaises(ValueError):pilot_store.validate_report(item)
+
+    def test_export_rejects_persisted_outcome_attempt_mismatch(self):
+        from fleet_witness import pilot_store
+        report,_=self.run_fixture(lambda *a,**kw:self.reply('invalid'))
+        with closing(sqlite3.connect(self.root/'output/pilot.sqlite3')) as db,db:
+            row=db.execute('SELECT trial_id,outcome FROM pilot_calls WHERE outcome IS NOT NULL').fetchone()
+            outcome=json.loads(row[1]);outcome['attempts'][0]['attempt_id']='wrong'
+            db.execute('UPDATE pilot_calls SET outcome=? WHERE trial_id=?',(canonical_json(outcome),row[0]))
+        with self.assertRaises(ValueError):pilot_store.export_report(self.root/'output/pilot.sqlite3',self.ledger.path)
+
+    def test_canonical_provider_attempts_cannot_be_reused_between_scheduled_calls(self):
+        from fleet_witness import pilot_store
+        report,_=self.run_fixture()
+        first,second=report['calls'][:2]
+        identity=first['ledger_attempt']['id']
+        second['ledger_attempt']['id']=identity
+        second['ledger_attempt']['receipt']['attempt_id']=identity
+        second['outcome']['attempts'][0]['attempt_id']=identity
+        with self.assertRaises(ValueError):pilot_store.validate_report(report)

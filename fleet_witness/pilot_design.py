@@ -84,3 +84,52 @@ def make_plan(key):
         for presentation in (first, 'scope_explicit' if first == 'raw' else 'raw'):
             schedule.append({'trial_id': uuid.uuid4().hex, 'pair_id': pair['pair_id'], 'presentation': presentation})
     return {'study_id': uuid.uuid4().hex, 'design_sha256': design_sha256(), 'pairs': pairs, 'schedule': schedule}
+
+
+def validate_plan(plan):
+    """Check the frozen allocation independently of the plan's ordinary checksum."""
+    from collections import Counter
+    import re
+    from .gateway import provider_input
+    def opaque(value, size):
+        return isinstance(value, str) and re.fullmatch(r'[0-9a-f]{'+str(size)+'}', value)
+    if (plan['design_sha256'] != design_sha256() or not opaque(plan['study_id'], 32) or
+            len(plan['pairs']) != 80 or len(plan['schedule']) != 160):
+        raise ValueError('invalid frozen study')
+    pairs = {p['pair_id']: p for p in plan['pairs']}
+    if len(pairs) != 80 or Counter(p['family'] for p in pairs.values()) != Counter({f:10 for f in FAMILIES}):
+        raise ValueError('invalid family allocation')
+    metadata = {(p['family'], p['repetition']): p for p in pairs.values()}
+    if set(metadata) != {(f, i) for f in FAMILIES for i in range(10)}:
+        raise ValueError('invalid repetition allocation')
+    identities = [plan['study_id']]
+    for pair in pairs.values():
+        facts = pair['facts']; family = pair['family']; repetition = pair['repetition']
+        identities.extend((pair['pair_id'], facts['run_id']))
+        if (type(repetition) is not int or not opaque(facts['artifact_digest'], 64) or
+                type(pair['evidence_valid_at_snapshot']) is not bool or
+                pair['evidence_valid_at_snapshot'] != (family in ('complete','revocation','duplicate','mixed')) or
+                pair['permission_at_snapshot'] is not True or facts['decision_time_policy'] != {'allowed': True, 'version': 1} or
+                pair['stratum'] != (STRATA[repetition // 2] if family == 'wrong_applicability' else None) or
+                facts['reviewer_verdict'] != REVIEWER or
+                facts['reviewer_statement'] != (INJECTION if family == 'injection' else STATEMENT)):
+            raise ValueError('sealed fixture metadata mismatch')
+        for presentation in ('raw','scope_explicit'): provider_input(facts, presentation)
+    rng = random.Random(SEED); expected_pairs = []
+    for family in FAMILIES:
+        orders = ['raw']*5 + ['scope_explicit']*5; rng.shuffle(orders)
+        for repetition, first in enumerate(orders):
+            pair = metadata[family, repetition]
+            if pair['first_presentation'] != first: raise ValueError('pair order metadata mismatch')
+            expected_pairs.append(pair)
+    rng.shuffle(expected_pairs)
+    expected = []
+    for pair in expected_pairs:
+        first = pair['first_presentation']
+        expected.extend([(pair['pair_id'], first), (pair['pair_id'], 'scope_explicit' if first == 'raw' else 'raw')])
+    if [(s['pair_id'], s['presentation']) for s in plan['schedule']] != expected:
+        raise ValueError('frozen pair/presentation order mismatch')
+    identities.extend(s['trial_id'] for s in plan['schedule'])
+    if not all(opaque(x,32) for x in identities) or len(identities) != len(set(identities)):
+        raise ValueError('opaque identities must be unique')
+    return True

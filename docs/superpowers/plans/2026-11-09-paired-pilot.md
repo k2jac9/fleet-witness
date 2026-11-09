@@ -97,3 +97,13 @@ Hoeffding radius sqrt(2*log(40)/80).
 D3: Calibration acceptance does not select on recommendation correctness. Keep
 its complete acceptance packet and source applicability statement; disclose the
 forged-HMAC information limit in design and every report.
+
+## Implementation review fix pass
+
+R1 (important): validate one detached authorization and construct the client from
+that same record; no filename reload after calibration qualification. R2–R4
+(important): bind outcome/usage/status/provenance to canonical ledger records,
+require unique request identities, validate effect/attempt/release/audit
+bijections and frozen family/presentation allocation. Behavioral RED receipts
+precede these corrections. Full-suite GREEN and exact-source CI remain required
+before integration. No review finding is deferred or ruled out.

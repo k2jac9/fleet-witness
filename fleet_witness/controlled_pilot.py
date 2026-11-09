@@ -8,7 +8,7 @@ import uuid
 
 from .controller import Controller
 from .gateway import provider_input
-from .pilot_design import make_plan, digest, MODEL
+from .pilot_design import make_plan, digest, MODEL, validate_plan
 from .pilot_store import Store, private_path, export_report, save_report
 from .swarm import operator
 from .swarm.authorization import validate_record
@@ -56,6 +56,7 @@ def collect(client, output):
         raise ValueError('qualified pilot profile required')
     key = secrets.token_bytes(32)
     plan = make_plan(key)
+    validate_plan(plan)
     pairs = {p['pair_id']: p for p in plan['pairs']}
     calls = []
     for call in plan['schedule']:
@@ -114,7 +115,13 @@ def run_pilot(authorization_path, calibration_path, output_dir, *, live=False):
     if not path.is_file() or path.stat().st_size > 262144: raise ValueError('bounded private calibration packet required')
     packet = json.loads(path.read_text(), object_pairs_hook=operator._object)
     validate_calibration(packet, record)
-    client = operator.authorized_client('openrouter', MODEL, authorization_path)
+    # Use the exact detached record whose calibration was checked. Re-reading
+    # the filename here could substitute a different otherwise valid profile.
+    from .swarm.providers import Ledger, ModelClient
+    ledger = Ledger(record['provider'], record['run_cap_usd'], record['provider_cap_usd'],
+                    Path(record['ledger_path']), run_id=record['run_id'])
+    client = ModelClient(record['provider'], record['model'], ledger, authorization=record,
+                         max_output_tokens=record['max_output_tokens'], timeout=record['timeout_s'])
     return collect(client, output_dir)
 
 
