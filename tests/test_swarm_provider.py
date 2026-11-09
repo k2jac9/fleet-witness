@@ -122,17 +122,16 @@ class ProviderBoundaryTest(SyntheticSourceTestCase):
                     self.client(ledger, record)
 
     def test_truncation_never_retries_logical_request(self):
-        client = object.__new__(p.ModelClient)
-        client.max_output_tokens = 100
-        caps = []
-        def attempt(system, user, cap):
-            caps.append(cap)
-            return {'text': '', 'input_tokens': 1, 'output_tokens': cap,
-                    'cost_usd': .001, 'truncated': True, 'latency_s': 0,
-                    'attempts': [], 'provider_attempts': 1, 'held_usd': 0, 'status': 'truncated'}
-        client._attempt = attempt
-        client.complete('s', 'u')
-        self.assertEqual(caps, [100])
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger = self.ledger(tmp)
+            client = self.client(ledger)
+            with patch.object(p, '_post', return_value=json.dumps(reply(tokens=100, finish='length')).encode()), \
+                    patch.object(p, '_env_key', return_value='synthetic-test-key'):
+                result = client.complete('s', 'u')
+            self.assertTrue(result['truncated'])
+            self.assertEqual(result['truncation_retries'], 0)
+            self.assertEqual(result['attempt_output_tokens'], [100])
+            self.assertEqual(ledger.calls, 1)
 
     def test_explicit_stop_near_cap_is_one_success_with_private_receipt(self):
         with tempfile.TemporaryDirectory() as tmp:

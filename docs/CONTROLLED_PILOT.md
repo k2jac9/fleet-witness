@@ -1,5 +1,52 @@
 # Controlled pilot foundation
 
+## Controlled OpenRouter profile: 2026-11-09
+
+The runner also accepts an additive `controlled-openrouter-v1` operator record.
+It retains the existing record fields and adds `openrouter`: exact provider slug,
+provider response name, expected response model, reasoning effort, token-limit
+parameter and a pinned transport profile. Generic `swarm-paid-v1` OpenRouter
+clients cannot enter the supervisor path; controlled profiles cannot enter
+generic completion. Adaption and offline consumers remain supported.
+
+This profile requires one calibration request, at most 256 combined output and
+reasoning tokens, 30 seconds, a run cap up to $15 and provider cap up to $50.
+Its fixed request pins the provider route and standard service tier, disables
+fallbacks/tools/streaming/storage, requests data-collection denial and ZDR
+routing, and requires strict JSON output. Unknown identities, tool content,
+unqualified BYOK or invalid/missing reported cost retain the reservation.
+An exhausted token budget with no visible text is an accounted invalid proposal.
+
+Transport binds exact Python executable/hash, OpenSSL version, CA bundle/hash,
+and root-certificate hashes. It verifies hostname and chain without loading
+default/environment trust or TLS key logging. Credentials come from a canonical
+owner-private directory and a 0600 singly-linked regular file; there is no
+environment-key fallback. These controls assume a trusted host and do not
+isolate hostile processes running as the owner.
+
+The sponsored inference key has a verified $50 allowance and the owner supplied
+the organizer's funding confirmation. No sponsor management key is required;
+a separate personal workspace's balance is unrelated. Sponsor account-wide
+funds and sponsor privacy opt-in settings are not directly observed.
+
+Provider qualification considers the Azure US route for GPT-6.1 Sol with low
+reasoning and `max_completion_tokens`. Current ZDR routing excludes first-party
+OpenAI. Conservative cache-write pricing bounds input charges. ZDR filtering
+does not establish universal zero retention: OpenRouter metadata/opt-in/legal
+policies and Microsoft's safety-retention exceptions remain applicable. Inputs
+are synthetic, without credentials, issuer keys, user data or evaluator answers.
+
+Receipts distinguish `provider_reported_cost_usd` from the conservative ledger
+amount: the larger of reported charge and token-rate bound. Recognizable
+generation identity and charges survive invalid content or HTTP failures.
+Check the original key's usage and generation receipt before another run;
+no automatic retry or hold release occurs.
+
+These are implemented boundaries, not a claim of completed live acceptance.
+See BUILD_STATUS and the retained packet for exact executed checks. The local
+calibration launches no worker, listener or controller effect; it does not
+qualify future worker-connected or cloud deployment topologies.
+
 ## Controlled calibration candidate: 2026-11-09
 
 `ModelClient.recommend(facts, presentation)` connects the existing provider

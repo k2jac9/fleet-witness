@@ -50,7 +50,10 @@ def validate_authorization(value, *, provider, model, ledger, max_output_tokens,
                     'source_commit', 'source_sha256', 'provider', 'model', 'endpoint', 'ledger_path', 'run_id',
                     'run_cap_usd', 'provider_cap_usd', 'request_limit', 'max_input_bytes', 'max_output_tokens',
                     'max_response_bytes', 'timeout_s', 'pricing', 'qualification'}
-        if set(value) != required or value['schema_version'] != 'swarm-paid-v1':
+        controlled = value.get('schema_version') == 'controlled-openrouter-v1'
+        if controlled:
+            required.add('openrouter')
+        if set(value) != required or value['schema_version'] not in ('swarm-paid-v1', 'controlled-openrouter-v1'):
             raise ValueError('invalid operator authorization schema')
         checked = json.loads(canonical_json(value))
         for name in ('authorization_id', 'approved_by', 'model', 'run_id'):
@@ -103,6 +106,9 @@ def validate_authorization(value, *, provider, model, ledger, max_output_tokens,
                 not _hash(qualification['evidence_sha256']) or
                 (checked['purpose'] == 'confirmatory' and qualification['calibration_accepted'] is not True)):
             raise ValueError('provider qualification incomplete')
+        if controlled:
+            from .openrouter_controlled import validate_profile
+            validate_profile(checked)
         return checked
     except (ValueError, TypeError, KeyError, OverflowError):
         raise ProviderError('explicit source-bound, unexpired, verified operator authorization required') from None
