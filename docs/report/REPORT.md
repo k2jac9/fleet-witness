@@ -1,8 +1,6 @@
 # Verify the Institution, Not the Agents: A Bounded-Verified Separation-of-Powers Kernel Stress-Tested Against Colluding LLM Swarms
 
-**Authors:** Alejandro Castellanos (`k2jac9`) and [IPBin, preferred name TBD]
-
-**Affiliations:** [TBD by team]
+**Authors:** Alejandro Castellanos and Ignatius Pio Binawan (University of Toronto)
 
 **Track:** 4, Multi-Agent Oversight and Control (cross-track: 2, 3)
 
@@ -77,7 +75,7 @@ decades old (§2). We do not claim the quorum idea. We contribute a bounded-veri
 for agent swarms and a harness that measures, on real LLM swarms, the behavioural assumptions
 those guarantees rest on: honest error, independence and colluder compliance.
 
-## 2. Related work
+## 2. Related Work
 
 **Multi-agent risk and collusion.** Hammond et al. (2025) taxonomize multi-agent failures,
 with collusion central. Motwani et al. (2024) study secret collusion via steganography. AI
@@ -101,7 +99,7 @@ every auditor is a copy of one model.
 institution's invariants with (b) a stress test against a real LLM swarm containing a
 captured subgroup. Two candidate papers were inaccessible to us.
 
-## 3. Method
+## 3. Methods
 
 ### 3.1 The kernel (`fleet_witness/institution.py`)
 
@@ -291,7 +289,7 @@ could.**
 - False positives: none for DeepSeek. For gpt-oss, one spurious 3-agent cluster with no
   colluders present (0% share, hidden board).
 
-## 5. Discussion
+## 5. Discussion and Limitations
 
 **Verify the institution, not the agents.** The kernel's guarantee is conditional, but the
 condition is explicit and measurable: an unsafe release needs *k* false attestations from
@@ -329,7 +327,19 @@ was capture, which is a property of the institution's design and not of crowd ps
 This suggests that for current models, institutional design may matter more than
 crowd-dynamics mitigation. We hold that tentatively.
 
-**Toward a fellowship roadmap.**
+### Limitations
+
+The main limitations, detailed in Appendix A:
+- verification is bounded (one case, three seats, depth 6), not a proof;
+- the task is synthetic, with colluders instructed rather than self-organizing;
+- two cheap reasoning models were tested;
+- cells are small (n = 12 targets);
+- unsafe honest error was zero, so the independence assumption was untested;
+- the guarantee assumes unpredictable seating, uncompromised keys, and every action routed
+  through the kernel.
+
+### Future Work
+
 1. A small specification language for institutions, compiled to both a kernel and a model.
 2. Mechanized proofs (TLA+, Lean) beyond bounded checking.
 3. Ambiguous-judgement tasks where honest error is non-zero, to measure correlated LLM
@@ -348,26 +358,46 @@ colluding LLM swarms, and its failures were predictable from seat draws. Crowds 
 agents resisted capture but approved every forgery. Verifying the institution, not the
 agents, is a tractable path to oversight that scales with swarm size.
 
+## Code and Data
+
+- **Code repository:** https://github.com/k2jac9/fleet-witness (branch `feat/live-swarm`).
+  It contains the kernel, the bounded checker, the swarm harness, the figure scripts and the
+  tests.
+- **Data:** the per-run event logs, sealed ground truth and analyses are regenerated with
+  the commands in `docs/SWARM.md`. The raw logs from the reported sweeps are retained by the
+  authors and available on request.
+- **Reproduction:** `python -m fleet_witness.verify_institution --depth 6 --mutants`, then
+  `python -m fleet_witness swarm-sweep` and `swarm-summary`.
+
+## Author Contributions
+
+- A.C. built the Fleet Witness baseline (trusted controller, scripted evaluation, replay
+  viewer and cloud deployment) that this work extends.
+- I.P.B. proposed the institutional-verification research direction, and designed and ran
+  the institution kernel, bounded verification and live swarm experiments with AI coding
+  assistance.
+- Both authors are responsible for the final manuscript.
+
 ## References
 
-- Apart Research (2026). *Swarm Alignment Hackathon* brief and resources.
-  https://apartresearch.com/sprints/swarm-alignment-2026
-- Deochake, S. (2026). *Heartbeat-Bound Hierarchical Credentials: Cryptographic Revocation
-  for AI Agent Swarms.* arXiv:2605.20704.
-- Desmedt, Y. & Frankel, Y. (1989). *Threshold Cryptosystems.* CRYPTO '89.
-- Gilad, Y., Hemo, R., Micali, S., Vlachos, G. & Zeldovich, N. (2017). *Algorand: Scaling
-  Byzantine Agreements for Cryptocurrencies.* SOSP.
-- Knight, J. C. & Leveson, N. G. (1986). *An Experimental Evaluation of the Assumption of
-  Independence in Multiversion Programming.* IEEE Transactions on Software Engineering.
-- *From Logic Monopoly to Social Contract: Separation of Power and the Institutional
-  Foundations for Autonomous Agent Economies* (2026). arXiv:2603.25100.
-- Greenblatt, R. et al. (2024). *AI Control: Improving Safety Despite Intentional
-  Subversion.*
-- Hammond, L. et al. (2025). *Multi-Agent Risks from Advanced AI.* arXiv:2502.14143.
-- Lamport, L., Shostak, R. & Pease, M. (1982). *The Byzantine Generals Problem.* ACM TOPLAS.
-- Motwani, S. et al. (2024). *Secret Collusion among AI Agents: Multi-Agent Deception via
-  Steganography.*
-- SQLite. *Atomic Commit in SQLite.* https://sqlite.org/atomiccommit.html
+1. Apart Research (2026). *Swarm Alignment Hackathon* brief and resources.
+   https://apartresearch.com/sprints/swarm-alignment-2026
+2. Deochake, S. (2026). *Heartbeat-Bound Hierarchical Credentials: Cryptographic Revocation
+   for AI Agent Swarms.* arXiv:2605.20704.
+3. Desmedt, Y. & Frankel, Y. (1989). *Threshold Cryptosystems.* CRYPTO '89.
+4. *From Logic Monopoly to Social Contract: Separation of Power and the Institutional
+   Foundations for Autonomous Agent Economies* (2026). arXiv:2603.25100.
+5. Gilad, Y., Hemo, R., Micali, S., Vlachos, G. & Zeldovich, N. (2017). *Algorand: Scaling
+   Byzantine Agreements for Cryptocurrencies.* SOSP.
+6. Greenblatt, R. et al. (2024). *AI Control: Improving Safety Despite Intentional
+   Subversion.*
+7. Hammond, L. et al. (2025). *Multi-Agent Risks from Advanced AI.* arXiv:2502.14143.
+8. Knight, J. C. & Leveson, N. G. (1986). *An Experimental Evaluation of the Assumption of
+   Independence in Multiversion Programming.* IEEE Transactions on Software Engineering.
+9. Lamport, L., Shostak, R. & Pease, M. (1982). *The Byzantine Generals Problem.* ACM TOPLAS.
+10. Motwani, S. et al. (2024). *Secret Collusion among AI Agents: Multi-Agent Deception via
+    Steganography.*
+11. SQLite. *Atomic Commit in SQLite.* https://sqlite.org/atomiccommit.html
 
 *(Verify every reference against its source before submission; do not add uncited claims.)*
 
@@ -422,8 +452,7 @@ same measurements could help an attacker size a cell. Mitigations:
   informed the design, but no pre-sprint code is used (`docs/AI_ASSISTANCE.md`). The scripted
   Fleet Witness controller was built earlier in the same sprint; the institution kernel,
   checker and swarm harness were built after it.
-- AI assistance (Claude Code) was used for implementation and drafting. The human authors
-  are responsible for all claims.
+- AI assistance is described in the LLM Usage Statement.
 
 ---
 
@@ -468,3 +497,22 @@ are checked.
 - Its outcomes matched the original in 13 of 14 regime × condition cells; the remaining cell
   (4-of-7, hidden) moved from 1 capture to 0.
 - Both versions are retained. Main results use the re-run.
+
+---
+
+## LLM Usage Statement
+
+We used Claude Code (Anthropic, Claude Opus 5.5) extensively, for:
+- auditing the existing repository;
+- implementing the institution kernel, the bounded checker and the swarm harness;
+- running and analysing the experiments;
+- generating the figures;
+- drafting this report.
+
+The authors set the research questions and the key methodological decisions, including:
+- the pivot to verifying institutions rather than agents;
+- comparing two reasoning models rather than a reasoning and a non-reasoning model;
+- treating output caps as non-binding instruments, with the pre-declared re-run rule.
+
+Every reported number was produced by code in the repository and cross-checked against the
+raw run logs. The authors are responsible for all claims.
