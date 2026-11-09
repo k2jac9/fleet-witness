@@ -50,7 +50,7 @@ class TransportFailure(ProviderError):
         self.error_code, self.raw, self.http_status = code, raw, http_status
 
 
-def _post(url, key, body, timeout, *, max_response_bytes=1048576):
+def _post(url, key, body, timeout, *, max_response_bytes=1048576, ssl_context=None):
     """One direct HTTPS exchange; no proxy discovery, redirect, or retry layer.
 
     A daemon worker bounds caller latency even if OS name resolution stalls.
@@ -66,7 +66,8 @@ def _post(url, key, body, timeout, *, max_response_bytes=1048576):
     cancelled = threading.Event()
 
     def exchange():
-        connection = http.client.HTTPSConnection(parsed.hostname, timeout=timeout)
+        connection = http.client.HTTPSConnection(parsed.hostname, timeout=timeout,
+                         **({'context': ssl_context} if ssl_context is not None else {}))
         try:
             connection.connect()
             if cancelled.is_set() or time.monotonic() >= deadline:
@@ -149,7 +150,23 @@ def _parse_json(raw, limit):
 
 
 def _redact(raw, key):
-    return raw.replace(key.encode(), b'[REDACTED]').replace(canonical_json(key)[1:-1].encode(), b'[REDACTED]')
+    literal, escaped = key.encode(), canonical_json(key)[1:-1].encode()
+    # Decode JSON unicode escapes also for incomplete/invalid bodies. This
+    # detection covers mixed literal/escaped ASCII credentials without making
+    # acceptance of malformed JSON a prerequisite for secret protection.
+    decoded = re.sub(rb'\\u([0-9a-fA-F]{4})',
+                     lambda match: chr(int(match[1], 16)).encode('utf-8', errors='surrogatepass'), raw)
+    try:
+        normalized = json.dumps(json.loads(raw), ensure_ascii=True, default=str).encode()
+    except (ValueError, TypeError, UnicodeError, RecursionError):
+        normalized = None
+    if normalized is not None and (literal in normalized or escaped in normalized):
+        return normalized.replace(literal, b'[REDACTED]').replace(escaped, b'[REDACTED]')
+    if literal in decoded or escaped in decoded:
+        # A malformed escaped echo cannot safely be kept as raw text. Preserve
+        # its identity, never the reversible secret-bearing representation.
+        return b'[REDACTED unsafe response; sha256=' + hashlib.sha256(raw).hexdigest().encode() + b']'
+    return raw.replace(literal, b'[REDACTED]').replace(escaped, b'[REDACTED]')
 
 
 class ModelClient:
@@ -161,6 +178,7 @@ class ModelClient:
         self.max_output_tokens, self.temperature, self.timeout = max_output_tokens, temperature, timeout
         self.authorization = validate_authorization(authorization, provider=provider, model=model, ledger=ledger,
                                                    max_output_tokens=max_output_tokens, timeout=timeout)
+        self._initial_authorization_json = canonical_json(self.authorization)
         if type(max_concurrency) is not int or max_concurrency != 1:
             raise ProviderError('exactly one in-flight request is permitted')
         if isinstance(temperature, bool) or not isinstance(temperature, (int, float)) or not 0 <= temperature <= 2:
@@ -187,10 +205,11 @@ class ModelClient:
         output_bound = self.authorization['max_output_tokens']
         return dollars(units((input_bound * self.prices[0] + output_bound * self.prices[1]) / Decimal(1000000)))
 
-    def _body(self, system, user, cap):
+    def _body(self, system, user, cap, *, authorization=None):
+        authorization = self.authorization if authorization is None else authorization
         if (not isinstance(system, str) or not isinstance(user, str) or
-                len(system.encode()) + len(user.encode()) > self.authorization['max_input_bytes'] or
-                type(cap) is not int or not 1 <= cap <= self.authorization['max_output_tokens']):
+                len(system.encode()) + len(user.encode()) > authorization['max_input_bytes'] or
+                type(cap) is not int or not 1 <= cap <= authorization['max_output_tokens']):
             raise ProviderError('request exceeds authorized input/output bounds')
         if not isinstance(self.extra_body, dict) or set(self.extra_body) - {'reasoning'}:
             raise ProviderError('protected or unsupported request extension')
@@ -205,11 +224,23 @@ class ModelClient:
             return {'model': self.model, 'instructions': system, 'input': user, 'max_output_tokens': cap,
                     'temperature': self.temperature, 'store': False, 'tools': [], 'tool_choice': 'none',
                     'agentic_memory': False, 'background': False}
-        return {'model': self.model, 'messages': [{'role': 'system', 'content': system},
+        body = {'model': self.model, 'messages': [{'role': 'system', 'content': system},
                     {'role': 'user', 'content': user}], 'max_tokens': cap, 'temperature': self.temperature,
                 'usage': {'include': True}, 'stream': False, 'tools': [], 'tool_choice': 'none', **extra}
+        if authorization['schema_version'] == 'controlled-openrouter-v1':
+            from .openrouter_controlled import request_fields
+            if self.extra_body:
+                raise ProviderError('controlled request extensions refused')
+            profile = authorization['openrouter']
+            body.pop('temperature')
+            body.pop('max_tokens')
+            body[profile['output_token_parameter']] = cap
+            body.update(request_fields(profile, authorization['pricing']))
+        return body
 
     def complete(self, system, user, meta=None):
+        if self.authorization['schema_version'] == 'controlled-openrouter-v1':
+            raise ProviderError('controlled profile requires the supervisor input boundary')
         return self._attempt(system, user, self.max_output_tokens)
 
     def recommend(self, facts, presentation):
@@ -221,8 +252,8 @@ class ModelClient:
         """
         from ..gateway import provider_input
         visible = provider_input(facts, presentation)
-        if self.provider != 'adaption':
-            raise ProviderError('controlled supervisor supports Adaption only')
+        if self.provider != 'adaption' and self.authorization['schema_version'] != 'controlled-openrouter-v1':
+            raise ProviderError('controlled OpenRouter requires its qualified profile')
         return self._attempt(visible['instruction'], canonical_json(visible['facts']),
                              self.max_output_tokens, contract='supervisor-v1')
 
@@ -230,16 +261,32 @@ class ModelClient:
         started = time.monotonic()
         authorization = validate_authorization(self.authorization, provider=self.provider, model=self.model,
                 ledger=self.ledger, max_output_tokens=cap, timeout=self.timeout)
-        body = self._body(system, user, cap)
+        if canonical_json(authorization) != self._initial_authorization_json:
+            raise ProviderError('authorization changed after client construction')
+        self.prices = tuple(Decimal(str(authorization['pricing'][name]))
+                            for name in ('input_per_million', 'output_per_million'))
+        body = self._body(system, user, cap, authorization=authorization)
         request_raw = canonical_json(body).encode()
         input_bound = len(request_raw) + 512
-        reserved = self.worst_case_usd(system, user, cap)
+        reserved = dollars(units((input_bound * self.prices[0] + cap * self.prices[1]) / Decimal(1000000)))
         if (contract == 'supervisor-v1' and authorization['purpose'] == 'calibration'
                 and authorization['request_limit'] == 1):
             if units(reserved) > units(self.ledger.run_cap):
                 raise BudgetExceeded('calibration request exceeds its full reserved envelope')
             reserved = self.ledger.run_cap
-        key = _env_key('ADAPTION_API_KEY' if self.provider == 'adaption' else 'OPENROUTER_API_KEY')
+        transport_options = {}
+        if authorization['schema_version'] == 'controlled-openrouter-v1':
+            from . import secure_transport
+            if contract != 'supervisor-v1':
+                raise ProviderError('controlled profile requires the supervisor contract')
+            try:
+                transport = authorization['openrouter']['transport']
+                transport_options['ssl_context'] = secure_transport.prepare(transport)
+                key = secure_transport.read_key(transport)
+            except (ValueError, OSError):
+                raise ProviderError('controlled transport or credential qualification failed') from None
+        else:
+            key = _env_key('ADAPTION_API_KEY' if self.provider == 'adaption' else 'OPENROUTER_API_KEY')
         if key in system or key in user:
             raise ProviderError('credential material forbidden in model inputs')
         identity = self.ledger.reserve(reserved, request=body, authorization=authorization)
@@ -257,18 +304,23 @@ class ModelClient:
             attempt['provider_attempts'] = 1
             raw = _post(authorization['endpoint'], key, body,
                         min(self.timeout, max(.001, authorization['expires_at'] - time.time())),
-                        max_response_bytes=authorization['max_response_bytes'])
+                        max_response_bytes=authorization['max_response_bytes'], **transport_options)
             if isinstance(raw, bytes):
                 attempt['response_sha256'] = hashlib.sha256(raw).hexdigest()
             data = _parse_json(raw, authorization['max_response_bytes'])
+            self._accounting_identity(data, attempt, key)
             # Extract known liability before validating content and authorized caps.
             # Excess tokens remain billable even though they invalidate the outcome.
             usage = data.get('usage')
             if isinstance(usage, dict):
+                if authorization['schema_version'] == 'controlled-openrouter-v1':
+                    from .openrouter_controlled import known_cost_liability
+                    liability = known_cost_liability(usage)
                 names = ('input_tokens', 'output_tokens') if self.provider == 'adaption' else ('prompt_tokens', 'completion_tokens')
                 counts = tuple(usage.get(name) for name in names)
                 if all(type(count) is int and 0 <= count <= 2**53 for count in counts):
-                    liability = (counts[0] * self.prices[0] + counts[1] * self.prices[1]) / Decimal(1000000)
+                    liability = max(liability or Decimal(0),
+                        (counts[0] * self.prices[0] + counts[1] * self.prices[1]) / Decimal(1000000))
                 if 'cost' in usage:
                     liability = max(liability or Decimal(0), decimal_usd(usage['cost'], liability=True))
             canonical_response = json.dumps(data, sort_keys=True, separators=(',', ':'), ensure_ascii=True,
@@ -280,7 +332,13 @@ class ModelClient:
             text, tokens_in, tokens_out, finish, truncated = self._outcome(data, cap, input_bound)
             proposal = None
             if contract == 'supervisor-v1':
-                self._supervisor_envelope(data)
+                if self.provider == 'openrouter':
+                    from .openrouter_controlled import validate_envelope
+                    validate_envelope(data, authorization)
+                    attempt['provider_reported_cost_usd'] = str(decimal_usd(data['usage']['cost'], liability=True))
+                    attempt['accounting_method'] = 'max_conservative_token_bound_and_reported_charge'
+                else:
+                    self._supervisor_envelope(data)
                 from ..gateway import ProviderReply, _proposal
                 proposal = _proposal(ProviderReply(text, None,
                                     status='incomplete' if truncated else 'completed'))
@@ -311,6 +369,26 @@ class ModelClient:
                 raw = error.raw
                 attempt['http_status'] = error.http_status
                 code = error.error_code
+                # An HTTP failure can still carry a known charge. It remains a
+                # held failure, but a charge above the reservation must survive.
+                if isinstance(raw, bytes):
+                    try:
+                        failure_data = _parse_json(raw, authorization['max_response_bytes'])
+                        self._accounting_identity(failure_data, attempt, key)
+                        usage = failure_data.get('usage')
+                        if isinstance(usage, dict):
+                            if authorization['schema_version'] == 'controlled-openrouter-v1':
+                                from .openrouter_controlled import known_cost_liability
+                                liability = max(liability or Decimal(0), known_cost_liability(usage))
+                            names = ('input_tokens', 'output_tokens') if self.provider == 'adaption' else ('prompt_tokens', 'completion_tokens')
+                            counts = tuple(usage.get(name) for name in names)
+                            if all(type(count) is int and 0 <= count <= 2**53 for count in counts):
+                                liability = max(liability or Decimal(0),
+                                    (counts[0] * self.prices[0] + counts[1] * self.prices[1]) / Decimal(1000000))
+                            if 'cost' in usage:
+                                liability = max(liability or Decimal(0), decimal_usd(usage['cost'], liability=True))
+                    except (ValueError, TypeError, KeyError, UnicodeError, RecursionError):
+                        pass
             elif isinstance(error, (ValueError, TypeError, KeyError, UnicodeError, RecursionError)):
                 code = 'invalid_response'
             else:
@@ -336,6 +414,18 @@ class ModelClient:
                 attempt['error_code'] = 'receipt_persistence_failure'
             raise ProviderError('provider attempt unresolved; operator reconciliation required',
                                 attempts=[attempt], status=status) from None
+
+    def _accounting_identity(self, data, attempt, key):
+        """Recover reconciliation identity before content/identity acceptance."""
+        provider_id = data.get('id')
+        if (isinstance(provider_id, str) and re.fullmatch(r'[A-Za-z0-9_.:-]{1,128}', provider_id)
+                and key not in provider_id):
+            attempt['provider_request_id'] = provider_id
+        if self.provider == 'openrouter' and isinstance(data.get('usage'), dict) and 'cost' in data['usage']:
+            try:
+                attempt['provider_reported_cost_usd'] = str(decimal_usd(data['usage']['cost'], liability=True))
+            except ValueError:
+                pass
 
     def _supervisor_envelope(self, data):
         """Verify identities and a single assistant text message before proposing."""
@@ -412,6 +502,11 @@ class ModelClient:
                     message.get('role') not in (None, 'assistant')):
                 raise ValueError('unexpected tool/role output')
             text = message.get('content')
+            if (text is None and truncated and
+                    self.authorization['schema_version'] == 'controlled-openrouter-v1'):
+                # A reasoning-only completion may exhaust the combined cap
+                # without visible content. It is a billed invalid proposal.
+                text = ''
         if (type(tokens_in) is not int or type(tokens_out) is not int or
                 not 0 <= tokens_in <= input_bound or not 0 <= tokens_out <= cap or not isinstance(text, str)):
             raise ValueError('invalid or excess usage/content')

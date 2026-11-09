@@ -1,5 +1,45 @@
 # Build and deployment verification
 
+## Controlled OpenRouter implementation candidate: 2026-11-09
+
+Task `openrouter-calibration-20261109`, base `14f3b399`, isolated branch
+`feat/openrouter-calibration-20261109`, adds the qualified OpenRouter supervisor
+profile, pinned transport/private-file loading, and provider selection in the
+one-request runner. Existing Adaption and generic fixture paths remain distinct.
+No accepted ADR or historical receipt was changed.
+
+Observed so far: clean-base 254 Python tests; six new transport tests RED then
+GREEN, including actual local TLS hostname and alternate-root rejection; twelve
+OpenRouter behavioral tests GREEN after retained RED runs. The first combined
+271-test run found one legacy test constructing an uninitialized client; that
+fixture now uses a real client/ledger and its 26-test provider suite passes.
+Five viewer tests pass. Inherited SQLite ResourceWarnings remain visible.
+Latest-stable Python 3.15.2 was downloaded with the committed archive hash;
+explicit loader/library smoke tests pass without changing workstation defaults.
+The combined suite subsequently passed **272 Python tests** on the explicit
+Python 3.15.2 runtime/loader/library set. Actual provider hostname TLS passed
+without credentials; the pinned GTS-root subset from NSS 3.131.1 rejected all
+16 retained compromised-chain fixtures with server purpose and hostname checks.
+Private credential metadata and absence of running local fleet worker services
+were checked. This is trusted-host-only evidence, not hostile-process isolation.
+Hosted runtime CI, independent implementation review, merge, paid calibration
+and charge reconciliation remain pending at this checkpoint. No paid model
+request has been sent by this task.
+
+Evidence: `/home/neo/Projects/fleet-witness-artifacts/openrouter-calibration-20261109/`.
+
+Independent review of `ee7010f` reproduced three important findings: Unicode-
+escaped credential echoes in HTTP-error receipts, unqualified usage/cost details,
+and valid-looking mutation of an initially accepted authorization. Follow-up
+tests reproduced all three before fixes. The focused suite now passes 17 tests,
+including larger cost holds, field-specific usage validation, immutable initial
+authorization identity and provider price limits. The reviewer's first full-suite
+invocation omitted child-process loader configuration and failed; that evidence
+is preserved separately from the integrator's passing invocation. Re-review and
+CI must bind the corrected commit before integration or inference.
+The corrected full suite passed **277 Python tests and five viewer tests** on
+the pinned Python 3.15.2 launch environment; `git diff --check` passed.
+
 ## Calibration ceiling update: 2026-11-09
 
 Task `calibration-budget-15-20261109` extends the existing isolated PR #7 branch

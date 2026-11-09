@@ -40,7 +40,9 @@ def _record(path):
         raise ValueError('calibration requires exactly one provider/model record')
     record = validate_record(next(iter(records.values())))
     canonical_ledger = providers.LEDGER_DIR / 'spend-ledger.sqlite3'
-    if (record['provider'] != 'adaption' or record['purpose'] != 'calibration' or
+    qualified_provider = (record['provider'] == 'adaption' or
+                          (record['provider'] == 'openrouter' and record['schema_version'] == 'controlled-openrouter-v1'))
+    if (not qualified_provider or record['purpose'] != 'calibration' or
             record['request_limit'] != 1 or not 0 < units(record['run_cap_usd']) <= units(15) or
             record['max_output_tokens'] > 256 or record['timeout_s'] > 30 or
             record['ledger_path'] != str(canonical_ledger)):
@@ -89,7 +91,7 @@ def run_calibration(authorization_path, output_dir, *, live=False):
                 'visible_sha256': hashlib.sha256(canonical_json(visible).encode()).hexdigest(),
                 'controller_effect': None, 'account_reconciliation': 'required'}
     _write_private(output, 'manifest.json', manifest)
-    client = operator.authorized_client('adaption', record['model'], authorization_path, temperature=0)
+    client = operator.authorized_client(record['provider'], record['model'], authorization_path, temperature=0)
     # Detect replacement of the operator record between validation and opening.
     if client.authorization != record:
         raise ValueError('calibration authorization changed during preparation')
