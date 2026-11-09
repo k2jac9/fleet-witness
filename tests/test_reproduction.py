@@ -181,6 +181,25 @@ class ReproductionTest(unittest.TestCase):
         self.assertIn('missing required sweep', result.stderr)
         self.assertFalse(output.exists())
 
+    def test_reproduction_rejects_wrong_model_and_configuration_before_output(self):
+        from scripts.reproduce_tables import reproduce
+        for model, error in [('openrouter:openai/gpt-oss-20b', 'model'),
+                             ('openrouter:deepseek/deepseek-v4-flash-0731', 'configuration')]:
+            with self.subTest(model=model), tempfile.TemporaryDirectory() as temp:
+                inputs = Path(temp) / 'inputs'
+                for i, fraction in enumerate((0, .1, .2, .3, .4, .5)):
+                    directory = inputs / 'sweep-deepseek2k' / f'f{i * 10:02d}'
+                    run_swarm(directory, FakeClient(), agents=7, cases=1,
+                              conditions=['hidden-cell', 'visible-cell'], cell_fraction=fraction, seed=1000+i)
+                    path = directory / 'manifest.json'
+                    manifest = json.loads(path.read_text())
+                    manifest['model'] = model  # Synthetic fixture with deliberately wrong report identity.
+                    path.write_text(json.dumps(manifest))
+                output = Path(temp) / 'derived'
+                with self.assertRaisesRegex(ValueError, error):
+                    reproduce(inputs, output, skip_checker=True)
+                self.assertFalse(output.exists())
+
 
 if __name__ == '__main__':
     unittest.main()

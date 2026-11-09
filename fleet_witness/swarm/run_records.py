@@ -9,7 +9,7 @@ import sys
 import threading
 
 ATTEMPT_FIELDS = frozenset({
-    'attempt_id', 'provider', 'model', 'status', 'provider_request_id',
+    'attempt_id', 'provider', 'model', 'status', 'provider_request_id', 'provider_attempts',
     'input_tokens', 'output_tokens', 'cost_usd', 'held_usd', 'reserved_usd',
     'request_sha256', 'response_sha256', 'latency_s', 'finish_reason', 'truncated',
     'http_status', 'error_code',
@@ -87,7 +87,8 @@ class PrivateRunLog:
     def summary(self):
         with self._lock:
             return {'logical_requests': self._logical_requests,
-                    'provider_attempts': len(self._attempts),
+                    'provider_attempts': sum(a.get('provider_attempts', 0) for a in self._attempts),
+                    'reservations': len(self._attempts),
                     'attempt_ids': [a['attempt_id'] for a in self._attempts],
                     'cost_usd': round(sum(a.get('cost_usd') or 0.0 for a in self._attempts), 9),
                     'held_usd': round(sum(a.get('held_usd') or 0.0 for a in self._attempts), 9)}

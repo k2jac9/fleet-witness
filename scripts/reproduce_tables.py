@@ -24,6 +24,26 @@ from fleet_witness.swarm.sweep import summarize, format_summary
 MAIN_ROOTS = ('sweep-deepseek2k', 'sweep-gptoss')
 AMBIG_ROOTS = {name: tuple(f'ambig-{stem}-s{seed}' for seed in (3000, 4000, 5000))
                for name, stem in (('DeepSeek', 'deepseek'), ('gpt-oss', 'gptoss'))}
+MODELS = {'DeepSeek': 'openrouter:deepseek/deepseek-v4-flash-0731',
+          'gpt-oss': 'openrouter:openai/gpt-oss-20b'}
+
+
+def validate_sweep_identity(name, runs):
+    """Bind this published dataset's labels to recorded model and experiment identities."""
+    label = 'DeepSeek' if 'deepseek' in name else 'gpt-oss'
+    mode = 'standard' if name in MAIN_ROOTS else 'ambiguous'
+    seed_base = 1000 if name in MAIN_ROOTS else int(name.rsplit('-s', 1)[1])
+    expected = {'agents': 50, 'cases': 24, 'waves': 5, 'max_output_tokens': 2000,
+                'conditions': ['hidden-cell', 'visible-cell']}
+    for run in runs:
+        manifest = run['manifest']
+        if manifest.get('model') != MODELS[label]:
+            raise ValueError(f'model identity differs from declared dataset: {name}')
+        if (any(manifest.get(key) != value for key, value in expected.items())
+                or manifest.get('case_mode', 'standard') != mode
+                or manifest['seed'] != seed_base + round(manifest['cell_fraction'] * 1000)):
+            raise ValueError(f'experiment configuration differs from declared dataset: {name}')
+    return {'label': label, 'model': MODELS[label], 'case_mode': mode, 'seed_base': seed_base, **expected}
 
 
 def _write(root, name, value):
@@ -41,7 +61,7 @@ def reproduce(input_root, output_root, *, skip_checker=False):
     if output_root.resolve().is_relative_to(input_root):
         raise ValueError('output root must be outside the immutable input root')
     roots = [*MAIN_ROOTS, *(name for group in AMBIG_ROOTS.values() for name in group)]
-    loaded = {}
+    loaded, identities = {}, {}
     # Validate every required main/near-miss input before creating output. A
     # missing fraction is not silently turned into a smaller report denominator.
     for name in roots:
@@ -52,6 +72,7 @@ def reproduce(input_root, output_root, *, skip_checker=False):
         expected = {0, .1, .2, .3, .4, .5} if name in MAIN_ROOTS else {0, .3}
         if {r['manifest']['cell_fraction'] for r in runs} != expected:
             raise ValueError(f'incomplete sweep fractions: {root}')
+        identities[name] = validate_sweep_identity(name, runs)
         loaded[name] = runs
     input_hashes = {str(p.relative_to(input_root)): hashlib.sha256(p.read_bytes()).hexdigest()
                     for p in input_root.rglob('*') if p.is_file()}
@@ -75,6 +96,7 @@ def reproduce(input_root, output_root, *, skip_checker=False):
             directories = [r['directory'] for name in names for r in loaded[name]]
             ambiguous[label] = independence.load(directories)
             independent_results[label] = {
+                'model': MODELS[label],
                 'share_0': independence.analyze(label, ambiguous[label], 0.0),
                 'share_30': independence.analyze(label, ambiguous[label], 0.3)}
         independence.mixed(*ambiguous.values())
@@ -104,6 +126,7 @@ def reproduce(input_root, output_root, *, skip_checker=False):
                   'source_worktree_dirty': bool(subprocess.check_output(
                       ['git', 'status', '--porcelain'], cwd=REPO, text=True).strip()),
                   'source_files_sha256': {p: hashlib.sha256((REPO / p).read_bytes()).hexdigest() for p in source_paths},
+                  'dataset_identities': identities,
                   'input_root': str(input_root), 'input_files_sha256': input_hashes,
                   'inputs_unchanged': True, 'checker': checker,
                   'output_files_sha256': {str(p.relative_to(output_root)): hashlib.sha256(p.read_bytes()).hexdigest()

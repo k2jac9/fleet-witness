@@ -12,6 +12,7 @@ from unittest.mock import patch
 
 from fleet_witness.swarm.providers import FakeClient, ProviderError
 from fleet_witness.swarm.runner import run_swarm
+from test_swarm_provider import SyntheticSourceTestCase
 
 
 class RecordedClient(FakeClient):
@@ -31,6 +32,7 @@ class RecordedClient(FakeClient):
             self.count += 1
             number = self.count
         attempt = {'attempt_id': f'attempt-{number}', 'provider': 'test', 'model': 'synthetic',
+                   'provider_attempts': 1,
                    'status': 'unresolved' if self.fail else 'settled',
                    'provider_request_id': f'response-{number}', 'input_tokens': 12, 'output_tokens': 8,
                    'cost_usd': 0.0001, 'held_usd': 0.0002 if self.fail else 0.0,
@@ -52,7 +54,7 @@ class RecordedClient(FakeClient):
         return result
 
 
-class RunProvenanceTest(unittest.TestCase):
+class RunProvenanceTest(SyntheticSourceTestCase):
     def run_fixture(self, root, client):
         return run_swarm(root / 'run', client, agents=7, cases=1,
                          conditions=['hidden-cell'], cell_fraction=0.3, seed=42)
@@ -244,7 +246,33 @@ class JudgeAccountingTest(unittest.TestCase):
             self.assertNotIn('PRIVATE-EXTRA-MUST-NOT-BE-PUBLIC', json.dumps(result))
 
 
-class ReviewAccountingTest(unittest.TestCase):
+class ReviewAccountingTest(SyntheticSourceTestCase):
+    def test_unsent_reservation_is_preserved_but_not_counted_as_dispatch(self):
+        from fleet_witness.swarm import providers as p
+        from fleet_witness.swarm.run_records import PrivateRunLog, public_attempts
+        from test_swarm_provider import authorization
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            ledger = p.Ledger('openrouter', 1, 1, root / 'ledger.sqlite3')
+            client = p.ModelClient('openrouter', 'fixture-model', ledger, authorization=authorization(ledger),
+                                   max_output_tokens=100, timeout=1)
+            receipts = PrivateRunLog(root)
+            try:
+                with patch.object(ledger, 'dispatch', side_effect=OSError('synthetic persistence failure')), \
+                        patch.object(p, '_env_key', return_value='synthetic-key'), \
+                        patch.object(p, '_post', side_effect=AssertionError('network called')):
+                    with self.assertRaises(ProviderError) as caught:
+                        client.complete('s', 'u')
+                error = caught.exception
+                receipts.write('logical-1', 's', 'u', None, error.status, public_attempts(error.attempts))
+                self.assertEqual(error.provider_attempts, 0)
+                self.assertEqual(ledger.calls, 0)
+                self.assertEqual(receipts.summary()['provider_attempts'], 0)
+                self.assertEqual(len(receipts.summary()['attempt_ids']), 1)
+                self.assertGreater(receipts.summary()['held_usd'], 0)
+            finally:
+                receipts.close()
+
     def test_review_receipts_preserve_failed_and_truncated_attempts(self):
         sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
         import peer_review

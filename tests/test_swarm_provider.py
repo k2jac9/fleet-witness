@@ -12,6 +12,20 @@ from unittest.mock import patch
 from fleet_witness.swarm import providers as p
 
 
+class SyntheticSourceTestCase(unittest.TestCase):
+    """Git-free offline workers use a synthetic test identity, never paid authority."""
+    def setUp(self):
+        super().setUp()
+        from fleet_witness.swarm import authorization as gate
+        identity = p.source_identity()
+        if identity['source_commit'] is None:
+            identity = {**identity, 'source_commit': 'f' * 40}
+            for module in (p, gate):
+                substitute = patch.object(module, 'source_identity', return_value=identity)
+                substitute.start()
+                self.addCleanup(substitute.stop)
+
+
 def authorization(ledger, *, provider='openrouter', purpose='calibration'):
     identity = p.source_identity()
     now = int(time.time())
@@ -43,7 +57,7 @@ def reply(*, tokens=98, finish='stop', usage=True, cost=None):
     return data
 
 
-class ProviderBoundaryTest(unittest.TestCase):
+class ProviderBoundaryTest(SyntheticSourceTestCase):
     def ledger(self, root):
         return p.Ledger('openrouter', 1, 1, Path(root) / 'ledger.sqlite3')
 
@@ -62,6 +76,50 @@ class ProviderBoundaryTest(unittest.TestCase):
             with self.assertRaises(p.ProviderError):
                 p.ModelClient('openrouter', 'fixture-model', self.ledger(tmp))
             self.assertEqual(touched, [])
+
+    def test_models_share_request_limit_across_restart(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger = self.ledger(tmp)
+            first = authorization(ledger)
+            first['request_limit'] = 1
+            client = self.client(ledger, first)
+            with patch.object(p, '_post', return_value=json.dumps(reply()).encode()) as transport, \
+                    patch.object(p, '_env_key', return_value='synthetic-key'):
+                client.complete('s', 'u')
+                resumed = p.Ledger('openrouter', 1, 1, ledger.path, run_id=ledger.run_id)
+                second = {**first, 'authorization_id': 'second-model-record', 'model': 'second-model'}
+                other = p.ModelClient('openrouter', 'second-model', resumed, authorization=second,
+                                      max_output_tokens=100, timeout=1)
+                with self.assertRaises(p.BudgetExceeded):
+                    other.complete('s', 'u')
+                self.assertEqual(transport.call_count, 1)
+                self.assertEqual(resumed.calls, 1)
+
+    def test_replacement_record_cannot_raise_shared_request_cap(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger = self.ledger(tmp)
+            first = authorization(ledger)
+            first['request_limit'] = 2
+            client = self.client(ledger, first)
+            with patch.object(p, '_post', return_value=json.dumps(reply()).encode()) as transport, \
+                    patch.object(p, '_env_key', return_value='synthetic-key'):
+                client.complete('s', 'u')
+                replacement = {**first, 'authorization_id': 'replacement', 'request_limit': 3}
+                changed = self.client(ledger, replacement)
+                with self.assertRaises(p.BudgetExceeded):
+                    changed.complete('s', 'u')
+                self.assertEqual(transport.call_count, 1)
+
+    def test_production_missing_commit_is_rejected_before_io(self):
+        from fleet_witness.swarm import authorization as gate
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger = self.ledger(tmp)
+            record = authorization(ledger)
+            missing = {**p.source_identity(), 'source_commit': None}
+            with patch.object(gate, 'source_identity', return_value=missing), \
+                    patch.object(p, '_env_key', side_effect=AssertionError('credential touched')):
+                with self.assertRaises(p.ProviderError):
+                    self.client(ledger, record)
 
     def test_truncation_never_retries_logical_request(self):
         client = object.__new__(p.ModelClient)
@@ -170,7 +228,7 @@ class ProviderBoundaryTest(unittest.TestCase):
             self.assertEqual(row[0], 'unresolved')
             self.assertIn('transport_failure', row[1])
 
-class AdditionalBoundaryTest(unittest.TestCase):
+class AdditionalBoundaryTest(SyntheticSourceTestCase):
     ledger = ProviderBoundaryTest.ledger
     client = ProviderBoundaryTest.client
 
@@ -268,7 +326,7 @@ class AdditionalBoundaryTest(unittest.TestCase):
                 with closing(sqlite3.connect(ledger.path)) as con:
                     self.assertEqual(con.execute('SELECT response_raw FROM requests').fetchone()[0], raw)
 
-class TransportBoundaryTest(unittest.TestCase):
+class TransportBoundaryTest(SyntheticSourceTestCase):
     def connection(self, *, status=200, raw=b'{}', connection_close=False):
         observed = {'hosts': [], 'requests': [], 'timeouts': [], 'closed': 0}
         class Socket:
@@ -344,7 +402,7 @@ class TransportBoundaryTest(unittest.TestCase):
         self.assertEqual(sent, [])
 
 
-class RecordPreflightTest(unittest.TestCase):
+class RecordPreflightTest(SyntheticSourceTestCase):
     def test_record_preflight_checks_source_and_authority_without_opening_ledger(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.assertTrue(callable(getattr(p, 'validate_record', None)), 'operator must validate before ledger initialization')
@@ -357,7 +415,7 @@ class RecordPreflightTest(unittest.TestCase):
                 with self.assertRaises(p.ProviderError): p.validate_record(record)
             self.assertFalse((Path(tmp) / 'unopened.sqlite3').exists())
 
-class DecimalUsageTest(unittest.TestCase):
+class DecimalUsageTest(SyntheticSourceTestCase):
     def test_reported_decimal_charge_rounds_up_without_float_loss(self):
         with tempfile.TemporaryDirectory() as tmp:
             ledger = p.Ledger('openrouter', 1, 1, Path(tmp) / 'ledger.sqlite3')
@@ -369,7 +427,7 @@ class DecimalUsageTest(unittest.TestCase):
             self.assertEqual(caught.exception.held_usd, .100000001)
             self.assertEqual(ledger.run_reserved, .100000001)
 
-class AdaptionBoundaryTest(unittest.TestCase):
+class AdaptionBoundaryTest(SyntheticSourceTestCase):
     def test_completed_adaption_reply_uses_direct_tool_free_bounded_request(self):
         with tempfile.TemporaryDirectory() as tmp:
             ledger = p.Ledger('adaption', 1, 1, Path(tmp) / 'ledger.sqlite3')

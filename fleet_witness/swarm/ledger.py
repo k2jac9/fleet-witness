@@ -102,6 +102,7 @@ class Ledger:
             for statement in (
                 'CREATE TABLE IF NOT EXISTS providers(provider TEXT PRIMARY KEY, cap INTEGER NOT NULL)',
                 'CREATE TABLE IF NOT EXISTS runs(run_id TEXT PRIMARY KEY, provider TEXT NOT NULL, cap INTEGER NOT NULL, tag TEXT NOT NULL)',
+                'CREATE TABLE IF NOT EXISTS run_authority(run_id TEXT PRIMARY KEY, envelope TEXT NOT NULL)',
                 'CREATE TABLE IF NOT EXISTS authorizations(id TEXT PRIMARY KEY, data TEXT NOT NULL)',
                 '''CREATE TABLE IF NOT EXISTS requests(
                     id TEXT PRIMARY KEY, run_id TEXT NOT NULL, provider TEXT NOT NULL,
@@ -179,6 +180,18 @@ class Ledger:
                     raise BudgetExceeded(f'{field} budget exhausted')
             auth_id = None
             if authorization is not None:
+                envelope = {field: authorization[field] for field in
+                            ('request_limit', 'expires_at', 'source_commit', 'source_sha256', 'purpose')}
+                encoded_envelope = canonical_json(envelope)
+                shared = c.execute('SELECT envelope FROM run_authority WHERE run_id=?', (self.run_id,)).fetchone()
+                if shared is None:
+                    c.execute('INSERT INTO run_authority VALUES(?,?)', (self.run_id, encoded_envelope))
+                    self._audit(c, None, 'run_authority_bound', {'run_id': self.run_id, **envelope})
+                elif shared['envelope'] != encoded_envelope:
+                    raise BudgetExceeded('shared run request/source/deadline envelope is immutable')
+                run_count = c.execute('SELECT COUNT(*) FROM requests WHERE run_id=?', (self.run_id,)).fetchone()[0]
+                if time.time() >= envelope['expires_at'] or run_count >= envelope['request_limit']:
+                    raise BudgetExceeded('shared run expired or request limit exhausted')
                 auth_id = authorization['authorization_id']
                 data = canonical_json(authorization)
                 prior = c.execute('SELECT data FROM authorizations WHERE id=?', (auth_id,)).fetchone()
