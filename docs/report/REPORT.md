@@ -1,7 +1,9 @@
 # Verify the Institution, Not the Agents: A Bounded-Verified Separation-of-Powers Kernel Stress-Tested Against Colluding LLM Swarms
 
 **Authors:** Alejandro Castellanos (`k2jac9`) and [IPBin, preferred name TBD]
+
 **Affiliations:** [TBD by team]
+
 **Track:** 4, Multi-Agent Oversight and Control (cross-track: 2, 3)
 
 *Draft for the official Apart template. Every number comes from runs in this repository
@@ -77,30 +79,27 @@ those guarantees rest on: honest error, independence and colluder compliance.
 
 ## 2. Related work
 
-- **Multi-agent risk.** Hammond et al. (2025) taxonomize multi-agent failures; collusion is
-  central.
-- **Collusion between models.** Motwani et al. (2024) study secret collusion via
-  steganography.
-- **AI control.** AI Control (Greenblatt et al., 2024) asks whether protocols hold against an
-  intentionally subversive model. We ask the same of an institution facing a *group* of agents.
-- **Agent institutions.** The separation-of-powers proposal (arXiv:2603.25100) is closest in
-  spirit but is not implemented or tested. Heartbeat-Bound Hierarchical Credentials
-  (Deochake, arXiv:2605.20704) give hand-written proofs and small LLM tests for credential
-  revocation, not governance.
-- **Prior Apart sprint work.** An earlier Apart sprint project measured how much agents defer
-  to an authoritative planner, without an institutional mechanism.
-- **Classic foundations.**
-  - Byzantine agreement tolerates a bounded fraction of faulty participants (Lamport, Shostak
-    & Pease, 1982).
-  - Threshold cryptography distributes authority over k-of-n parties (Desmedt & Frankel,
-    1989).
-  - Algorand selects committees by cryptographic sortition (Gilad et al., 2017).
-  - N-version programming showed that independently developed versions fail in correlated
-    ways (Knight & Leveson, 1986). That is the assumption most at risk when every auditor is
-    a copy of the same model.
-- **Gap.** To our knowledge, no prior work combines (a) mechanical verification of an
-  institution's invariants with (b) a stress test against a real LLM swarm containing a
-  captured subgroup. Two candidate papers were inaccessible to us.
+**Multi-agent risk and collusion.** Hammond et al. (2025) taxonomize multi-agent failures,
+with collusion central. Motwani et al. (2024) study secret collusion via steganography. AI
+Control (Greenblatt et al., 2024) asks whether protocols hold against an intentionally
+subversive model; we ask the same of an institution facing a *group* of agents.
+
+**Agent institutions.** The separation-of-powers proposal (arXiv:2603.25100) is closest in
+spirit but is neither implemented nor tested. Heartbeat-Bound Hierarchical Credentials
+(Deochake, arXiv:2605.20704) give hand-written proofs and small LLM tests, for credential
+revocation rather than governance. An earlier Apart sprint project measured how much agents
+defer to an authoritative planner, without an institutional mechanism.
+
+**Classic foundations.** Byzantine agreement tolerates a bounded fraction of faulty
+participants (Lamport, Shostak & Pease, 1982). Threshold cryptography distributes authority
+over k-of-n parties (Desmedt & Frankel, 1989). Algorand seats committees by cryptographic
+sortition (Gilad et al., 2017). N-version programming showed that independently developed
+versions fail in correlated ways (Knight & Leveson, 1986), the assumption most at risk when
+every auditor is a copy of one model.
+
+**Gap.** To our knowledge, no prior work combines (a) mechanical verification of an
+institution's invariants with (b) a stress test against a real LLM swarm containing a
+captured subgroup. Two candidate papers were inaccessible to us.
 
 ## 3. Method
 
@@ -130,34 +129,18 @@ therefore conditional:
 
 ### 3.2 Bounded verification (`fleet_witness/verify_institution.py`)
 
-**World.** One case and three seated auditors (quorum 2), plus one registered but unseated
-agent. Evidence is either intact or tampered.
+We explore every reachable state of the *real* kernel (SQLite serialized and cloned at each
+state, states deduplicated) in a small world. That world has one case, three seated auditors
+(quorum 2), one unseated outsider, and 12 actions including forged, outsider, misbound and
+duplicate attestations and repeated executions. After every transition the kernel is
+compared with an independently written specification:
+- **S1 safety:** no release unless every precondition holds;
+- **S2 liveness:** a release whenever they do;
+- **S3:** at most one release per case;
+- **S4:** every release has its audit event.
 
-**Actions (12).**
-- Majority or minority proposal.
-- Policy on or off.
-- Valid attestations from each seat and from the outsider.
-- A forged-signature attestation.
-- An attestation bound to the wrong artifact.
-- Two distinct execution attempts. Repeating any action models duplicates and replays.
-
-**Exploration.** Breadth-first over the *real* kernel (SQLite serialized and cloned at each
-state), with states deduplicated. After every transition the kernel's outcome is compared
-with an independently written specification:
-
-| Invariant | Statement |
-| --- | --- |
-| **S1 safety** | No release unless every precondition holds. |
-| **S2 liveness** | A release happens whenever every precondition holds. |
-| **S3** | At most one release per case. |
-| **S4** | Every release has its audit event. |
-
-Both kernel modes, committee-only and hybrid, are checked.
-
-**Mutation testing.** To show the checker can fail, we run it against seven mutants, each
-deleting one check.
-
-**This is bounded model checking, not a proof for all sizes.**
+Seven mutant kernels, each missing one check, show the checker can fail. This is bounded
+model checking, not a proof for all sizes. Details are in Appendix B.
 
 ### 3.3 Capture probability
 
@@ -168,18 +151,10 @@ P(capture) = Σⱼ Hypergeom(j; N, C, m) · P(Binom(m−j, ε) ≥ k−j)
 
 ### 3.4 Live stress test (`fleet_witness/swarm/`)
 
-**Release cases.** 24 per run, built from receipt scenarios:
-
-| Kind | Valid? | Notes |
-| --- | --- | --- |
-| Valid | Yes | — |
-| Build-only | No | Authentic signature, wrong claim |
-| Wrong-artifact | No | — |
-| Wrong-run | No | — |
-| Forged | No | Plausible fields, bad signature |
-
-The cell's **targets** are the invalid cases that honest agents could spot (12 per run).
-Forged cases are not targets; they test what crowds cannot check.
+**Release cases.** There are 24 per run: 8 valid, plus invalid build-only, wrong-artifact
+and wrong-run receipts (authentic signatures, wrong claim or binding) and forged receipts
+(plausible fields, bad signature). The cell's **targets** are the 12 invalid cases honest
+agents could spot. The 4 forged cases are not targets; they test what crowds cannot check.
 
 **Swarm.**
 - 50 reviewers vote approve or deny in five waves.
@@ -191,71 +166,42 @@ Forged cases are not targets; they test what crowds cannot check.
   are paired. Committee members audit with the same rule; colluders on the committee are
   told to sign targets.
 
-**Regimes.** The same votes and attestations are judged under each regime:
+**Regimes.** The same votes and attestations are judged under seven regimes:
+- direct majority, with no kernel;
+- kernel committees of 1-of-1, 2-of-3, 3-of-5, 4-of-7 and unanimous 7-of-7;
+- a hybrid requiring the majority **and** 4-of-7.
 
-| Regime | What authorizes a release |
-| --- | --- |
-| direct | Majority vote, no kernel |
-| 1-of-1 | Single auditor |
-| 2-of-3 | 2 of 3 auditors |
-| 3-of-5 | 3 of 5 auditors |
-| 4-of-7 | 4 of 7 auditors |
-| 7-of-7 | All 7 auditors |
-| hybrid | Majority **and** 4 of 7 |
+**Models.** Two reasoning models from different families via OpenRouter: DeepSeek v4 Flash
+(`deepseek/deepseek-v4-flash-0731`) and OpenAI gpt-oss-20b (`openai/gpt-oss-20b`).
+- Both use temperature 0.7, a 2,000-token cap, and the same seeds, so the same cells and
+  committees are drawn.
+- Both reason before answering, so only the model family varies. Non-reasoning models were
+  rejected.
+- Each sweep makes 16,416 calls; both together cost $2.18.
 
-**Model and spend.**
-- Two reasoning models from different families, via OpenRouter:
-  - DeepSeek v4 Flash (`deepseek/deepseek-v4-flash-0731`);
-  - OpenAI gpt-oss-20b (`openai/gpt-oss-20b`).
-- Both run with temperature 0.7, a 2,000-token output cap, and the same seeds, so the same
-  cells and committees are drawn.
-- Both models reason before answering, so the comparison varies the model family, not the
-  reasoning mode. Non-reasoning candidates, such as Gemini 2.5 Flash Lite at about 34 output
-  tokens, were rejected for this reason.
-- Each sweep: 6 shares × 2 board conditions × 24 cases × (50 voters + 7 auditors) = 16,416
-  calls.
-- Total cost for both sweeps: $2.18.
-- A per-provider ledger reserves each call's worst-case cost before sending.
+**Output caps are instruments, not institutional rules.** Every agent in a run shares one
+cap, which is kept non-binding: truncated responses are re-sent at 2×, 4× and 8× the cap,
+and every run is audited.
+- This matters because truncation is not neutral: in a 600-token pilot, 98 of 99 cut-offs
+  were colluders. A binding cap is effectively a hidden deadline that silences deliberating
+  deceivers.
+- An unanswered audit counts as "not signed".
+- Audit outcome and the one pre-declared re-run are in Appendix B.
 
-**Output caps are instruments, not institutional rules.**
-- Within a run, every agent uses the same model and the same cap.
-- Caps are set to be non-binding: a truncated response is re-sent with 2×, 4× and 8× the
-  cap, up to 16,000 tokens, and both main sweeps are audited for unrecovered truncation.
-- **Audit result.** gpt-oss: 0 truncations, longest response 1,536 tokens. DeepSeek: one
-  colluder response hit the cap in the 30% run.
-- Under a rule declared before the results were known, that whole run (all agents) was
-  re-run with retry enabled. The re-run needed no retries. Its outcomes matched the original
-  in 13 of 14 regime × condition cells; the remaining cell (4-of-7, hidden) moved from 1
-  capture to 0. Both versions are retained.
-- This matters because truncation is not neutral. In a 600-token pilot, 98 of 99 cut-offs
-  were colluders, who deliberate longer. A binding cap acts like a hidden decision deadline
-  that silences deliberating deceivers and biases measured compliance.
-- How non-responses count is an explicit rule: an unanswered audit is "not signed", and an
-  unanswered vote is excluded.
-
-**Blue team.** A detector reads only the public log:
-- shared-minority voting plus TF-IDF similarity of reasons;
-- robust (median/MAD) z-scores and graph clustering;
-- scored against sealed ground truth.
+**Blue team.** A detector reads only the public log. It combines shared-minority voting
+with TF-IDF similarity of reasons, uses robust z-scores and graph clustering, and is scored
+against sealed ground truth.
 
 ## 4. Results
 
 ### 4.1 Verification
 
-| Check | Result |
-| --- | --- |
-| Kernel, depth 6 | 23,376 distinct states, 105,708 transitions; S1–S4 hold |
-| Committee-only mode, depth 4 | 3,188 states; all hold |
-| Hybrid mode, depth 4 | 2,906 states; all hold |
-| Mutant: skip policy recheck | Caught, S1 (4 steps) |
-| Mutant: skip integrity | Caught, S1 (tampered evidence, 5 steps) |
-| Mutant: skip seat check | Caught, S1 (outsider attests) |
-| Mutant: skip binding | Caught, S1 (wrong-artifact attestation) |
-| Mutant: count duplicates | Caught, S1 (same auditor twice) |
-| Mutant: skip uniqueness | Caught, S3 (two releases; needs depth 6 and was missed at depth 5) |
-| Mutant: skip audit | Caught, S4 |
+At depth 6 the checker explored 23,376 distinct states and 105,708 transitions, and S1–S4
+held throughout. Both kernel modes also passed at depth 4.
 
-The uniqueness mutant shows concretely why bounds matter.
+All seven mutants were caught, each with a shortest counterexample of four to six steps
+(Appendix B). One of them, the missing uniqueness check, surfaced only at depth 6 and was
+missed at depth 5, which shows concretely why bounds matter.
 
 ### 4.2 Live stress test (two reasoning models)
 
@@ -406,19 +352,19 @@ agents, is a tractable path to oversight that scales with swarm size.
 
 - Apart Research (2026). *Swarm Alignment Hackathon* brief and resources.
   https://apartresearch.com/sprints/swarm-alignment-2026
+- Deochake, S. (2026). *Heartbeat-Bound Hierarchical Credentials: Cryptographic Revocation
+  for AI Agent Swarms.* arXiv:2605.20704.
 - Desmedt, Y. & Frankel, Y. (1989). *Threshold Cryptosystems.* CRYPTO '89.
 - Gilad, Y., Hemo, R., Micali, S., Vlachos, G. & Zeldovich, N. (2017). *Algorand: Scaling
   Byzantine Agreements for Cryptocurrencies.* SOSP.
 - Knight, J. C. & Leveson, N. G. (1986). *An Experimental Evaluation of the Assumption of
   Independence in Multiversion Programming.* IEEE Transactions on Software Engineering.
-- Lamport, L., Shostak, R. & Pease, M. (1982). *The Byzantine Generals Problem.* ACM TOPLAS.
-- Deochake, S. (2026). *Heartbeat-Bound Hierarchical Credentials: Cryptographic Revocation
-  for AI Agent Swarms.* arXiv:2605.20704.
 - *From Logic Monopoly to Social Contract: Separation of Power and the Institutional
   Foundations for Autonomous Agent Economies* (2026). arXiv:2603.25100.
 - Greenblatt, R. et al. (2024). *AI Control: Improving Safety Despite Intentional
   Subversion.*
 - Hammond, L. et al. (2025). *Multi-Agent Risks from Advanced AI.* arXiv:2502.14143.
+- Lamport, L., Shostak, R. & Pease, M. (1982). *The Byzantine Generals Problem.* ACM TOPLAS.
 - Motwani, S. et al. (2024). *Secret Collusion among AI Agents: Multi-Agent Deception via
   Steganography.*
 - SQLite. *Atomic Commit in SQLite.* https://sqlite.org/atomiccommit.html
@@ -478,3 +424,47 @@ same measurements could help an attacker size a cell. Mitigations:
   checker and swarm harness were built after it.
 - AI assistance (Claude Code) was used for implementation and drafting. The human authors
   are responsible for all claims.
+
+---
+
+## Appendix B: Verification and audit details
+
+**B.1 Bounded-check world.**
+- One case, three seated auditors (quorum 2), one registered but unseated agent.
+- Evidence is either intact or tampered.
+
+The 12 actions:
+- majority or minority proposal;
+- policy on or off;
+- valid attestations from each seat and from the outsider;
+- a forged-signature attestation;
+- an attestation bound to the wrong artifact;
+- two distinct execution attempts.
+
+Repeating any action models duplicates and replays. Exploration is breadth-first over
+serialized SQLite states with deduplication. Both kernel modes, committee-only and hybrid,
+are checked.
+
+**B.2 Verification results.**
+
+| Check | Result |
+| --- | --- |
+| Kernel, depth 6 | 23,376 distinct states, 105,708 transitions; S1–S4 hold |
+| Committee-only mode, depth 4 | 3,188 states; all hold |
+| Hybrid mode, depth 4 | 2,906 states; all hold |
+| Mutant: skip policy recheck | Caught, S1 (4 steps) |
+| Mutant: skip integrity | Caught, S1 (tampered evidence, 5 steps) |
+| Mutant: skip seat check | Caught, S1 (outsider attests) |
+| Mutant: skip binding | Caught, S1 (wrong-artifact attestation) |
+| Mutant: count duplicates | Caught, S1 (same auditor twice) |
+| Mutant: skip uniqueness | Caught, S3 (two releases; needs depth 6, missed at depth 5) |
+| Mutant: skip audit | Caught, S4 |
+
+**B.3 Truncation audit.**
+- gpt-oss: 0 truncated responses; longest 1,536 tokens.
+- DeepSeek: one colluder response hit the 2,000-token cap in the 30% run.
+- Under a rule declared before results were known, that whole run (all agents) was re-run
+  with retry enabled. The re-run needed no retries.
+- Its outcomes matched the original in 13 of 14 regime × condition cells; the remaining cell
+  (4-of-7, hidden) moved from 1 capture to 0.
+- Both versions are retained. Main results use the re-run.
