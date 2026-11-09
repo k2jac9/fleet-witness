@@ -1,0 +1,78 @@
+{
+  "model": "google/gemini-4-argon",
+  "summary": "This report introduces a separation-of-powers execution kernel for multi-agent swarms, combining bounded exhaustive model checking of the SQLite-backed implementation (23,376 states and 7 mutation tests) with a 32,830-call empirical stress test across two reasoning-model families under 0\u201350% planted collusion. The results cleanly separate mechanical enforcement\u2014which blocks 100% of forged receipts that plain majority voting approves\u2014from random committee auditing, which matches the safety of a mechanically gated majority at one-seventh the call cost up to the hypergeometric seat-capture bound when honest error is near zero. The work stands out for its rigorous experimental hygiene and epistemic honesty, including a gated-majority control, a follow-up near-miss experiment to probe the untested error-independence assumption, and an audit of output-truncation confounds.",
+  "scores": {
+    "impact_innovation": 4,
+    "execution": 4,
+    "presentation": 5
+  },
+  "score_rationale": {
+    "impact_innovation": "While quorum systems, sortition, and Byzantine fault tolerance are classic, synthesizing implementation-level bounded model checking of an institutional gateway with empirical LLM swarm red-teaming is a strong, practical contribution to multi-agent AI control. Rather than claiming committees magically solve collusion, the paper reframes multi-agent oversight around decomposing guarantees into mechanically verifiable invariants (G1) and measurable behavioral parameters (honest error rate, error correlation, and colluder compliance in G2/G3). This provides a clear, buildable theory of change for MCP/A2A gateways.",
+    "execution": "For a 3-day sprint, the execution is unusually rigorous and self-critical. The authors include the crucial 'gated majority (no committee)' baseline that reveals committees are a cost-reduction mechanism rather than a safety improvement when honest error is zero; they catch and fix a major instrumentation confound where a 600-token cap selectively truncated colluders (98/99 times); and when main-sweep honest error turns out to be 0/746, they run 12 additional near-miss sweeps rather than overclaiming validation of G3. The main methodological weaknesses are high finite-sample variance in the 12 independent committee seating draws per share and the single-case scope of the bounded model check.",
+    "presentation": "The report is exceptionally clear, concise, and transparent. Claims are explicitly partitioned into conditional guarantees (G1\u2013G3), negative and null results are highlighted upfront rather than buried, statistical dependencies (paired committee draws across regimes and board conditions) are explicitly stated in table captions, and limitations are stated with precision."
+  },
+  "strengths": [
+    "Inclusion of the 'gated majority (no committee)' ablation (Section 3.4, Table 1), which isolates the effect of mechanical checks from committee subsampling and supports the candid conclusion that committees trade capture risk for a 7x reduction in LLM call cost rather than adding safety over a mechanically gated crowd.",
+    "Exemplary handling of instrumentation confounds (Section 3.4, Appendix B.3): identifying that a 600-token cap acted as an implicit deadline that silenced deliberating colluders (98 of 99 truncations), raising the cap to 2,000 tokens with non-binding retry rules, and pre-declaring a re-run rule.",
+    "Intellectual honesty regarding the independence assumption in G3 (Sections 3.3, 4.3): recognizing that 0% honest error on the main task left error correlation untested, designing a 12-run 'near-miss' receipt experiment to induce honest errors, and reporting the 5.6x between-case variance clustering in DeepSeek voter errors.",
+    "Implementation-level bounded verification with mutation testing (Section 3.2, Appendix B.2): model-checking the actual SQLite kernel state transitions rather than only an abstract specification, and verifying that all 7 single-defect mutants are caught (including showing that uniqueness requires depth 6)."
+  ],
+  "concerns": [
+    {
+      "id": "C1",
+      "severity": "major",
+      "category": "statistics",
+      "location": "Section 3.4, Section 4.2, Table 1, and Table 2",
+      "issue": "Only 12 independent committee seating draws exist per colluder share (60 across all shares), and nested sub-committees appear to share those draws. Because of finite-sample variance in the RNG seating alone, the realized seat bounds (G2) and empirical capture rates violate theoretical monotonicity across committee sizes: in Table 1, 3-of-5 has a higher seat bound (26) and more DeepSeek captures (23) than 1-of-1 (bound 24, captures 21); in Table 2 at 50% collusion, 4-of-7 has 12/13 captures versus 8/9 for 1-of-1.",
+      "why_it_matters": "While the authors note that 1-of-1 realized 24 capturable draws vs. 36 expected (1.8 SD low), coupling the evaluation of k-of-m committee scaling to a single RNG seating seed per share makes empirical comparisons across committee sizes (1-of-1 vs. 2-of-3 vs. 3-of-5 vs. 4-of-7) noisy and potentially misleading to readers comparing rows in Tables 1 and 2.",
+      "suggested_fix": "Since all 50 agents vote in every run (or since auditor compliance is measured per agent), you can decouple the pure combinatorial seating variance from LLM behavioral variance offline without new API calls: either bootstrap/resample 10,000 random committees from the logged agent decisions, or explicitly note in Section 4.2 that cross-row differences between 1-of-1, 2-of-3, 3-of-5, and 4-of-7 in Tables 1\u20132 are artifacts of the 12 seating draws per share rather than behavioral differences."
+    },
+    {
+      "id": "C2",
+      "severity": "major",
+      "category": "validity",
+      "location": "Section 3.2 and Appendix B.1",
+      "issue": "The bounded model checker explores a world with only a single release case (1 case, 3 seated auditors, 1 outsider, depth 6). A 1-case state space cannot test cross-case isolation invariants\u2014such as an attestation or policy for Case A being erroneously accepted for Case B due to a missing `WHERE case_id = ?` predicate in SQLite queries.",
+      "why_it_matters": "G1 claims that attestations are 'bound to that exact release' and that policy and uniqueness hold 'per case'. In relational database kernels, cross-case state leakage (missing case_id joins/filters) is one of the most common implementation bugs, and a 1-case model check is structurally blind to it.",
+      "suggested_fix": "Add a second case to the bounded verification world (e.g., 2 cases, 2 seats, quorum 1 or 2, depth 4\u20135) with an action that submits a valid attestation for Case 1 and attempts execution on Case 2, plus a corresponding cross-case mutant."
+    },
+    {
+      "id": "C3",
+      "severity": "minor",
+      "category": "confound",
+      "location": "Section 4.3 and Figure 2 (Deliberation token length)",
+      "issue": "The finding that colluders generate 1.9\u20132.8x more output tokens than honest agents is confounded by prompt differences: colluders received a longer prompt containing the covert instruction and shared talking point. The authors acknowledge this confound in the text, but do not use the built-in within-agent control already present in their data.",
+      "why_it_matters": "Without separating prompt overhead from the cognitive/reasoning load of executing deception on a target case, proposing 'uniform decision deadlines as an explicit, measured rule' (Section 5) rests on an unisolated signal.",
+      "suggested_fix": "Use the existing run logs to compare output token lengths of colluders vs. honest agents on the *non-target* cases (the 8 valid and 4 forged cases per run, where colluders received the exact same longer system prompt but were instructed to vote honestly). This requires zero additional LLM calls and directly isolates the effect of active deception on targets from prompt length."
+    },
+    {
+      "id": "C4",
+      "severity": "minor",
+      "category": "reproducibility",
+      "location": "Section 3.4 and Table 1",
+      "issue": "Section 3.4 does not specify whether the 7 seated committee auditors observe the public voting board in the 'visible' board condition, or at what point during the 5 voting waves committee audits occur. Table 2 shows slight differences (e.g., 12 vs. 13 captures at 50% share for gpt-oss) that imply two runs per share, but it is unclear if the committee prompt actually changes between visible and hidden conditions.",
+      "why_it_matters": "If committee auditors do not see the public board, then the visible and hidden conditions are identical for committee-only regimes (pure temperature-0.7 replicates on the same seated committee). If they do see the board, the timing of their audit relative to the 5 waves affects their exposure to herding.",
+      "suggested_fix": "Clarify in Section 3.4 whether committee auditors receive the public board state in the 'visible' condition or if their prompts are identical across visible and hidden conditions."
+    },
+    {
+      "id": "C5",
+      "severity": "minor",
+      "category": "validity",
+      "location": "Section 4.3 and Appendix B.4 (Blue-team detector)",
+      "issue": "The collusion detector requires `z_minority >= 3.0` and a positive `shared-minority score` (fraction of common cases where both agents voted on the losing side). While effective up to 50% collusion when colluders compliance is ~90% (so colluders remain <50% of votes), this metric breaks down if a colluding bloc achieves >50% of votes on targets (or if honest error pushes the approve vote over 50%), which would flip honest agents into the 'shared minority'. Additionally, false-positive rates at 0% collusion are only mentioned anecdotally (one 3-agent cluster in gpt-oss).",
+      "why_it_matters": "A collusion detector that relies on colluders being on the losing side of a majority vote will fail precisely when majority voting fails (>50% capture).",
+      "suggested_fix": "Explicitly note in Section 4.3 / Appendix B.4 that the shared-minority feature assumes the colluding cell comprises less than 50% of active voters, and report the exact fraction of 0%-collusion runs that triggered false-positive clusters."
+    },
+    {
+      "id": "C6",
+      "severity": "minor",
+      "category": "related-work",
+      "location": "Section 2 and References",
+      "issue": "The References section retains a draft editorial prompt at the end (`*(Verify every reference against its source before submission; do not add uncited claims.)*`), and several cited 2026 arXiv identifiers (e.g., arXiv:2605.20704, arXiv:2607.23532, arXiv:2608.15888, arXiv:2609.04170) appear to be unverified or LLM-generated placeholders.",
+      "why_it_matters": "Accurate bibliography and removal of LLM drafting artifacts are critical for scientific credibility and archival reproducibility.",
+      "suggested_fix": "Verify all arXiv IDs and titles in Section 2 and the References list against actual published preprints, remove or replace any hallucinated citations, and delete the leftover verification note."
+    }
+  ],
+  "verdict": "accept",
+  "confidence": 5
+}

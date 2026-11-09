@@ -1,0 +1,68 @@
+{
+  "reviewers": {
+    "A": "openai/gpt-6.1-sol",
+    "B": "google/gemini-4-argon",
+    "C": "x-ai/grok-4.7",
+    "D": "qwen/qwen3.8-max-0902"
+  },
+  "auditor": "google/gemini-4-argon",
+  "chair": "openai/gpt-6.1-sol-pro",
+  "debate_rounds": 2,
+  "verdicts_after_debate": {
+    "A": "weak accept",
+    "B": "weak accept",
+    "C": "weak accept",
+    "D": "weak accept"
+  },
+  "rubric_scores": {
+    "A": {
+      "initial": {
+        "impact_innovation": 3,
+        "execution": 3,
+        "presentation": 4
+      },
+      "final": {
+        "impact_innovation": 3,
+        "execution": 3,
+        "presentation": 4
+      }
+    },
+    "B": {
+      "initial": {
+        "impact_innovation": 4,
+        "execution": 4,
+        "presentation": 5
+      },
+      "final": {
+        "impact_innovation": 4,
+        "execution": 4,
+        "presentation": 4
+      }
+    },
+    "C": {
+      "initial": {
+        "impact_innovation": 4,
+        "execution": 4,
+        "presentation": 4
+      },
+      "final": {
+        "impact_innovation": 4,
+        "execution": 3,
+        "presentation": 4
+      }
+    },
+    "D": {
+      "initial": {
+        "impact_innovation": 4,
+        "execution": 4,
+        "presentation": 4
+      },
+      "final": {
+        "impact_innovation": 4,
+        "execution": 3,
+        "presentation": 4
+      }
+    }
+  },
+  "cost_usd": 2.9105
+}

@@ -1,0 +1,78 @@
+{
+  "model": "x-ai/grok-4.7",
+  "summary": "The report builds a separation-of-powers release kernel, bounded-checks the implementation (23,376 states, seven mutants), and stress-tests seven regimes on two reasoning-model swarms (32,830 calls) with planted colluders. The evidence supports the narrow claims: HMAC forgeries are blocked only when mechanical checks run, observed target captures stay within realized seat draws, and honest error on this exact-match task is near zero. The theory-of-change claim that committee bounds remain meaningful once honest agents err in correlated ways is explicitly untested, and the checker does not cover the live committee sizes.",
+  "scores": {
+    "impact_innovation": 4,
+    "execution": 4,
+    "presentation": 4
+  },
+  "score_rationale": {
+    "impact_innovation": "Oversight that does not scale with swarm size is an important problem, and the loop in \u00a71\u2013\u00a73\u2014gateway kernel, bounded check of the real code, then measurement of the residual parameters (honest error, compliance, seat capture)\u2014is a direction others can build on. It is not a 5: \u00a72 correctly treats quorums, BFT, threshold signatures and sortition as classic, and the live task never reaches the judgment-error regime the theory of change needs.",
+    "execution": "For a three-day sprint the design is unusually careful: mutation testing (Appendix B.2), a gated-majority control (Table 1), shared seeds, a pre-declared truncation re-run, a near-miss follow-up (\u00a74.3), and refusal to pool non-independent committee draws. Conclusions in \u00a74\u2013\u00a76 mostly match those results. Not a 5 because the checked world (1 case, 3 seats, depth 6) is not the live 7-seat, 24-case kernel, and G3\u2019s independence premise is untested rather than validated.",
+    "presentation": "Findings, tables and limitations are easy to audit, and G1/G2/G3 are stated as conditional. Density is high, and the abstract is slightly sharper than the by-construction and confound caveats that appear only in \u00a74.2\u2013\u00a74.3, so this is well presented rather than exceptionally clear."
+  },
+  "strengths": [
+    "Conditional guarantees in \u00a73.3 separate verified mechanical checks (G1) from seat-bound capture (G2) and an untested probabilistic model (G3), and the text does not treat G3 as confirmed.",
+    "Table 1\u2019s gated-majority arm is the right control: it shows forgeries fall to 0/48 once checks are added, while committees add call-cost savings and capture risk rather than extra safety on this task.",
+    "Statistical non-independence is handled honestly: shared committee draws, counts by share in Table 2, no pooled confidence intervals, and the ~1.8 SD favorable 1-of-1 draw (12 vs 18) is reported.",
+    "Limitations in \u00a75 and Appendix A name the same-team specification, bounded world, instructed adversary, prompt confound on token length, and planted-signature detector, and the reproduce path does not require new model calls."
+  ],
+  "concerns": [
+    {
+      "id": "C1",
+      "severity": "major",
+      "category": "validity",
+      "location": "\u00a73.3 G3; \u00a74.2 Finding 2; \u00a74.3; Table 1",
+      "issue": "Honest unsafe error is essentially zero (0/746 main-sweep auditor signatures per model; 0\u20130.3% on near-miss receipts), and direct majority already has 0 unsafe releases on the 120 pooled target trials. Committee \u2018failures\u2019 are therefore seated colluders complying ~89\u201392% of the time, not a test of independent or correlated honest error.",
+      "why_it_matters": "The theory of change says residual risk is honest error and its correlation. Table 1 supports an integration check of G1/G2 on an exact-match task; it does not support committee bounds, or any safety gain of committees over gated majority, once agents must judge.",
+      "suggested_fix": "State in the abstract and in Finding 2 that, on this task, committees are a cost\u2013capture tradeoff against gated majority, not a safety improvement, and keep G3 labeled untested until a judgment task produces non-zero honest error."
+    },
+    {
+      "id": "C2",
+      "severity": "major",
+      "category": "validity",
+      "location": "Abstract; \u00a73.2; Appendix B.1\u2013B.2",
+      "issue": "The checker covers one case, three seats, quorum 2 and depth 6. Live regimes use up to seven seats and 24 cases. The uniqueness mutant was missed at depth 5 and caught only at depth 6, and the specification was written by the same team.",
+      "why_it_matters": "Abstract wording that 23,376 states \u2018confirm\u2019 safety, liveness, at-most-once and audit invariants can be read as covering the kernel that was swarm-tested. A shared spec/kernel mistake, or a bug that appears only at m=7 or across cases, would not have been seen.",
+      "suggested_fix": "Put the bound (1 case, 3 seats, depth 6) in the same abstract sentence as the state count, and say live 4-of-7 and 7-of-7 configurations were not in the checked state space."
+    },
+    {
+      "id": "C3",
+      "severity": "minor",
+      "category": "overclaiming",
+      "location": "Abstract; \u00a74.2 Finding 1",
+      "issue": "Majority approval of all 48 forged-signature releases is reported as a result, but \u00a74.2 states voters had no way to check a symmetric HMAC, so the failure is architectural. The informative comparison is gated majority (0/48 forgeries, 96/96 valid).",
+      "why_it_matters": "Readers of the abstract can treat an inevitable baseline failure as evidence about voting under collusion.",
+      "suggested_fix": "Add the by-construction clause and the gated-majority numbers to the abstract bullet."
+    },
+    {
+      "id": "C4",
+      "severity": "minor",
+      "category": "confound",
+      "location": "Abstract; \u00a74.3; Figure 2",
+      "issue": "The 1.9\u20132.8\u00d7 output-length association includes hidden reasoning and is confounded by a longer, conflicting colluder prompt. \u00a74.3 says so; the abstract still offers it as a monitoring signal.",
+      "why_it_matters": "A defender could treat a prompt artifact as a measured cost of deception.",
+      "suggested_fix": "Drop the ratio from the abstract or add that the instruction was longer and the comparison is not causal."
+    },
+    {
+      "id": "C5",
+      "severity": "minor",
+      "category": "statistics",
+      "location": "Table 1; Figure 1; \u00a74.2",
+      "issue": "Board conditions share committee draws, so each regime has 60 independent draws (12 per share), not 120. Realized 1-of-1 capturable committees were 12 versus 18 expected, so points below the G3 curve partly reflect favorable draws. Figure 1\u2019s n=24 overstates independent sample size.",
+      "why_it_matters": "Visual fit to G3 and \u2018never exceeded the seat bound\u2019 look more precise than the effective sample supports, even though the text correctly avoids pooled intervals.",
+      "suggested_fix": "Caption Figure 1 with 12 independent draws per point and the 12-vs-18 capturable count; optional draw-level intervals can be computed from the published logs."
+    },
+    {
+      "id": "C6",
+      "severity": "minor",
+      "category": "related-work",
+      "location": "\u00a72 Gap",
+      "issue": "The claim that no prior work combines (a) bounded verification of a committee institution with (b) a live colluding-cell capture test rests on a scan the authors say was incomplete, and on 2026 arXiv items the manuscript itself flags for source checks.",
+      "why_it_matters": "If a cited or missed paper already does both, contributions 2\u20134 are an incremental measurement study rather than a new combination.",
+      "suggested_fix": "Verify each arXiv id before treating the gap as established; if a paper stayed inaccessible, mark the gap as provisional."
+    }
+  ],
+  "verdict": "accept",
+  "confidence": 4
+}

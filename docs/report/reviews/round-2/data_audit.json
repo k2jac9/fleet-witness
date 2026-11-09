@@ -1,0 +1,37 @@
+{
+  "model": "google/gemini-4-argon",
+  "checked_claims": 70,
+  "issues": [
+    {
+      "location": "Section 3.4 ('Output caps are instruments...') and Section 4.3 ('Colluders produced longer outputs')",
+      "claim": "'in a 600-token pilot, 98 of 99 cut-offs were colluders' (\u00a73.4) and 'In a 600-token pilot, 98 of 99 truncated responses came from colluders' (\u00a74.3).",
+      "data_says": "Truncation audit reports: '600-token pilot (runs/sweep-or): 99 abstentions, 98 by colluders, 95 at the cap.' There were 99 total abstentions (98 by colluders), but only 95 of them hit the 600-token cap (truncated/cut-off); 4 abstentions were not at the cap.",
+      "severity": "minor"
+    },
+    {
+      "location": "Appendix A ('Limitations: Unsafe honest error was essentially zero...')",
+      "claim": "'On near-miss receipts, honest auditor error was 0.3% (DeepSeek) and 0% (gpt-oss). The only other honest error observed was gpt-oss refusing valid releases (8/492).'",
+      "data_says": "The 0.3% (DeepSeek) and 0% (gpt-oss) figures come only from the 0% colluder-share near-miss runs (properly labeled '0% cell' in the \u00a74.3 table). In the 30% colluder-share near-miss runs, honest committee auditor error was 0.002 (0.2%, issuer_variant 0.01 on n=84, i.e., 1 error across 508 honest seats) for both DeepSeek and gpt-oss. Thus gpt-oss did make 1 honest unsafe auditor error on near-miss receipts at 30% share.",
+      "severity": "minor"
+    },
+    {
+      "location": "Abstract, Section 1 (Contribution 4), Section 3.4 ('Regimes'), and Table 1",
+      "claim": "'We stress-tested seven governance regimes' (Abstract) and 'A live stress test of seven regimes, including a mechanically gated majority baseline' (\u00a71, Contribution 4).",
+      "data_says": "Including the gated-majority baseline alongside the original seven regimes (direct, 1-of-1, 2-of-3, 3-of-5, 4-of-7, 7-of-7, hybrid) yields 8 governance regimes, all 8 of which are listed in \u00a73.4 and reported in Table 1.",
+      "severity": "minor"
+    },
+    {
+      "location": "Section 3.4 ('Models') vs. Section 4.2 ('Totals per model')",
+      "claim": "'Each sweep makes 16,416 calls' (\u00a73.4) vs. '16,415 calls, 1 transport error' per sweep (\u00a74.2) and '32,830 calls' total (Abstract, \u00a71).",
+      "data_says": "Each 6-run sweep scheduled 6 x 2,736 = 16,416 calls, but f00 in both sweeps had calls=2735 and errors=1, giving 16,415 completed calls per sweep (32,830 total). \u00a73.4 reports the scheduled total (16,416) without noting the 1 failed call per sweep reported in \u00a74.2.",
+      "severity": "minor"
+    },
+    {
+      "location": "Appendix A ('Limitations: Models') and Appendix B.3 ('Truncation audit')",
+      "claim": "Qwen 3.7 Flash exhausted its 600-token budget in 'about 39% of responses in a partial pilot whose logs were not retained' (Appendix A), and the DeepSeek f30 re-run 'matched the original in 13 of 14 regime x condition cells; the remaining cell (4-of-7, hidden) moved from 1 capture to 0' (Appendix B.3).",
+      "data_says": "These two historical pilot/superseded-run statistics cannot be verified from the provided raw summary blocks (Appendix A explicitly notes the Qwen pilot logs were not retained, and the raw data only cites the path runs/deepseek2k-f30-truncated without printing its per-cell counts).",
+      "severity": "minor"
+    }
+  ],
+  "notes": "All primary experimental results, Table 1 and Table 2 counts, bounded verification state/transition counts (depth 4 and depth 6), mutant trace lengths (4 to 6 actions after setup), API costs ($1.376 + $0.807 = $2.18), colluder compliance rates (234/262 = 89.3% and 242/262 = 92.4%), herding counts (0/14 and 0/16), output-token medians and ratios (1.89x to 2.77x, reported as 1.9-2.8x), detector F1 scores, and the stratified variance calculation for seat draws (Var = 11.4, z = -1.78 or ~1.8 SD) match the raw data exactly."
+}

@@ -1,0 +1,1282 @@
+[
+  {
+    "model": "x-ai/grok-4.7",
+    "seconds": 306.6,
+    "ok": true,
+    "output_tokens": 8546,
+    "cost_usd": 0.1562,
+    "concerns": 5,
+    "scores": {
+      "impact_innovation": 4,
+      "execution": 4,
+      "presentation": 4
+    },
+    "verdict": "accept",
+    "retries": 1,
+    "review": {
+      "summary": "The report proposes putting swarm-release safety in a small separation-of-powers kernel, bounded-checks the real implementation, and stress-tests seven regimes on instructed colluding LLM swarms. The scoped claims\u2014that mechanical checks block HMAC forgeries, and that committee capture stays inside the seat bound\u2014are supported by the reported runs and are carefully caveated. The load-bearing behavioural assumptions (honest error and independence) are essentially untested because the task almost never elicits honest mistakes, and the checked world is smaller than the live configuration.",
+      "scores": {
+        "impact_innovation": 4,
+        "execution": 4,
+        "presentation": 4
+      },
+      "score_rationale": {
+        "impact_innovation": "Oversight that does not scale with swarm size is an important problem, and measuring the behavioural parameters a verified gateway kernel actually depends on is a neglected, buildable direction. The mechanisms themselves (quorum, HMAC attestations, sortition, bounded checking) are classical, and the closest cited design is implemented rather than invented, so this is significant rather than exceptional.",
+        "execution": "For a weekend, the loop is unusually complete: real-implementation exploration (23,376 states), seven mutants, a gated-majority baseline, shared seeds across two model families, a pre-declared truncation re-run, and claims kept conditional (G1\u2013G3, \u00a73.3, Table 1). Results match the narrower conclusions, but the live config is outside the checked world and the crisp receipt task does not stress G3.",
+        "presentation": "Findings, the seat-bound versus G3 distinction, and limitations are easy to locate and numerically consistent between Table 1 and Table C1. Density and the easy-to-miss note that board conditions share committee draws (60 draws, not 120) keep it short of exceptional clarity."
+      },
+      "strengths": [
+        "G1\u2013G3 cleanly separate verified mechanical invariants from untested behavioural assumptions, and the abstract and \u00a75 do not drop those conditions.",
+        "Mutation testing has teeth: all seven broken kernels are caught, and the uniqueness mutant appears only at depth 6 (\u00a74.1, Appendix B), which is used to justify the bound rather than hidden.",
+        "The gated-majority baseline is the right comparison; Finding 1 correctly treats forgery-blocking as architectural under symmetric HMAC and does not credit the committee for it.",
+        "Capture is never reported above the seat bound, and the gap versus G3 is decomposed into favourable draws (~1.8 SD) and incomplete colluder compliance (89\u201392%), rather than pooled into an overconfident interval.",
+        "Limitations match the threat model: instructed cells, no seat-steering or key compromise, same-team specification, and the token-length association confounded by a longer prompt."
+      ],
+      "concerns": [
+        {
+          "id": "C1",
+          "severity": "major",
+          "category": "validity",
+          "location": "\u00a73.2, \u00a74.1, Appendix B.1\u2013B.2 vs \u00a73.4 live config",
+          "issue": "Safety, liveness, at-most-once and audit are shown only in a world of one case, three seats, quorum 2 and depth 6, while the stress test uses 24 cases and seven seats. The uniqueness mutant was missed at depth 5, so the bound is material, and the specification was written by the same team.",
+          "why_it_matters": "Abstract language that the exploration 'confirms' those invariants can be read as covering the kernel that was actually stress-tested. A shared spec/kernel mistake or an interleaving across cases would not have been seen.",
+          "suggested_fix": "State in the abstract and \u00a74.1 that S1\u2013S4 are confirmed only inside the checked world, and add one multi-case or 7-seat smoke bound\u2014even at lower depth\u2014or an explicit untested-interleaving list."
+        },
+        {
+          "id": "C2",
+          "severity": "major",
+          "category": "validity",
+          "location": "\u00a73.4, \u00a74.3, Table 1, Appendix C.2",
+          "issue": "Honest auditors never signed a main-sweep target (0/746 per model) and near-miss auditor error was 0\u20130.3%, so G3's independence assumption and the 'safety in numbers' question are untested. Colluders are instructed, with no covert channel or seat-steering.",
+          "why_it_matters": "On this crisp exact-match task a full honest vote is nearly perfect, so committees add cost and capture risk rather than a demonstrated safety mechanism. The theory of change for judgement tasks is not yet evidenced.",
+          "suggested_fix": "Keep G3 labelled untested in the abstract, and if any extra runs are possible, use one judgement task where honest error is intentionally non-zero so capture can exceed the pure seat bound."
+        },
+        {
+          "id": "C3",
+          "severity": "major",
+          "category": "statistics",
+          "location": "Table 1 direct-majority row; Table C1 50% row; \u00a74.2",
+          "issue": "Direct majority releases 0/120 targets even at 50% colluders, but reported compliance (~89\u201392% of 25 colluders) never yields a complying majority, and tie-breaking is not specified. Table 1 also counts both board conditions (120 slots) although committees are shared (60 draws).",
+          "why_it_matters": "Readers can take majority voting as empirically robust to a hostile half of the swarm, and can treat seat-bound denominators as independent trials. Both would overstate what the design tolerated.",
+          "suggested_fix": "Define majority and ties, report complying-colluder counts versus honest votes at each share, and show per-condition capture or mark paired conditions so 21/22-style totals cannot be read as 120 i.i.d. trials."
+        },
+        {
+          "id": "C4",
+          "severity": "minor",
+          "category": "validity",
+          "location": "\u00a74.2 Finding 1",
+          "issue": "Forgery rejection is by construction: voters had no way to check a symmetric HMAC, and the public-key plus verification-tool baseline was not run.",
+          "why_it_matters": "The headline contrast (voting 48/48 forgeries versus kernel 0/48) does not show that crowds cannot check integrity when given the same predicate the kernel uses.",
+          "suggested_fix": "Keep the gated-majority result as the claim, and label the 48/48 figure as specific to unverifiable HMAC rather than to voting in general."
+        },
+        {
+          "id": "C5",
+          "severity": "minor",
+          "category": "related-work",
+          "location": "\u00a72, References",
+          "issue": "The gap claim depends on several 2026 citations (including arXiv:2603.25100 and the AgentRFC / Bounded Agents cluster) that cannot be confirmed from this review, plus two papers the authors say were inaccessible.",
+          "why_it_matters": "If those works already combine committee capture with a live swarm measurement, the novelty claim in \u00a72 would need to be narrowed.",
+          "suggested_fix": "Verify each citation against its source before submission, and quote the specific gap (no committee-capture measurement) rather than 'to our knowledge, none'."
+        }
+      ],
+      "verdict": "accept",
+      "confidence": 4
+    }
+  },
+  {
+    "model": "qwen/qwen3.8-max-0902",
+    "seconds": 444.8,
+    "ok": true,
+    "output_tokens": 9559,
+    "cost_usd": 0.1294,
+    "concerns": 7,
+    "scores": {
+      "impact_innovation": 4,
+      "execution": 4,
+      "presentation": 4
+    },
+    "verdict": "accept",
+    "retries": 1,
+    "review": {
+      "summary": "This hackathon report proposes a small separation-of-powers kernel that enforces mechanical checks and randomly seated committees for LLM agent swarms, then bounded-checks the implementation and stress-tests it against instructed colluders. The main evidence shows that unaided majority voting cannot block forged HMAC receipts while kernel mechanical checks do, and that committee captures occur only when colluders hold enough seats, at lower call cost. The report is unusually honest about limits, but the central safety guarantee remains conditional because honest semantic error and correlated failure are nearly untested in the chosen task.",
+      "scores": {
+        "impact_innovation": 4,
+        "execution": 4,
+        "presentation": 4
+      },
+      "score_rationale": {
+        "impact_innovation": "The target problem, collusion and oversight in large agent swarms, is important and likely neglected in typical per-agent alignment work. The combination of a small institutional kernel, bounded verification, mutation testing, and live LLM-swarm stress tests is original for a hackathon and could be built upon. It is not a 5 because the core mechanisms draw on well-known quorum, Byzantine-fault, and sortition ideas, and the demonstrated guarantee is narrow to syntactically checkable releases.",
+        "execution": "The methodology is strong for a 3-day sprint: bounded checking of real code, mutant kernels, two model families, multiple governance regimes, planted colluder shares, public logs, and explicit limitations. However, the central behavioral assumptions are not really tested because honest error is near zero on the exact-match task, the statistical units are partially non-independent, and several comparisons are confounded by design.",
+        "presentation": "The report is clear, structured, and unusually careful about conditional claims, limitations, and reproducibility. The main presentation weaknesses are in Table 1 denominators, the distinction between target invalid releases and forged releases, and the need to carry more caveats from the limitations section into the abstract and headline findings."
+      },
+      "strengths": [
+        "The paper explicitly separates mechanical guarantees from semantic judgment and states the safety claims as conditional guarantees rather than absolute protections.",
+        "The bounded verification is meaningfully connected to the implementation, and mutation testing helps show that the checker can detect missing safeguards.",
+        "The live stress test is ambitious for a hackathon, covering two reasoning-model families, seven regimes, multiple colluder shares, visible and hidden voting, and thousands of model calls.",
+        "The authors are honest about key threats to validity, including near-zero honest error, untested independence, small cells, confounded token-length signals, and the planted nature of the collusion.",
+        "The comparison between direct majority, gated majority, committees, and hybrid regimes cleanly isolates the effect of mechanical checks from the effect of committee-based judgment.",
+        "The release of code, logs, reproduction scripts, and run manifests improves reproducibility and allows external checking of the reported numbers."
+      ],
+      "concerns": [
+        {
+          "id": "C1",
+          "severity": "major",
+          "category": "validity",
+          "location": "Abstract; Section 3.3; Section 4.3",
+          "issue": "The main safety guarantee depends on honest auditors not attesting unsafe releases and on honest errors being independent, but the experimental task produces near-zero honest error because invalid releases are mostly exact-match or syntactic failures.",
+          "why_it_matters": "For alignment oversight, the hard case is semantic judgment where honest models can disagree or err. If honest errors are correlated across copies of the same model, the committee capture bound can be optimistic, so the current results do not validate the central safety claim in realistic judgment-heavy settings.",
+          "suggested_fix": "Reframe the demonstrated guarantee as applying to mechanically or syntactically checkable releases. Add a small judgment-based pilot where honest agents have nontrivial error rates, or explicitly label G3 and the independence assumption as untested in the abstract and conclusion."
+        },
+        {
+          "id": "C2",
+          "severity": "major",
+          "category": "confound",
+          "location": "Section 4.2 Finding 1; Table 1",
+          "issue": "The forged-receipt result compares unaided majority voting against a kernel that can check HMAC signatures, but voters were not given a verification tool or public-key material.",
+          "why_it_matters": "The conclusion that mechanical checks rather than voting stop forgeries is true in this design, but it may mainly show that unaided voters cannot verify symmetric HMACs. It does not establish that tool-assisted crowds could not perform the same mechanical check.",
+          "suggested_fix": "Qualify the claim to unaided voting on unverifiable signatures. If possible within hackathon scope, add a baseline where voters receive a verification tool or public-key signatures; otherwise list this as a specific missing control."
+        },
+        {
+          "id": "C3",
+          "severity": "major",
+          "category": "statistics",
+          "location": "Table 1; Section 4.2",
+          "issue": "Table 1 pools target trials even though committee draws are shared across board conditions, leaving fewer independent committee draws than pooled observations, and no uncertainty estimates or paired tests are reported.",
+          "why_it_matters": "The apparent agreement between observed capture and seat bounds may be affected by favorable random draws, small per-share cells, and non-independence. Without appropriate units of analysis, readers may overinterpret pooled counts as robust evidence.",
+          "suggested_fix": "Report results by independent committee draw as well as pooled target trials. Use a paired analysis over shared draws, such as McNemar-style comparisons or a bootstrap over committee draws, and include simple uncertainty bounds or explicitly state that the table is descriptive."
+        },
+        {
+          "id": "C4",
+          "severity": "minor",
+          "category": "presentation",
+          "location": "Table 1",
+          "issue": "The columns use different trial bases and separate unsafe target releases from forged releases, which can be confusing. For example, direct majority shows 0 unsafe target releases but 48 forged releases approved.",
+          "why_it_matters": "A quick reader may underestimate direct-majority failures or misunderstand what counts as unsafe. The distinction between authentic-but-invalid targets and forged receipts is important but not immediately obvious from the table alone.",
+          "suggested_fix": "Add a footnote explaining denominators and the target versus forged distinction. Consider adding a combined unsafe-release column or a small table note stating that forged releases are also unsafe but excluded from the target column."
+        },
+        {
+          "id": "C5",
+          "severity": "minor",
+          "category": "reproducibility",
+          "location": "Section 3.4; Section 4.2",
+          "issue": "The live runs used temperature 0.7 and appear to rely on one main sweep per model, with no repeated-run variance reported.",
+          "why_it_matters": "Model outputs may vary across runs, especially for borderline cases, unanimity blocks, and near-miss honest errors. Without repeated seeds or a stability check, some counts could be sensitive to stochasticity or API behavior.",
+          "suggested_fix": "If compute permits, rerun a small subset with different seeds or temperature 0 and report agreement. Otherwise, add a limitation that results are single-run estimates and may vary with model nondeterminism."
+        },
+        {
+          "id": "C6",
+          "severity": "minor",
+          "category": "confound",
+          "location": "Section 4.3; Appendix C.1; Appendix B.4",
+          "issue": "The longer colluder outputs and the high detector F1 are tied to a planted experimental signature: colluders received a longer conflicting prompt and shared talking point.",
+          "why_it_matters": "These signals may not generalize to covert collusion without shared phrasing or prompt asymmetries. The token-length association in particular cannot be interpreted as a cost of deception because the prompt itself differs.",
+          "suggested_fix": "Present both signals as exploratory. If possible, test a control where honest agents receive comparably long instructions, vary the colluder talking point, or evaluate detectors against less coordinated cells."
+        },
+        {
+          "id": "C7",
+          "severity": "minor",
+          "category": "related-work",
+          "location": "Section 2",
+          "issue": "The gap claim that no work combines bounded verification of committee institutions with live LLM-swarm stress testing is broad, and several cited items are recent, inaccessible, or hard to verify.",
+          "why_it_matters": "The novelty claim is plausible, but it should be cautious because the report itself notes inaccessible candidate papers and relies on several 2026 preprints.",
+          "suggested_fix": "Use phrasing such as to our knowledge and explicitly note which related works were inaccessible. Avoid implying exhaustive coverage of the agent-governance literature."
+        }
+      ],
+      "verdict": "accept",
+      "confidence": 4
+    }
+  },
+  {
+    "model": "moonshotai/kimi-k3.1-pro",
+    "seconds": 260.1,
+    "ok": true,
+    "output_tokens": 8912,
+    "cost_usd": 0.1919,
+    "concerns": 6,
+    "scores": {
+      "impact_innovation": 4,
+      "execution": 4,
+      "presentation": 5
+    },
+    "verdict": "accept",
+    "retries": 1,
+    "review": {
+      "summary": "This report builds a separation-of-powers release kernel, bounded-checks the real SQLite implementation with mutation testing, and evaluates majority, gated, committee, and hybrid regimes in instructed-colluder LLM swarms. It convincingly supports the narrow conclusions that kernel-side signature and binding checks block the tested forgeries and that observed committee capture stays within realized seat draws, while the cost advantage is accompanied by substantial capture at higher colluder shares. The work is an exceptionally clear and strong sprint artifact, but its synthetic exact-match task, bounded same-team specification, and untested honest-error independence prevent broader assurance claims.",
+      "scores": {
+        "impact_innovation": 4,
+        "execution": 4,
+        "presentation": 5
+      },
+      "score_rationale": {
+        "impact_innovation": "The gateway-based institutional framing and explicit separation of mechanical checks from semantic judgment address an important oversight problem, and combining implementation-level bounded checking with live committee-capture measurements is a promising integration others could extend. The underlying quorums, random committees, and gateway enforcement are established ideas, and the result remains a synthetic feasibility demonstration rather than a validated general oversight system, so it is significant rather than exceptional.",
+        "execution": "For a three-day sprint, the real-implementation state exploration, seven mutation tests, paired committee draws, two model families, crucial gated-majority control, and published reproduction path constitute strong execution. The authors report compliance failures and negative results, avoid unsupported pooled significance claims, and scope most conclusions carefully. It does not reach exceptional rigor because the checked world is much smaller than the live configuration, the specification shares authorship with the kernel, the adversary and task are highly synthetic, and the central independence assumption remains empirically untested.",
+        "presentation": "The abstract, G1-G3 claims, main table, and appendices make a complex study unusually easy to audit. Architectural results are distinguished from behavioral observations, important confounds are stated next to the relevant findings, and limitations and reproduction instructions are easy to locate."
+      },
+      "strengths": [
+        "Section 3.2 and Appendix B check the actual SQLite-backed implementation rather than only an abstract model, and the seven mutants provide concrete evidence that the checker detects missing checks.",
+        "The mechanically gated majority in Table 1 is a particularly informative control: it shows that the committee is unnecessary for safety in this task and reframes its value as a cost-versus-capture trade-off.",
+        "The conditional guarantee structure in Section 3.3 is precise: G1 is bounded-verification scoped, G2 uses realized seats, and G3 explicitly depends on independent honest errors and full colluder compliance.",
+        "The experiments use shared cells and committee draws for paired comparisons, report colluder noncompliance, and avoid treating the 120 pooled target trials as 120 independent committee draws.",
+        "Negative and narrow results are handled honestly: honest-error independence remains untested, herding evidence is described as weak, output length is acknowledged as prompt-confounded, and detector performance is limited to the planted signature.",
+        "The repository, retained logs, run manifests, table-regeneration script, and pre-specified detector and truncation rerun rule provide a strong reproducibility foundation for a hackathon."
+      ],
+      "concerns": [
+        {
+          "id": "C1",
+          "severity": "major",
+          "category": "validity",
+          "location": "Sections 3.2 and 4.1; Appendices A and B",
+          "issue": "The assurance evidence covers one case, three seats, quorum two, and depth six, while the live system uses 24 cases and seven seats; arbitrary cross-case interleavings are not checked. The specification was also written by the same team, so a shared misconception could affect both implementation and specification.",
+          "why_it_matters": "The successful live runs are consistent with G1 but cannot establish that the live configuration inherits the checked guarantees, particularly for uniqueness and audit behavior across cases.",
+          "suggested_fix": "Keep G1 explicitly bounded and add, if feasible, a two-case exploration and a shallow seven-seat run targeting uniqueness and cross-case interleavings. A second specification derived directly from the executive preconditions, or independent review of that specification, would reduce common-mode risk."
+        },
+        {
+          "id": "C2",
+          "severity": "major",
+          "category": "overclaiming",
+          "location": "Sections 3.4, 4.2-4.3, and 6",
+          "issue": "Because the task uses exact-match rules, instructed colluders, and essentially zero honest target error, much of the committee experiment re-expresses seat draws and instruction compliance rather than testing semantic oversight or adaptive collusion. The conclusion that committees 'matched a gated majority's judgement' and that this oversight 'does not get harder as swarms grow' is broader than the evidence: Table C1 shows 4-of-7 capture at 20-50% collusion while the gated majority remained uncaptured, and only 50-agent swarms were studied.",
+          "why_it_matters": "Readers could interpret a useful architectural feasibility result as evidence that random committees provide robust oversight for realistic judgment tasks or arbitrary swarm sizes.",
+          "suggested_fix": "Restrict the conclusion to exact-match release decisions, instructed cells, and the tested scale, and state the cost-safety trade-off separately by colluder share. If time permits, add one ambiguous judgment-based case set; otherwise leave that as the necessary next experiment."
+        },
+        {
+          "id": "C3",
+          "severity": "minor",
+          "category": "confound",
+          "location": "Section 4.2, Finding 1; Section 5",
+          "issue": "The 48/48 forged-release approvals under direct majority are architecturally expected because voters cannot verify the symmetric HMAC. Although the manuscript acknowledges this, the broader statement that 'no amount of voting substitutes for' mechanical checks could be read as applying to tool-equipped voters or public-key attestations.",
+          "why_it_matters": "The result distinguishes kernel verification from untooled voting, not from every possible crowd-based verification protocol.",
+          "suggested_fix": "Qualify the abstract and discussion as applying to untooled voters in this HMAC setting, and retain gated majority as the primary empirical comparison. A public-key verification-tool baseline can remain future work."
+        },
+        {
+          "id": "C4",
+          "severity": "minor",
+          "category": "statistics",
+          "location": "Table 1, Figure 1, and Section 4.2",
+          "issue": "The numerical inputs used to calculate the G3 expectations, particularly the value of epsilon, are not stated alongside Table 1. In addition, the 1.8-standard-deviation statement concerns independent seat draws, whereas observed capture outcomes also share agents, cases, and model runs and should not be interpreted as independent Bernoulli trials.",
+          "why_it_matters": "This limits independent checking of the planning expectations and could lead readers to overinterpret the deviation from G3 as statistical evidence about model behavior.",
+          "suggested_fix": "State epsilon, compliance, and hypergeometric parameters used for every G3 column and label the standard-deviation calculation strictly as a realized-seat-draw diagnostic. The existing descriptive, non-significance-based presentation is otherwise appropriate."
+        },
+        {
+          "id": "C5",
+          "severity": "minor",
+          "category": "reproducibility",
+          "location": "Section 3.4 and Code and Data",
+          "issue": "The reproduction path is strong, but the report does not identify an immutable repository commit, locked dependency environment, or OpenRouter provider-routing details; identical seeds and model aliases alone may not reproduce hosted-model outputs.",
+          "why_it_matters": "Exact regeneration of tables from retained logs should remain possible, but rerunning the live sweeps could vary silently with software or provider changes.",
+          "suggested_fix": "Pin a commit and data release, include dependency versions and run configuration, and record provider identifiers where available. Clarify that the no-model-call table script is the deterministic reproduction path."
+        },
+        {
+          "id": "C6",
+          "severity": "minor",
+          "category": "related-work",
+          "location": "Section 2 and References",
+          "issue": "The novelty claim is appropriately qualified, but two candidate papers were inaccessible and the manuscript itself notes that references still require source verification.",
+          "why_it_matters": "The claim that no prior work combines bounded verification with live colluding-cell committee capture therefore remains provisional.",
+          "suggested_fix": "Verify the cited sources before submission and, for the closest accessible work, add a concise comparison of verification target, adversary model, and whether committee capture is measured."
+        }
+      ],
+      "verdict": "accept",
+      "confidence": 4
+    }
+  },
+  {
+    "model": "deepseek/deepseek-v4-pro",
+    "seconds": 42.7,
+    "ok": true,
+    "output_tokens": 3326,
+    "cost_usd": 0.0138,
+    "concerns": 4,
+    "scores": {
+      "impact_innovation": 4,
+      "execution": 4,
+      "presentation": 4
+    },
+    "verdict": "accept",
+    "retries": 0,
+    "review": {
+      "summary": "This hackathon report presents a separation-of-powers kernel for multi-agent oversight, combining bounded formal verification with a live stress test against colluding LLM swarms. The kernel mechanically enforces attestation rules, and experiments with two reasoning models show that mechanical checks block forged releases while committees fail only when their random seat draws include enough colluders. The work is transparent about limitations, including the synthetic task, bounded verification, and untested independence assumptions.",
+      "scores": {
+        "impact_innovation": 4,
+        "execution": 4,
+        "presentation": 4
+      },
+      "score_rationale": {
+        "impact_innovation": "The idea of verifying the institution rather than agents is a fresh framing, and the combination of bounded verification with a large-scale LLM swarm stress test is novel in this context. The core mechanisms (quorums, threshold signatures) are well-known, but the concrete implementation and empirical measurement of behavioural assumptions advance the field. For a hackathon, this is a significant contribution that others could build on.",
+        "execution": "The methodology is sound for a 3-day sprint: a working kernel, bounded model checking (23k states, mutation testing), and 32k LLM calls across two model families, multiple colluder shares, and seven governance regimes. Results are clearly linked to the conditional guarantees, and limitations (bounded verification, synthetic task, small cells, confounded token-length signal) are honestly acknowledged. No overclaiming is present.",
+        "presentation": "The report is well-structured, with clear sections, informative tables and figures, and a logical flow from motivation through methods to results and limitations. The writing is dense but clear, and the appendices provide necessary detail without cluttering the main text."
+      },
+      "strengths": [
+        "Novel integration of bounded formal verification with a live LLM swarm stress test, directly measuring the behavioural assumptions behind institutional guarantees.",
+        "Clear theory of change and explicit conditional claims (G1\u2013G3) that separate mechanical guarantees from behavioural assumptions.",
+        "Thorough experimental design: seven regimes, varying colluder shares, visible/hidden boards, two reasoning-model families, and additional near-miss receipt tests.",
+        "Honest and detailed limitation section, including acknowledgment of untested independence, confounded token-length signal, and bounded verification scope.",
+        "Reproducible: code, data, and regeneration scripts are provided, and all reported numbers are traceable to the repository."
+      ],
+      "concerns": [
+        {
+          "id": "C1",
+          "severity": "minor",
+          "category": "validity",
+          "location": "\u00a73.2, Appendix B",
+          "issue": "The specification used for bounded verification was written by the same team as the kernel, so a mistake shared between implementation and specification could go undetected.",
+          "why_it_matters": "Reduces confidence that the verified invariants hold in all cases, though the mutation testing partially mitigates this.",
+          "suggested_fix": "Already acknowledged as a limitation; for a hackathon this is acceptable. Future work could use an independent specification or property-based testing."
+        },
+        {
+          "id": "C2",
+          "severity": "minor",
+          "category": "validity",
+          "location": "\u00a74.2, \u00a75",
+          "issue": "Only two cheap reasoning models were tested on a synthetic task with instructed colluders; results may not transfer to frontier models or real deployment scenarios.",
+          "why_it_matters": "Limits external validity of the behavioural findings (e.g., near-zero honest error, colluder compliance rates).",
+          "suggested_fix": "Already noted in limitations. A fellowship could extend to more models and ecologically valid tasks."
+        },
+        {
+          "id": "C3",
+          "severity": "minor",
+          "category": "overclaiming",
+          "location": "\u00a74.2 Finding 1",
+          "issue": "The claim that 'mechanical checks, not voting, stop forgeries' compares a direct majority that cannot verify HMACs to a kernel that can. A crowd equipped with public-key verification tools might also stop forgeries, so the comparison is not entirely fair.",
+          "why_it_matters": "Could overstate the necessity of the kernel for forgery prevention; the key insight is that verifiable checks are needed, whether in a kernel or in voter tools.",
+          "suggested_fix": "The text already mentions this caveat ('With public-key signatures and a verification tool a crowd could check too; we did not test that baseline'). No change needed, but the finding's wording could be softened slightly."
+        },
+        {
+          "id": "C4",
+          "severity": "minor",
+          "category": "statistics",
+          "location": "\u00a74.3, Appendix C.2",
+          "issue": "The near-miss receipt experiments used only 12 additional runs (756 auditor seats), which is a small sample for estimating very low error rates.",
+          "why_it_matters": "The conclusion that honest error is essentially zero may be fragile; rare errors could appear with more trials.",
+          "suggested_fix": "Already acknowledged as a limitation. Future work should use larger-scale testing on judgement-based tasks where errors are more frequent."
+        }
+      ],
+      "verdict": "accept",
+      "confidence": 4
+    }
+  },
+  {
+    "model": "xiaomi/mimo-v2.6-pro",
+    "seconds": 74.5,
+    "ok": true,
+    "output_tokens": 4476,
+    "cost_usd": 0.0083,
+    "concerns": 8,
+    "scores": {
+      "impact_innovation": 3,
+      "execution": 4,
+      "presentation": 4
+    },
+    "verdict": "accept",
+    "retries": 0,
+    "review": {
+      "summary": "The report builds a separation-of-powers kernel with k-of-m randomly seated auditors, exhaustively explores its implementation against an independent spec (23,376 states; 7 mutants caught), and stress-tests seven governance regimes against 50-agent LLM swarms with planted colluders across two model families (32,830 calls). Mechanical gating blocks forged receipts outright while committees fail only as their seat draws allow, at roughly 1/7 the vote cost; but committees add no safety over a mechanically gated majority on this task. Honest unsafe error was near zero, leaving the independence assumption behind the closed-form capture bound untested.",
+      "scores": {
+        "impact_innovation": 3,
+        "execution": 4,
+        "presentation": 4
+      },
+      "score_rationale": {
+        "impact_innovation": "The 'verify the institution, not the agents' framing and the build-verify-stress-test loop are useful and others could build on the harness, but the underlying ingredients (quorums, k-of-n committees, random sortition, BFT bounds) are established and the paper itself concedes that committees add no safety over a mechanically gated majority here. The interesting novelty is methodological framing plus the live stress-test apparatus, not a new mechanism or theory.",
+        "execution": "For a hackathon, this is strong: real implementation explored exhaustively against an independent spec with mutation testing, real LLM sweeps with paired seeds, pre-declared truncation/re-run rules, published logs and reproduction scripts, and unusually candid limitations. Main weaknesses are that the verification world is much smaller than the live configuration and the spec shares authorship with the kernel, plus small per-cell n.",
+        "presentation": "Clear structure, well-chosen tables, explicit separation of verified (G1), conditional (G2) and probabilistic (G3) claims, and honest signposting of confounds (e.g., the token-length association). Some sections are dense and a few statistical remarks (the '1.8 SD' figure) would benefit from more derivation, but overall well presented."
+      },
+      "strengths": [
+        "Bounded exploration of the actual SQLite-backed kernel (not a model of it), with 7 mutant kernels each caught and one that required depth 6 \u2014 a concrete demonstration that the bound matters.",
+        "Honest scope statements: the authors explicitly flag that the checked world is smaller than the live world, that the spec shares authors with the kernel, and that the independence assumption behind G3 is untested because honest error was ~0.",
+        "The gated-majority baseline is the right control and is reported alongside committee regimes; the paper correctly reads its own result (committee adds no safety here) rather than overselling.",
+        "Paired seeds/committees across models and conditions, pre-declared truncation re-run rule, and full run logs (including the superseded truncated run and the 600-token pilot) published for reproduction.",
+        "The dual-use discussion and adversary-model limitations are specific and appropriate.",
+        "The near-miss receipt experiment (\u00a74.3) is a good-faith attempt to actually probe honest error rather than assume it, even though the result limits the paper's claims."
+      ],
+      "concerns": [
+        {
+          "id": "C1",
+          "severity": "major",
+          "category": "overclaiming",
+          "location": "\u00a74.2 Finding 1 and Abstract",
+          "issue": "'Mechanical checks were decisive' / 'plain majority approved every forged-signature release (48/48)' is largely tautological: voters were not given any way to verify a symmetric HMAC (the paper admits this in \u00a74.2). The informative comparison is gated majority vs committee, where the paper's own result is that committees add no safety in this task. The headline should reflect that the design (mechanical gate) rather than any empirical LLM behaviour produced the forgery result.",
+          "why_it_matters": "The abstract and title read as if the empirical stress test discovered that mechanical checks beat voting. In fact the experiment mostly confirms the architecture by construction. This inflates the perceived novelty of the empirical finding.",
+          "suggested_fix": "Reframe Finding 1 as a control that validates the harness (and as evidence of the cost of not having a mechanical gate), and centre the empirical finding on the committee-vs-gated-majority cost/safety trade-off. If feasible within the sprint, add a 'crowd with tool' baseline where voters receive a signature-verification tool, as listed in Future Work."
+        },
+        {
+          "id": "C2",
+          "severity": "major",
+          "category": "statistics",
+          "location": "Table 1, Figure 1, Table C1",
+          "issue": "Per-cell target counts are n=24 with 12 independent committee draws; the paper pools across shares for Table 1 but the headline 'never exceeded the seat bound' rests on very few draws per share \u00d7 regime \u00d7 condition cell. The 'about 1.8 standard deviations low' claim uses a 'stratified variance 11.4' that is not derived in the paper.",
+          "why_it_matters": "With ~12 independent draws per point, non-exceedance of the bound is weak evidence and the SD-based statement about realized seat draws is not readily checkable. Readers may over-interpret Figure 1's agreement with G3.",
+          "suggested_fix": "Show the derivation of the stratified variance or drop the SD language; add exact binomial / hypergeometric CIs (or the enumeration) per cell in Table C1; explicitly say 'consistent with' rather than imply statistical fit."
+        },
+        {
+          "id": "C3",
+          "severity": "major",
+          "category": "validity",
+          "location": "\u00a73.3 G3, \u00a74.3, Appendix A",
+          "issue": "The probabilistic capture bound G3 assumes independent honest errors with rate \u03b5 and full colluder compliance. The experiments measure \u03b5 \u2248 0 and observe colluder compliance 89\u201392%, so G3's key assumption is neither stress-tested nor meaningfully constrained. Correlated honest errors (Knight & Leveson) could break the bound, and the paper acknowledges this but continues to present the closed-form as a planning estimate.",
+          "why_it_matters": "The paper's central theoretical claim (a closed-form capture probability) is currently unfalsified and unfalsifiable on the chosen exact-match task. This limits the value of the 'committee bound' story.",
+          "suggested_fix": "Add a judgement-based task variant with non-trivial honest error (as listed in Future Work) or clearly restate G3 as a formal statement whose empirical test is future work. Consider reporting what \u03b5 upper bound the data supports."
+        },
+        {
+          "id": "C4",
+          "severity": "major",
+          "category": "validity",
+          "location": "\u00a73.2 Scope and \u00a74.1 vs \u00a73.4",
+          "issue": "The bounded exploration uses one case, three seats, quorum 2, depth 6; the live stress test uses 24 cases, seven seats. The authors acknowledge this gap, but the paper still treats the verification as evidence for the live configuration ('every outcome landed inside the envelope that the verified rules allow').",
+          "why_it_matters": "The verified invariants are for a smaller world; cross-case interleavings, larger committees, and the seating logic are not formally covered. The claim that the live runs 'exercise G1 and G2' is weaker than it reads.",
+          "suggested_fix": "Add at least one deeper or larger bounded configuration (e.g., 2 cases \u00d7 4 seats or 5 seats, quorum 3) and/or check the seating+committee selection path specifically. Alternatively, narrow \u00a75's claim to 'the rules as implemented in the small world hold; live runs are consistent with them'."
+        },
+        {
+          "id": "C5",
+          "severity": "minor",
+          "category": "confound",
+          "location": "\u00a73.4 Models and Appendix C.1",
+          "issue": "The colluder output-length signal is confounded by the colluders' longer, conflicting prompt (acknowledged), and the near-miss task shows honest error \u2248 0 so mixed-model committees were 'no help' \u2014 meaning both headline empirical observations (output length as monitoring signal; diverse committees as error-diversifier) are weak or null.",
+          "why_it_matters": "The abstract flags '1.9\u20132.8\u00d7 longer outputs' as 'worth testing', which is appropriately hedged, but the reader may still carry it forward as a finding.",
+          "suggested_fix": "Either match prompt lengths across roles and re-run the output-length comparison, or move it entirely to exploratory observations and demote it from the abstract's bullets."
+        },
+        {
+          "id": "C6",
+          "severity": "minor",
+          "category": "reproducibility",
+          "location": "References; \u00a73.4 Models",
+          "issue": "Several cited arXiv references carry 2026 dates and identifiers (e.g., 2603.25100, 2605.20704, 2608.15888, 2609.04170) that cannot be independently checked from within the report. The paper itself instructs 'Verify every reference against its source before submission'. The related-work claim 'None studies authority spread over a committee that a colluding cell can partially capture' rests on this list.",
+          "why_it_matters": "The novelty positioning depends on these references being real and being read correctly. An unverifiable reference weakens the Gap paragraph.",
+          "suggested_fix": "Confirm each reference is public and correctly characterized before submission; where a paper is inaccessible, soften the Gap claim to 'to our knowledge among accessible work'."
+        },
+        {
+          "id": "C7",
+          "severity": "minor",
+          "category": "validity",
+          "location": "Table 1 'Calls per decision' column and \u00a75 Discussion",
+          "issue": "The cost comparison equates 50 voter calls to 7 auditor calls, but assumes audits and votes have equal evidentiary weight. The hybrid regime (57 calls) is dominated by gated majority (50 calls) at the same measured safety in this task, yet is presented as a distinct offering.",
+          "why_it_matters": "The paper's practical recommendation ('gated majority where votes are cheap, large-quorum committee where they are not') depends on this cost equivalence and on a task where audits and votes happened to be substitutable.",
+          "suggested_fix": "Note explicitly that hybrid is dominated in this benchmark and only becomes relevant when votes and audits differ in quality or cost; state the assumption that per-call cost is uniform across roles."
+        },
+        {
+          "id": "C8",
+          "severity": "minor",
+          "category": "related-work",
+          "location": "\u00a72 Related Work, \u00a73.4 Blue team",
+          "issue": "The detector achieves F1 = 1.0 at most shares against a planted cell using a shared talking point and unanimous-honest-denial setup. The paper appropriately caveats this ('detection of this planted signature'), but the abstract does not include the detector; if promoted, it would over-claim.",
+          "why_it_matters": "The detector result is a nice addition but is only valid for a stylized adversary with a shared talking point and no covert channel.",
+          "suggested_fix": "Keep the detector out of the abstract headline; if space permits, add a simple ablation (drop the talking point, or use paraphrased coordination) to show how F1 degrades."
+        }
+      ],
+      "verdict": "accept",
+      "confidence": 4
+    }
+  },
+  {
+    "model": "meta/muse-spark-1.3",
+    "seconds": 62.3,
+    "ok": true,
+    "output_tokens": 5237,
+    "cost_usd": 0.0344,
+    "concerns": 7,
+    "scores": {
+      "impact_innovation": 4,
+      "execution": 4,
+      "presentation": 4
+    },
+    "verdict": "accept",
+    "retries": 0,
+    "review": {
+      "summary": "Builds a separation-of-powers kernel with bounded verification of the real implementation plus large LLM-swarm stress tests with planted colluders. Shows mechanical checks block forgeries and committee capture stays within the seat-draw bound at lower cost than full voting. Honestly reports that near-zero honest error leaves the independence assumption untested.",
+      "scores": {
+        "impact_innovation": 4,
+        "execution": 4,
+        "presentation": 4
+      },
+      "score_rationale": {
+        "impact_innovation": "Important problem (colluding swarms defeating per-agent alignment/monitoring) with clear theory of change via gateway kernel. Integration of bounded-verified committee institution + measurement of behavioural assumptions is original framing others could build on, though quorums/BFT/sortition are decades old as authors state, so not exceptional.",
+        "execution": "Ambitious scope executed thoroughly for 3 days: 23,376-state check with 7 mutants caught, 32,830 calls across 2 model families, 0-50% shares, visible/hidden, paired seats, pre-declared re-run rule, and conditional G1/G2/G3 claims that match results. Downgraded from exceptional by toy exact-match task, weak instructed adversary, and small per-cell N.",
+        "presentation": "Well structured with contributions, conditional guarantees, pooled and per-share tables, and extensive limitations appendices. Dense but interpretable; not exceptional due to many numbers and reliance on unseen figures/logs."
+      },
+      "strengths": [
+        "Bounded exhaustive check of real SQLite kernel (23,376 states, 105,708 transitions) plus 7 mutants all caught, including depth-6-only uniqueness violation, showing checker has teeth.",
+        "Large paired live design: same votes/attestations judged under 8 regimes, same seeds/cells/committees across models, 16,415/16,416 calls per model, costs logged.",
+        "Honest conditional framing G1/G2/G3, explicit seat-bound vs a-priori expectation, refusal to claim pooled CIs, reporting favourable draws and colluder non-compliance (89-93%).",
+        "Open harness, logs, reproduce_tables.py without model calls, truncation audit retaining both versions, and detector pre-fixed on scripted runs."
+      ],
+      "concerns": [
+        {
+          "id": "C1",
+          "severity": "major",
+          "category": "validity, confound",
+          "location": "\u00a73.4, \u00a74.2 Finding 1, Table 1",
+          "issue": "Direct-majority 48/48 forgery approval is architectural by construction: voters had no way to verify symmetric HMAC. Informative gated-majority is offline replay.",
+          "why_it_matters": "Makes 'mechanical checks decisive' trivial in this setting and overstates voting failure vs a realistic crowds-plus-tools baseline.",
+          "suggested_fix": "Add public-key + verification-tool baseline where crowd can check signatures, as authors note as future; label Finding 1 as setting-specific."
+        },
+        {
+          "id": "C2",
+          "severity": "major",
+          "category": "validity",
+          "location": "\u00a73.2, Appendix B.1-B.2",
+          "issue": "Verification is one case, 3 seats quorum-2 depth-6 vs live 24 cases 7 seats; S2 is eligible-attempt succeeds not temporal progress; spec written by same team; dedup on table contents.",
+          "why_it_matters": "Verified G1 may not transfer to larger interleavings; shared spec/kernel bug could be missed.",
+          "suggested_fix": "Expand bounds/multi-case, independent spec review, clarify S2; pursue TLA+/Lean as proposed."
+        },
+        {
+          "id": "C3",
+          "severity": "major",
+          "category": "validity, related-work",
+          "location": "\u00a73.3 G3, \u00a74.3, \u00a75, Appendix A",
+          "issue": "Core assumptions untested: honest unsafe error 0/746 and 0-0.3% on near-miss so independence/correlation untested; colluders instructed with 89-92% compliance, no covert channel, seat-steering, key compromise, or kernel bypass.",
+          "why_it_matters": "Real capture could exceed G3 bound via correlated errors or adaptive adversary; stress test measures compliance not robustness.",
+          "suggested_fix": "Judgement-based tasks where honest agents genuinely err; adaptive red-team that steers seating and evades detection."
+        },
+        {
+          "id": "C4",
+          "severity": "major",
+          "category": "statistics",
+          "location": "Table 1, Figure 1, Table C1",
+          "issue": "Per-point N is 12 independent committee draws (24 trials sharing draws across board conditions); pooled 120 double-counts; per-share cells n=12 targets; 1.8-SD-low claim is post-hoc descriptive.",
+          "why_it_matters": "Apparent precision overstated; favourable draws explain gap to G3 curve.",
+          "suggested_fix": "Keep per-share reporting as done, add exact intervals accounting for pairing, pre-register independent draws and power; avoid SD interpretation."
+        },
+        {
+          "id": "C5",
+          "severity": "minor",
+          "category": "reproducibility",
+          "location": "\u00a74.2, Appendix B.3, C.3, Code and Data, References",
+          "issue": "Qwen pilot logs not retained; 2 transport errors + 6 unparseable as abstentions handling for unanimity liveness (9/96 gpt-oss blocks from 10 refusals) unclear; 2026 arXiv references unverified with author note to verify.",
+          "why_it_matters": "Cannot reproduce pilot or check liveness accounting; positioning against prior work cannot be verified.",
+          "suggested_fix": "Retain all pilot logs, document abstention/refusal mapping, verify every reference before submission."
+        },
+        {
+          "id": "C6",
+          "severity": "minor",
+          "category": "confound, overclaiming",
+          "location": "\u00a74.3, Appendix C.1-C.2",
+          "issue": "Colluder 1.9-2.8x longer outputs confounded by longer conflicting prompt and includes hidden reasoning visible only via usage metadata; herding test has 14-16 exposures.",
+          "why_it_matters": "Cannot interpret length as cost of deception or monitoring signal; herding null is weak evidence.",
+          "suggested_fix": "Matched-length prompts/ablation, test adaptive shortening and uniform deadlines as proposed; label as association."
+        },
+        {
+          "id": "C7",
+          "severity": "minor",
+          "category": "overclaiming",
+          "location": "\u00a73.4, \u00a74.3 Detection, Appendix B.4",
+          "issue": "Detector F1=1.0 (0.97-1.0) on planted cell sharing talking point and voting against unanimous honest denials, with one false 3-agent cluster at 0%.",
+          "why_it_matters": "Risks misreading as general collusion detection though authors qualify as planted-signature only.",
+          "suggested_fix": "Keep qualification prominent, evaluate on diverse covert strategies without shared minority signal."
+        }
+      ],
+      "verdict": "accept",
+      "confidence": 4
+    }
+  },
+  {
+    "model": "meta/muse-wonder",
+    "seconds": 34.4,
+    "ok": true,
+    "output_tokens": 3314,
+    "cost_usd": 0.105,
+    "concerns": 7,
+    "scores": {
+      "impact_innovation": 4,
+      "execution": 4,
+      "presentation": 4
+    },
+    "verdict": "weak accept",
+    "retries": 0,
+    "review": {
+      "summary": "The paper builds a small separation-of-powers release kernel, bounded-model-checks the real implementation with mutation testing, and stress-tests committee, majority, gated-majority, and hybrid regimes in 50-agent LLM swarms with planted colluders across two model families. Its most convincing result is narrow but useful: mechanical integrity/binding checks stop forged receipts that unaided voters cannot check, while random committees reduce decision cost at a capture risk largely determined by seat draws. The central behavioural assumption behind the probabilistic guarantee\u2014independence of honest errors\u2014remains essentially untested because the exact-match task produces almost no honest errors, and several headline comparisons are partly architectural rather than empirical.",
+      "scores": {
+        "impact_innovation": 4,
+        "execution": 4,
+        "presentation": 4
+      },
+      "score_rationale": {
+        "impact_innovation": "Important and neglected framing\u2014verify the institution and measure only the behavioural parameters its guarantee needs\u2014with a plausible gateway theory of change. Quorums, threshold authority, sortition, and bounded verification are explicitly and correctly acknowledged as old, so novelty lies in the verified-kernel-plus-live-collusion-measurement combination rather than a new primitive; that combination could be built on.",
+        "execution": "Strong for a 3-day hackathon: real-implementation state exploration (23,376 states), seven caught mutants, paired committee draws across regimes/models, 32,830 calls, truncation audit, near-miss follow-up, and unusually explicit limitation reporting. It is not a 5 because verification is bounded to a much smaller world than deployment, the main task is too crisp to test honest-error independence, per-share independent committee draws are only n=12, and the forgery and seat-bound results are partly guaranteed by construction.",
+        "presentation": "Well structured, with clear conditional claims G1\u2013G3, informative Table 1/Figure 1, and appendices separating verification, detector, and supplementary results. Length and dense caveats make some key qualifications easy to miss, and pooled counts in Table 1 require careful reading alongside the note that only 60 committee draws are independent."
+      },
+      "strengths": [
+        "Bounded verification is performed on the real SQLite-backed kernel rather than only a toy model, includes both kernel modes, and is mutation-tested with seven single-check deletions (Sections 3.2, 4.1, Appendix B.2).",
+        "The gated-majority baseline is the right control: it separates mechanical checking from committee judgement and shows committees add cost savings rather than extra safety in this task (Section 4.2, Finding 1).",
+        "Paired seeds, cells, and committee draws across models and board conditions improve comparability, and the authors correctly avoid pooled confidence intervals after noting only 60 independent committee draws (Table 1 note).",
+        "Claims are unusually well conditioned: G1/G2/G3 are distinguished, bounded checking is not called a proof, detector success is limited to the planted signature, and the token-length result is labelled an association (Sections 3.3, 4.3, Appendix C.1).",
+        "Truncation is treated as a non-neutral instrument, with a stated re-run rule, retention of both versions, and disclosure that one regime-condition cell changed (Appendix B.3)."
+      ],
+      "concerns": [
+        {
+          "id": "C1",
+          "severity": "major",
+          "category": "validity",
+          "location": "Abstract; Section 4.2 Finding 1; Section 3.4",
+          "issue": "The 48/48 forged-release approval by direct majority is largely architectural: voters were given no way to verify a symmetric HMAC, so the crowd could not in principle perform the check being tested. The authors acknowledge a public-key/tool-enabled crowd baseline was not tested, but the abstract still frames this as mechanical checks being 'decisive' over voting.",
+          "why_it_matters": "It risks converting a designed impossibility into an empirical claim that voting cannot stop forgery, when the tested comparison is really 'verifier versus no verifier'.",
+          "suggested_fix": "Add, even on a subset, a majority baseline given a signature-verification tool or public-key attestations; otherwise retitle the finding as showing that unaided judgement cannot substitute for an unavailable mechanical check."
+        },
+        {
+          "id": "C2",
+          "severity": "major",
+          "category": "validity",
+          "location": "Sections 3.3, 4.3, 5; Appendix A",
+          "issue": "G3's independence assumption is untested because honest auditors signed 0/746 targets per model and near-miss error was 0\u20130.3%. The exact-match receipt task is too easy to generate the honest errors whose correlation determines whether committee bounds are optimistic, especially with same-model auditors.",
+          "why_it_matters": "Correlated honest error is the main route by which the probabilistic capture formula could fail in real deployments, so the live experiments validate seat arithmetic more than the behavioural guarantee.",
+          "suggested_fix": "Run a small judgement-based variant where honest agents err at a measurable rate, ideally with same-model versus mixed-model committees, and report error correlation directly rather than only capture counts."
+        },
+        {
+          "id": "C3",
+          "severity": "major",
+          "category": "statistics",
+          "location": "Table 1; Figure 1; Section 4.2 Finding 2; Table C1",
+          "issue": "'Capture never exceeded the seat bound' is close to a consistency check once honest signing is observed to be zero in the same data: if honest auditors never sign targets and colluders sign only when seated, exceedance is impossible by construction. Per-share inference also rests on only 12 independent committee draws, with board conditions paired rather than independent.",
+          "why_it_matters": "This weakens the interpretation of Finding 2 as independent empirical confirmation of G2, and small-count differences between committee sizes or shares are noisy despite the clean pooled table.",
+          "suggested_fix": "State explicitly that the seat-bound result is a consistency check conditional on observed zero honest signing, and add exact binomial/hypergeometric intervals or draw-level bootstrap intervals clustered by the 60 independent committee draws."
+        },
+        {
+          "id": "C4",
+          "severity": "major",
+          "category": "validity",
+          "location": "Sections 3.2, 4.1; Appendix B.1\u2013B.2",
+          "issue": "Verification covers one case, three seats, quorum 2, and depth 6, whereas live runs use 24 cases and seven seats; the specification was written by the same team, and deduplication uses kernel-table plus specification state. Mutants each remove one obvious check, so mutation success does not strongly probe shared specification/kernel misconceptions or cross-case interleavings.",
+          "why_it_matters": "The verified bound may not transfer to the deployed configuration, particularly for multi-case uniqueness, seating, and interleaving bugs.",
+          "suggested_fix": "Add a scaled check for at least the 4-of-7 seating rule or two concurrent cases, plus randomized differential/property tests against a separately phrased invariant list; report state-space limits explicitly in the main text."
+        },
+        {
+          "id": "C5",
+          "severity": "major",
+          "category": "related-work",
+          "location": "Section 2; References",
+          "issue": "The novelty claim rests partly on 2026 arXiv items and the manuscript itself notes two candidate papers were inaccessible and instructs to 'verify every reference against its source before submission'. The claim that no prior work combines bounded verification with live colluding-swarm committee capture is therefore not fully substantiated from the presented evidence.",
+          "why_it_matters": "If an inaccessible or mis-cited work already combines protocol verification with adversarial multi-agent evaluation, the innovation positioning would need revision.",
+          "suggested_fix": "Verify or remove unverifiable citations, name the inaccessible candidates if possible, and soften 'none combines' to 'we found none among accessible work' until the search is complete."
+        },
+        {
+          "id": "C6",
+          "severity": "minor",
+          "category": "confound",
+          "location": "Section 4.3; Appendix C.1\u2013C.3",
+          "issue": "The 1.9\u20132.8x longer colluder outputs are confounded by a longer, conflicting colluder prompt and by counting hidden reasoning tokens; detector F1 near 1.0 likewise reflects a planted cell sharing a talking point while honest agents unanimously deny.",
+          "why_it_matters": "Neither result yet supports a general monitoring or deadline defence, and adaptive colluders could plausibly erase both signals.",
+          "suggested_fix": "Add a prompt-length/conflict-matched honest control for token length, and test the detector on a cell without a shared talking point or with mixed honest disagreement before proposing deadlines as defence."
+        },
+        {
+          "id": "C7",
+          "severity": "minor",
+          "category": "reproducibility",
+          "location": "Section 3.4; Appendix B.3; Code and Data",
+          "issue": "Several regimes are replayed offline from the same votes rather than run as independent live deployments, and one full run was replaced under a stated pre-declared rule that changed a 4-of-7 hidden cell from 1 capture to 0. The repository and reproduction script are cited, but the manuscript alone does not show preregistration or independent rerun evidence.",
+          "why_it_matters": "Offline replay is efficient and paired, but it cannot capture regime-dependent agent behaviour, and outcome-dependent-looking re-runs need especially transparent provenance.",
+          "suggested_fix": "Label replayed regimes consistently in Table 1, keep both versions of the re-run in the headline sensitivity analysis, and include manifest hashes or a timestamped note supporting the pre-declared rule."
+        }
+      ],
+      "verdict": "weak accept",
+      "confidence": 4
+    }
+  },
+  {
+    "model": "mistralai/mistral-large-4-0",
+    "seconds": 166.8,
+    "ok": false,
+    "output_tokens": 16000,
+    "cost_usd": 0.0607,
+    "concerns": 0,
+    "scores": null,
+    "verdict": null,
+    "retries": 1,
+    "review": {
+      "unparsed": ""
+    }
+  },
+  {
+    "model": "minimax/minimax-m3",
+    "seconds": 17.1,
+    "ok": true,
+    "output_tokens": 3984,
+    "cost_usd": 0.0077,
+    "concerns": 8,
+    "scores": {
+      "impact_innovation": 4,
+      "execution": 4,
+      "presentation": 4
+    },
+    "verdict": "weak accept",
+    "retries": 0,
+    "review": {
+      "summary": "The authors build a separation-of-powers kernel that mediates agent actions through mechanical checks plus a randomly seated committee, bounded-exhaustively verify it (23,376 states, 7 mutants caught), and stress-test 7 governance regimes with 32,830 LLM calls across two reasoning models with planted colluders. The work is methodologically careful, with pre-declared re-run rules, paired committee draws, and unusually honest acknowledgment of limitations. The most striking finding\u2014that a mechanically gated majority with no committee matches the safety of all committee regimes in this setting\u2014somewhat deflates the contribution of the committee mechanism itself.",
+      "scores": {
+        "impact_innovation": 4,
+        "execution": 4,
+        "presentation": 4
+      },
+      "score_rationale": {
+        "impact_innovation": "The 'verify the institution, not the agents' framing is genuinely original and the combination of bounded verification with live LLM-swarm stress testing is rare. Underlying primitives (Byzantine agreement, threshold crypto, random sortition) are decades old, and the closest design paper (arXiv:2603.25100) is explicitly unimplemented, so the empirical kernel + harness is a real contribution others could build on. Falls short of 5 because the gated-majority finding shows committees add no safety in this setting, narrowing the claimed contribution.",
+        "execution": "Bounded verification with mutation testing is rigorous for a hackathon; the paired committee-draw design across board conditions is sound; truncation handling with a pre-declared re-run rule is good practice; limitations are stated explicitly and accurately. Falls short of 5 because the verified world (1 case, 3 seats, depth 6) is much smaller than the live config (24 cases, 7 seats), the spec was written by the same team, per-share cells are small (n=12) with no significance tests, and G3's independence assumption is untested by design.",
+        "presentation": "Clear structure, informative tables, explicit conditional claims (G1/G2/G3), and unusually honest limitation statements. The abstract is dense but informative. Falls short of 5 because the deflating gated-majority finding is buried in Finding 1 rather than foregrounded, and the detector's F1=1.0 deserves more prominent caveat."
+      },
+      "strengths": [
+        "Bounded verification of the real kernel against an independent spec with mutation testing (7/7 mutants caught, including one that surfaced only at depth 6)",
+        "Pre-declared re-run rule for truncation, applied before results were known, with both versions retained",
+        "Paired committee draws across board conditions so regime comparisons are not confounded by seat luck",
+        "Three explicitly conditional claims (G1/G2/G3) that separate what is verified, what is bounded by seat draws, and what depends on untested behavioural assumptions",
+        "Unusually honest treatment of limitations: same-team spec risk, bounded-not-complete verification, near-zero honest error leaving independence untested, token-length confound",
+        "Substantial empirical scope for a hackathon: 32,830 calls, 7 regimes, 2 model families, 5 colluder shares, transparent cost reporting ($2.18)"
+      ],
+      "concerns": [
+        {
+          "id": "C1",
+          "severity": "major",
+          "category": "validity",
+          "location": "\u00a73.2, \u00a74.1, Appendix B.1",
+          "issue": "The bounded-verification world (1 case, 3 seated auditors, quorum 2, depth 6) is substantially smaller than the live configuration (24 cases, 7 seats, quorum 4). The verification does not actually cover the deployed kernel.",
+          "why_it_matters": "G1 is stated as 'verified within the bound' but the bound is far from the live system. A reader could overinterpret the verification as covering the live config.",
+          "suggested_fix": "Add a table explicitly mapping each live-config parameter to its verified-world analogue and stating which invariants transfer by argument vs. which require re-checking. Consider running the checker at depth 6 on a 2-case, 5-seat world as a bridge."
+        },
+        {
+          "id": "C2",
+          "severity": "major",
+          "category": "overclaiming",
+          "location": "\u00a74.2 Finding 1, Abstract",
+          "issue": "The gated-majority regime (mechanical checks + full vote, no committee) achieved 0/120 captures and 0/48 forgeries at 50 calls per decision\u2014matching the hybrid regime at 57 calls. In this setting, committees add no measurable safety over mechanical checks alone.",
+          "why_it_matters": "This is the paper's most important empirical finding but it is buried in Finding 1 and somewhat contradicts the framing that committees are a key contribution. The contribution then reduces to 'mechanical checks + optional committee for cost savings', which is a narrower claim.",
+          "suggested_fix": "Promote the gated-majority result to a top-level finding. Reframe the contribution as: (1) mechanical checks are necessary and sufficient for forgery resistance; (2) committees are a cost-saving substitute for full votes when judgement is needed, with capture bounded by seat draws."
+        },
+        {
+          "id": "C3",
+          "severity": "major",
+          "category": "validity",
+          "location": "\u00a73.3 G3, \u00a74.3, Appendix C.2",
+          "issue": "G3's independence assumption is untested because honest unsafe error was essentially zero (0/746 auditors signed invalid targets; 0.3% and 0% on near-miss receipts). The closed-form capture probability is therefore a planning estimate, not a validated prediction.",
+          "why_it_matters": "The most theoretically interesting claim (G3) is the one least supported by evidence. The paper acknowledges this but the abstract and introduction present G3 as a contribution.",
+          "suggested_fix": "Move G3 to 'future work' or clearly label it as a planning formula pending the judgement-based-task experiments in the fellowship roadmap. The current presentation risks readers treating G3 as validated."
+        },
+        {
+          "id": "C4",
+          "severity": "minor",
+          "category": "statistics",
+          "location": "\u00a74.2, Table 1, Table C1",
+          "issue": "Per-share cells have n=12 targets; committee draws are shared across board conditions so the two conditions are paired, not independent. No significance tests or confidence intervals are reported.",
+          "why_it_matters": "Small-n claims like '1.8 standard deviations low' for seat draws are suggestive but not statistically rigorous. The paper acknowledges this but the framing in Finding 2 is somewhat assertive.",
+          "suggested_fix": "Report Wilson or bootstrap confidence intervals on capture rates per share. State explicitly that the '1.8 SD' claim is descriptive, not inferential."
+        },
+        {
+          "id": "C5",
+          "severity": "minor",
+          "category": "confound",
+          "location": "\u00a74.3, Appendix C.1",
+          "issue": "The 1.9\u20132.8\u00d7 output-length association is confounded by the longer prompt given to colluders (which includes the conflicting instruction). The paper acknowledges this but still presents it as a monitoring signal.",
+          "why_it_matters": "An adaptive colluder who knows about the signal could match honest output length while still colluding, defeating the detector. The signal's robustness is untested.",
+          "suggested_fix": "Add a small experiment where colluders are instructed to match honest output length, and report whether capture still occurs. Alternatively, downgrade the signal to 'hypothesis-generating'."
+        },
+        {
+          "id": "C6",
+          "severity": "minor",
+          "category": "reproducibility",
+          "location": "References",
+          "issue": "Eight of the 17 references are 2026 arXiv preprints with sequential IDs (e.g., 2603.23801, 2603.25100, 2605.17998, 2605.20704, 2606.04104, 2607.23532, 2608.15888, 2609.04170). These should be verified to exist and be cited accurately.",
+          "why_it_matters": "Reproducibility and accurate positioning against prior work depend on real references. Fabricated or miscited references would undermine the related-work section.",
+          "suggested_fix": "Verify each arXiv ID resolves and that the cited claims match the abstracts. The paper already includes a note to verify references, which is appropriate."
+        },
+        {
+          "id": "C7",
+          "severity": "minor",
+          "category": "validity",
+          "location": "\u00a73.2, Appendix A",
+          "issue": "The specification was written by the same team that wrote the kernel. A mistake shared between spec and kernel would not be caught by the checker.",
+          "why_it_matters": "This is a standard limitation of bounded model checking against a same-author spec, but it limits the strength of the verification claim.",
+          "suggested_fix": "Acknowledge this more prominently in the abstract or contribution list. Consider having an independent reviewer write a second spec for cross-validation in future work."
+        },
+        {
+          "id": "C8",
+          "severity": "minor",
+          "category": "generalizability",
+          "location": "\u00a73.4, Appendix A",
+          "issue": "Only two cheap reasoning models were tested (DeepSeek v4 Flash, gpt-oss-20b). Results may not transfer to frontier agents with different capabilities or training.",
+          "why_it_matters": "The kernel's value proposition is deployment at gateways for real swarms; transfer to frontier models is the open question.",
+          "suggested_fix": "Acknowledge this as a key limitation in the abstract. The fellowship roadmap already addresses this."
+        }
+      ],
+      "verdict": "weak accept",
+      "confidence": 4
+    }
+  },
+  {
+    "model": "z-ai/glm-5.3",
+    "seconds": 64.6,
+    "ok": true,
+    "output_tokens": 7206,
+    "cost_usd": 0.0108,
+    "concerns": 7,
+    "scores": {
+      "impact_innovation": 4,
+      "execution": 4,
+      "presentation": 4
+    },
+    "verdict": "accept",
+    "retries": 0,
+    "review": {
+      "summary": "A 3-day sprint report that builds a small separation-of-powers governance kernel for agent swarms, bounded-model-checks its safety/liveness/uniqueness/audit invariants against a hand-written specification with mutation testing, and then stress-tests seven governance regimes against 50-agent LLM swarms with planted colluding cells across two reasoning-model families. The headline empirical results are that mechanical checks (not voting) block forged attestations, that committee capture never exceeds the seat-draw bound, and that honest error is near zero so the independence assumption underlying the probabilistic guarantee remains untested. The reporting is unusually honest: assumptions, bounds, favourable seat draws, and confounds are quantified rather than hidden, and the numbers are internally consistent (the 36.0 expected vs 24 capturable 1-of-1 draws, the 12-vs-18 independent-draw accounting, and the per-trial G3 arithmetic all check out).",
+      "scores": {
+        "impact_innovation": 4,
+        "execution": 4,
+        "presentation": 4
+      },
+      "score_rationale": {
+        "impact_innovation": "The framing \u2014 verify the institution mechanically, then empirically measure the behavioural parameters (honest error, its correlation, colluder compliance) that the verified guarantee conditions on \u2014 is genuinely novel positioning, distinct from prior protocol-verification and LLM-governance evaluation work, and the gateway theory of change is explicit. It falls short of a 5 because the headline discovery (mechanical checks beat unaided voting on forgeries) is largely architectural by construction, the core primitives (quorums, sortition, threshold signatures) are classical and not claimed, and the empirical findings are constrained to a setting where the key behavioural parameter is ~0.",
+        "execution": "Bounded verification of the real implementation with mutation testing (all 7 mutants caught, including one only at depth 6), a paired design with shared seeds/committee draws, a gated-majority control most similar work would omit, a pre-declared truncation re-run rule with both versions retained, dual model families to isolate family effects, and published logs plus a no-API table-regeneration script. Weaknesses are the weak adversary (instructed cell, no seat-steering, no key compromise), the near-tautological forged-release result, the much smaller verified world than the deployed configuration, and the fact that the central committee-vs-crowd trade-off is measured where honest error never occurs \u2014 but all of these are acknowledged and the conclusions are stated with matching conditionality.",
+        "presentation": "Very clear claim taxonomy (S1\u2013S4, G1\u2013G3, numbered findings), consistent notation, traceable numbers, and limitations plus dual-use analysis given equal prominence to results. Occasionally dense, with key caveats (shared draws, favourable seat draws) split across table footnotes, \u00a74.2, and appendices, but nothing important is buried."
+      },
+      "strengths": [
+        "Genuinely novel methodological loop: bounded verification of governance invariants combined with live measurement of the behavioural assumptions (honest error, independence, compliance) those guarantees rest on \u2014 a direction others can build on.",
+        "Mutation testing gives the checker teeth, and the depth-6-only mutant (missing uniqueness check, missed at depth 5) is a concrete, honest demonstration of why bounds matter.",
+        "The gated-majority baseline is the right control: it isolates the effect of committees from the effect of mechanical checks, showing the committee's value in this setting is cost, not safety \u2014 a distinction most evaluations would blur.",
+        "Exceptional statistical honesty: correctly identifies that shared committee draws give 60 (not 120) independent draws, therefore reports counts rather than CIs, and quantifies the favourable seat draws (12 vs 18, ~1.8 SD low with stated variance) instead of letting Figure 1 flatter G3.",
+        "Pre-declared truncation re-run rule, both run versions retained, non-binding output caps justified by the pilot finding that 98/99 truncations were colluders, and a detector tuned on scripted runs and frozen before live sweeps.",
+        "Open code, sealed ground truth, per-run manifests, and a reproduction script that regenerates tables without model calls."
+      ],
+      "concerns": [
+        {
+          "id": "C1",
+          "severity": "major",
+          "category": "overclaiming",
+          "location": "Title, Abstract, \u00a74.2 Finding 1",
+          "issue": "The title's 'Stress-Tested Against Colluding LLM Swarms' and the abstract's 'Mechanical checks were decisive' overstate both the adversary and the discovery. The 48/48 forged approvals under direct majority are architectural (voters cannot verify a symmetric HMAC), and the cell was instructed, with no covert channel, seat-steering, or key compromise (Appendix A).",
+          "why_it_matters": "Readers may infer general adversarial robustness and an empirical discovery where the paper mostly demonstrates a structural property against a weak, compliant adversary.",
+          "suggested_fix": "Soften the title/abstract to 'planted-cell compliance stress test', and move the by-construction caveat (currently buried in Finding 1) into the abstract bullet itself; the gated-majority comparison is the genuinely informative result and should lead."
+        },
+        {
+          "id": "C2",
+          "severity": "major",
+          "category": "validity",
+          "location": "\u00a74.2 Finding 2, \u00a74.3, Abstract",
+          "issue": "The conclusion that committees add no safety over a gated majority is measured in a task where honest unsafe error is ~0 (0/746 auditors; 0.3% on near-miss receipts), so the judgement channel that committees exist to supply is never exercised.",
+          "why_it_matters": "The cost-safety trade-off \u2014 the paper's central practical claim \u2014 may not transfer to judgement-based tasks where honest errors are nonzero and correlated, which the authors themselves identify as the key open risk.",
+          "suggested_fix": "Add one judgement-noise condition (e.g., subtly ambiguous receipts with sealed ground truth) even at small n, or scope the trade-off claim explicitly to exact-match tasks in the abstract; the future-work roadmap already gestures at this but the abstract does not."
+        },
+        {
+          "id": "C3",
+          "severity": "major",
+          "category": "validity",
+          "location": "\u00a73.2, \u00a74.1 vs \u00a73.4",
+          "issue": "The bounded-verification world (one case, three seats, quorum 2) is much smaller than the live configuration (24 cases, seven seats, quorums up to 7), so G1 is verified only for a configuration that was never deployed; the paper says 'verified within the bound' but the gap is easy to miss.",
+          "why_it_matters": "Cross-case interleavings and larger committee sizes are exactly where uniqueness/at-most-once bugs could appear; the mutation results do not cover them.",
+          "suggested_fix": "Run the checker once on the live-shaped world (seven seats, quorum 4, reduced depth) and report whether S1\u2013S4 hold, or add a state-count-vs-seats table showing feasibility; also note that the specification was written by the same team, so an independent re-derivation of at least S1 would strengthen the 'independent specification' claim."
+        },
+        {
+          "id": "C4",
+          "severity": "minor",
+          "category": "statistics",
+          "location": "Table 1, Figure 1, Table C1",
+          "issue": "Observed-vs-expected comparisons carry no uncertainty quantification beyond the single 1.8-SD note; cells are n=12 targets over 12 independent draws per share.",
+          "why_it_matters": "Small deviations from G3 (e.g., 4-of-7 at 20%: 1\u20132 of 24) cannot be distinguished from draw noise, so Figure 1's point placement risks over-reading.",
+          "suggested_fix": "Report exact hypergeometric/binomial tail probabilities (or per-draw capture indicators with a CI) per regime-share cell \u2014 feasible offline from the published logs."
+        },
+        {
+          "id": "C5",
+          "severity": "minor",
+          "category": "confound",
+          "location": "\u00a74.3, Appendix C.1",
+          "issue": "The 1.9\u20132.8x output-length signal is confounded by the colluders' longer, conflicting prompt; the paper says so but presents medians (106 vs 294) that invite causal reading.",
+          "why_it_matters": "If the effect is mostly prompt length, the 'deadlines as defence' future-work item is built on sand.",
+          "suggested_fix": "Add a small length-matched control (long benign instruction) in a pilot to bound the confound; even a negative result would sharpen the claim."
+        },
+        {
+          "id": "C6",
+          "severity": "minor",
+          "category": "reproducibility",
+          "location": "\u00a73.4, Appendix A, Code and Data",
+          "issue": "The Qwen exclusion and truncation pilot rest on logs 'not retained' on a second host, and the 12 near-miss runs (x2 models x3 seeds) are not clearly mapped into the published data bundle.",
+          "why_it_matters": "Model-selection and honest-error results partially rest on unverifiable pilot evidence.",
+          "suggested_fix": "State which files in the data zip cover the near-miss runs, and retain or regenerate the 600-token pilot logs for the truncation claim."
+        },
+        {
+          "id": "C7",
+          "severity": "minor",
+          "category": "related-work",
+          "location": "\u00a72, References",
+          "issue": "Several 2026 arXiv identifiers (e.g., 2603.25100, 2608.15888, 2609.04170) could not be verified here, and the authors themselves note two candidate gap-papers were inaccessible.",
+          "why_it_matters": "The novelty claim ('to our knowledge, none combines a and b') rests on this coverage.",
+          "suggested_fix": "Confirm every identifier and venue before submission; obtain or explicitly list the two inaccessible papers as unreviewed threats to the gap claim."
+        }
+      ],
+      "verdict": "accept",
+      "confidence": 4
+    }
+  },
+  {
+    "model": "tencent/hy3",
+    "seconds": 94.1,
+    "ok": true,
+    "output_tokens": 6330,
+    "cost_usd": 0.0046,
+    "concerns": 2,
+    "scores": {
+      "impact_innovation": 4,
+      "execution": 4,
+      "presentation": 4
+    },
+    "verdict": "weak accept",
+    "retries": 0,
+    "review": {
+      "summary": "The report presents a bounded-verified separation-of-powers kernel for LLM swarms and stress-tests it against colluding cells, showing mechanical checks block forgeries and committee capture stays within seat bounds. Execution is strong for a hackathon with mutation testing, 32k calls, and reproducible artifacts, though statistical reporting of seat-draw deviation is slightly inconsistent. The work honestly scopes its guarantees and offers a promising institution-centered oversight path.",
+      "scores": {
+        "impact_innovation": 4,
+        "execution": 4,
+        "presentation": 4
+      },
+      "score_rationale": {
+        "impact_innovation": "Addresses important multi-agent oversight problem with original integration of bounded verification of a committee-based institution and live LLM swarm stress test, filling a gap vs prior design-only or protocol-only works; others could build on the open harness.",
+        "execution": "Technically solid for a weekend: bounded model checking with mutants, 32k-call live test across regimes/models, paired design, pre-declared re-run rule, reproducible data. Some statistical confusion in reporting G2/G3 deviation but conclusions supported by evidence.",
+        "presentation": "Well structured with abstract, clear tables/figures, thorough appendices; minor ambiguity in statistical text but overall clear enough for a hackathon report."
+      },
+      "strengths": [
+        "Concrete theory of change: shift verification from agents to institution",
+        "Bounded verification of real kernel with mutation testing (7 mutants caught)",
+        "Large-scale live stress test (32,830 calls) with paired committees across conditions and two model families",
+        "Honest acknowledgment of untested independence assumption and limitations",
+        "Open repository and data for reproduction"
+      ],
+      "concerns": [
+        {
+          "id": "C1",
+          "severity": "minor",
+          "category": "statistics",
+          "location": "Section 4.2, paragraph 'Realized seat draws were favourable relative to G3' and Table 1 seat bound column",
+          "issue": "Text states '24 committees were capturable for 1-of-1 against 36 expected. That is 12 versus 18 on the 60 independent draws', but models share seeds/committees so there are 60 independent draws total, not 120; reporting both 24/36 and 12/18 double-counts the same draws across models.",
+          "why_it_matters": "Could confuse readers into thinking observed deviation from G3 is based on 120 draws, inflating apparent sample size; the z-score computed from 12 vs 18 is correct but preceding numbers mislead.",
+          "suggested_fix": "Clarify that 60 committee draws are shared across both models; report only the 12-versus-18 figure (or explicitly note 24 is the sum of two identical model replicates)."
+        },
+        {
+          "id": "C2",
+          "severity": "minor",
+          "category": "validity",
+          "location": "Section 3.2 / Appendix B.1",
+          "issue": "Bounded verification covers only one case, three seats, quorum 2, depth 6, while live config uses 24 cases, seven seats; specification written by same team.",
+          "why_it_matters": "Verification does not cover cross-case interactions or larger quorum; shared specification error could miss bugs. Guarantees are conditionally extrapolated to live scale.",
+          "suggested_fix": "Already acknowledged in limitations; explicitly state in main results that G1 holds only within verified bound and live scaling is unverified."
+        }
+      ],
+      "verdict": "weak accept",
+      "confidence": 4
+    }
+  },
+  {
+    "model": "cohere/command-a-plus",
+    "seconds": 16.7,
+    "ok": true,
+    "output_tokens": 3438,
+    "cost_usd": 0.008,
+    "concerns": 5,
+    "scores": {
+      "impact_innovation": 4,
+      "execution": 4,
+      "presentation": 4
+    },
+    "verdict": "weak accept",
+    "retries": 0,
+    "review": {
+      "summary": "The authors built a small separation-of-powers kernel for LLM swarms, mechanically verified its invariants via bounded model checking, and stress\u2011tested it against colluding agents in 50\u2011agent swarms using two reasoning models. Mechanical checks stopped forged attestations, and random committees failed only as predicted by seat\u2011capture bounds, while honest errors were negligible. The work provides reproducible code and data, but its verification scope, model coverage, and statistical analysis are limited, and some claims overstate the exhaustiveness of the model check.",
+      "scores": {
+        "impact_innovation": 4,
+        "execution": 4,
+        "presentation": 4
+      },
+      "score_rationale": {
+        "impact_innovation": "Addresses a critical multi\u2011agent risk (collusion) with a novel institution\u2011level verification approach; the implementation and live stress test against real LLMs are new for the field, though the concept builds on recent design work.",
+        "execution": "Methodologically sound: kernel, bounded checker, mutation testing, and a large stress\u2011test harness are all implemented and documented; results are supported by data, but verification is bounded to a smaller world than the live config and statistical claims lack confidence intervals.",
+        "presentation": "Report is well\u2011structured, includes tables, figures, and links to code/data; the abstract meets length limits and the methodology is explained clearly, though some sections are dense."
+      },
+      "strengths": [
+        "Concrete separation\u2011of\u2011powers kernel with mechanical checks (integrity, seating, binding, quorum, policy, uniqueness, audit).",
+        "Bounded exhaustive verification of 23,376 states with an independent specification and mutation testing confirming safety, liveness, and audit invariants.",
+        "Live stress test of 32,830 LLM calls across 7 governance regimes, 5 colluder shares, two reasoning models, and visible/hidden board conditions.",
+        "Reproducible repository with code, logs, and regeneration scripts; data archive provided.",
+        "Clear demonstration that mechanical checks block forged signatures and that committee capture respects seat bounds.",
+        "Open\u2011source detection harness achieving perfect recall for planted cell detection at moderate collusion levels."
+      ],
+      "concerns": [
+        {
+          "id": "C1",
+          "severity": "major",
+          "category": "overclaiming",
+          "location": "Abstract \u00a73.2",
+          "issue": "Claims \"bounded exhaustive exploration of the real implementation\" confirms safety, but verification only covered a reduced world (1 case, 3 seats) while the live system has 24 cases and 7 seats.",
+          "why_it_matters": "Overstates the scope of formal verification; readers may infer a full proof of the deployed kernel, which is not provided.",
+          "suggested_fix": "Explicitly label the verification as bounded to a representative sub\u2011world; future work should extend to the full state space."
+        },
+        {
+          "id": "C2",
+          "severity": "minor",
+          "category": "validity",
+          "location": "Section 4.2, Appendix A",
+          "issue": "Only two reasoning models (DeepSeek v4 Flash, gpt\u2011oss\u201120b) and 50 agents were tested; no covert channel, seat\u2011prediction, or larger swarms were included.",
+          "why_it_matters": "Limits generalizability; the kernel\u2019s resilience against frontier models, larger swarms, or adaptive colluders remains untested.",
+          "suggested_fix": "Acknowledge as a limitation; plan experiments with additional models, larger agent counts, and adversarial seating in future work."
+        },
+        {
+          "id": "C3",
+          "severity": "minor",
+          "category": "statistics",
+          "location": "Table 1, Section 4.2",
+          "issue": "Capture rates are reported as raw counts (n=24 per cell) without confidence intervals or statistical testing.",
+          "why_it_matters": "Makes it difficult to assess whether observed differences (e.g., between models or regimes) are meaningful.",
+          "suggested_fix": "Compute confidence intervals (e.g., Wilson or Clopper\u2011Pearson) and, where appropriate, report p\u2011values for pairwise comparisons."
+        },
+        {
+          "id": "C4",
+          "severity": "minor",
+          "category": "validity",
+          "location": "Section 4.3",
+          "issue": "The guarantee G3 relies on independence of honest errors, but the experiments found near\u2011zero honest errors, leaving the assumption untested.",
+          "why_it_matters": "If honest errors become correlated in future tasks, the probabilistic bound could be overly optimistic.",
+          "suggested_fix": "Design judgement\u2011based tasks where honest agents intentionally err to measure error correlation and test G3."
+        },
+        {
+          "id": "C5",
+          "severity": "minor",
+          "category": "validity",
+          "location": "Section 3.1",
+          "issue": "Attestations use symmetric HMACs verified only by the kernel; external parties cannot independently verify audit evidence.",
+          "why_it_matters": "Reduces transparency and auditability, which are key properties of an institution.",
+          "suggested_fix": "Add asymmetric signatures (e.g., Ed25519) and provide a public verification tool."
+        }
+      ],
+      "verdict": "weak accept",
+      "confidence": 4
+    }
+  },
+  {
+    "model": "stepfun/step-3.7-flash",
+    "seconds": 7.7,
+    "ok": false,
+    "error": "HTTP 400: {\"error\":{\"message\":\"Provider returned error\",\"code\":400,\"metadata\":{\"raw\":\"{\\\"message\\\":\\\"invalid request error trace_id: b2646ce15e4545da21da12b80927f3c7\\\",\\\"type\\\":\\\"invalid_request_error"
+  },
+  {
+    "model": "x-ai/grok-4.20",
+    "seconds": 26.8,
+    "ok": true,
+    "output_tokens": 2494,
+    "cost_usd": 0.0182,
+    "concerns": 4,
+    "scores": {
+      "impact_innovation": 4,
+      "execution": 4,
+      "presentation": 5
+    },
+    "verdict": "accept",
+    "retries": 0,
+    "review": {
+      "summary": "The report implements a mechanically verified separation-of-powers kernel for LLM swarms, uses bounded model checking (23k states) to establish safety/liveness invariants on the real SQLite implementation, and stress-tests seven governance regimes against 50-agent colluding swarms (32k+ calls, two reasoning models). Mechanical checks (signatures, binding, uniqueness) perfectly block forgeries while committees trade cost for a seat-bounded capture risk; honest error was near-zero, leaving the independence assumption in G3 untested. For a hackathon, the work is reproducible, limitations are explicitly stated, and it supplies an open harness measuring the exact behavioral parameters the institutional guarantee rests on.",
+      "scores": {
+        "impact_innovation": 4,
+        "execution": 4,
+        "presentation": 5
+      },
+      "score_rationale": {
+        "impact_innovation": "Addresses a core multi-agent oversight problem (collusion defeating per-agent methods) with an institutional approach that others can build on (\u00a71, \u00a75). The combination of bounded verification of real kernel code plus live measurement of honest-error/colluder-compliance parameters on LLM swarms fills a gap relative to cited design papers and protocol verifiers (\u00a72); not wholly unprecedented but a neglected empirical direction with clear theory of change via gateways.",
+        "execution": "Methods are sound given 3-day constraints: bounded exhaustive checking of real implementation catches all 7 mutants (\u00a74.1, Appendix B), stress-test design re-uses the same committees/seeds across regimes for paired comparisons, results directly support G1/G2 claims (Table 1, Figure 1, Finding 1-2). Limitations (bounded scope, zero honest error, synthetic task, small n=12-24 cells) are exhaustively acknowledged (Appendix A); no overclaiming. Minor weaknesses are missing statistical tests (acknowledged) and prompt-length confound on output tokens (acknowledged).",
+        "presentation": "All numbers tied to published logs and regeneration scripts; tables/appendices separate mechanical vs. behavioral effects; limitations, confounds and untested assumptions stated plainly in multiple places (\u00a74.3, \u00a75, Appendix A). No buried caveats."
+      },
+      "strengths": [
+        "Explicit conditional guarantees (G1 mechanical/verified, G2 seat-bound, G3 probabilistic) cleanly separate what the kernel proves from what must be measured empirically (\u00a73.3); live results map directly onto these claims.",
+        "Mutation testing and depth-6 exploration that caught the uniqueness bug only at full depth concretely demonstrates checker power (Appendix B.2).",
+        "Honest reporting that independence assumption remains untested because honest error \u2248 0 even on near-miss receipts (\u00a74.3, C.2), turning a null result into a clear next-experiment signal.",
+        "Reproducibility artifacts (full run logs, table-regeneration script, open harness) exceed typical hackathon standards."
+      ],
+      "concerns": [
+        {
+          "id": "C1",
+          "severity": "major",
+          "category": "validity",
+          "location": "\u00a73.2, Appendix B",
+          "issue": "Verification world (1 case, 3 seats, quorum 2, depth 6) is substantially smaller than the live configuration (24 cases, 7 seats); shared kernel/specification author team creates common-mode failure risk.",
+          "why_it_matters": "Limits confidence that all relevant interleavings or multi-case interactions are covered, weakening the 'verified within the bound' claim for G1.",
+          "suggested_fix": "Add one-sentence quantification of state-space gap in abstract or \u00a73.2; note that larger multi-case checking is already listed in future-work item 4."
+        },
+        {
+          "id": "C2",
+          "severity": "minor",
+          "category": "related-work",
+          "location": "\u00a72",
+          "issue": "States two candidate papers were inaccessible; no verification step described for whether they already combine bounded verification with LLM-swarm measurement of behavioral parameters.",
+          "why_it_matters": "Slight risk that the claimed gap is smaller than presented.",
+          "suggested_fix": "Replace sentence with 'We verified that the following works do not combine\u2026' or remove the clause; feasible in hackathon by checking arXiv abstracts."
+        },
+        {
+          "id": "C3",
+          "severity": "minor",
+          "category": "statistics",
+          "location": "Table 1, Figure 1 caption, \u00a74.2",
+          "issue": "Capture counts are reported without per-cell confidence intervals or exact binomial tests despite n=12 targets per share; favorable committee draws (1.8 SD below G3) noted but variance calculation only in text.",
+          "why_it_matters": "Readers cannot easily judge how surprising the below-G3 points are; small cells acknowledged but statistical transparency could be higher.",
+          "suggested_fix": "Add column of 95% Clopper-Pearson intervals to Table C1 or a footnote; already feasible from existing logs."
+        },
+        {
+          "id": "C4",
+          "severity": "minor",
+          "category": "confound",
+          "location": "\u00a74.3, Appendix C.1",
+          "issue": "Colluder output-length signal (1.9\u20132.8\u00d7) is confounded by longer conflicting prompt; authors label it an 'association' but still list it as an observation worth testing.",
+          "why_it_matters": "Risk of readers treating it as a reliable monitoring signal before the confound is removed.",
+          "suggested_fix": "Run a control sweep with identical prompt length for colluders and add the 1-sentence result to Appendix C.1."
+        }
+      ],
+      "verdict": "accept",
+      "confidence": 4
+    }
+  },
+  {
+    "model": "openai/gpt-6.1-terra",
+    "seconds": 67.5,
+    "ok": true,
+    "output_tokens": 4340,
+    "cost_usd": 0.0339,
+    "concerns": 7,
+    "scores": {
+      "impact_innovation": 4,
+      "execution": 3,
+      "presentation": 4
+    },
+    "verdict": "weak accept",
+    "retries": 0,
+    "review": {
+      "summary": "The report presents a bounded-checked governance kernel and a planted-collusion stress test comparing committees with mechanically gated voting. The prototype and comparisons are promising, but the evidence is largely confined to a synthetic, easily checked task and does not establish the broader deployment guarantees suggested in the conclusion.",
+      "scores": {
+        "impact_innovation": 4,
+        "execution": 3,
+        "presentation": 4
+      },
+      "score_rationale": {
+        "impact_innovation": "The combination of an implementable kernel, bounded checking, and a swarm evaluation addresses an important oversight problem and offers a foundation for further work. Its components are established, and the precise novelty relative to recent agent-runtime work remains to be verified.",
+        "execution": "The checker, mutations, paired regimes, mechanically gated baseline, and released logs are substantial for a sprint. Generalization is limited by the planted adversary, small effective samples, bounded verification, and centralized trust assumptions; some conclusions go beyond the observed comparisons.",
+        "presentation": "The methods, conditional claims, baselines, and major limitations are generally clear. A few consequential claims and table denominators need clarification to make the evidence easier to interpret."
+      },
+      "strengths": [
+        "Section 3.3 separates mechanical, behavioural, and probabilistic assumptions rather than presenting the committee bound as unconditional.",
+        "The gated-majority baseline in Table 1 isolates the contribution of mechanical checks from the choice of committee versus full vote.",
+        "Section 4.1 reports bounded exploration and mutation tests, including a mutation missed at the shallower depth.",
+        "The report acknowledges that honest-error independence was not meaningfully tested, that the token-length association is confounded, and that the detector targets a conspicuous planted signature.",
+        "The authors provide code, logs, and a table-reproduction command, enabling scrutiny without repeating the model calls."
+      ],
+      "concerns": [
+        {
+          "id": "C1",
+          "severity": "major",
+          "category": "validity",
+          "location": "Sections 3.4, 4.2 and 4.3",
+          "issue": "The main task uses instructed colluders with a shared talking point and mostly exact-match receipt judgments; voters lack a tool to verify the forged HMACs. This demonstrates performance against a particular planted attack, not the behaviour of adaptive or covertly coordinating swarms on difficult safety judgments.",
+          "why_it_matters": "The strongest architectural result follows from giving the kernel a verification capability that the direct voters do not have, while the task produces almost no honest semantic errors\u2014the main uncertainty for committee safety.",
+          "suggested_fix": "Add a small tool-assisted voting or mechanical exact-match baseline if feasible. Otherwise, narrow the claims to this planted-adversary setting and identify judgment-based and adaptive attacks as untested."
+        },
+        {
+          "id": "C2",
+          "severity": "major",
+          "category": "overclaiming",
+          "location": "Section 4.2 Finding 2 and Section 6",
+          "issue": "The conclusion says random committees matched gated-majority judgment at a fraction of the cost, but the 4-of-7 committee released 16/17 unsafe targets versus 0 for gated majority in Table 1. The claimed match is observed only in restricted conditions, such as the 10% share.",
+          "why_it_matters": "The important result is a cost\u2013safety trade-off, not general equivalence. Moreover, seven versus 50 is a hypothetical per-decision call comparison; the experiment collected votes and attestations for replay, and equal call counts need not imply equal monetary or token cost.",
+          "suggested_fix": "State the overall capture and valid-release differences alongside the 10% observation, and label call counts as per-regime estimates. If available, report tokens or cost per decision by regime."
+        },
+        {
+          "id": "C3",
+          "severity": "major",
+          "category": "validity",
+          "location": "Sections 3.2\u20133.3, 5 and 6; Appendix B",
+          "issue": "The checker covers a one-case, three-seat world to depth six, whereas the live committees have seven seats. Statements that gateway guarantees hold regardless of swarm size or that outcomes held exactly as the rules promised can be read as stronger than this bounded evidence supports.",
+          "why_it_matters": "Successful bounded exploration and mutations do not rule out implementation bugs in larger configurations, concurrent cases, or unmodelled actions. The seat bound also depends on honest auditors not signing unsafe releases and on enforcement of the kernel rules.",
+          "suggested_fix": "Qualify deployment claims as conditional and bounded. Give a short separate argument for the seat bound under enforced quorum and perfect honest behaviour, and distinguish that argument from what the implementation checker establishes."
+        },
+        {
+          "id": "C4",
+          "severity": "major",
+          "category": "trust-model",
+          "location": "Section 3.1 and Appendix A, trust assumptions",
+          "issue": "Attestations are described as coming from auditors with individual keys, but Appendix A says those keys are held by the kernel. The manuscript does not fully explain how a model response is authenticated and translated into an attestation or what prevents the trusted host from signing on an auditor's behalf.",
+          "why_it_matters": "Centralized signing can enforce the simulated protocol while providing weaker origin authentication and separation of authority than independent auditor-held credentials.",
+          "suggested_fix": "Document the response-to-signature path and explicitly state which components are trusted not to impersonate auditors. Describe independent auditor-held keys as future work unless they are already implemented."
+        },
+        {
+          "id": "C5",
+          "severity": "minor",
+          "category": "statistics",
+          "location": "Table 1, Figure 1 and Appendix C.0\u2013C.2",
+          "issue": "The report correctly notes shared committee draws but gives little uncertainty quantification for small per-share cells and near-zero honest errors. Table 1 should also clarify which shares contribute to each denominator: 120 targets corresponds to shares above zero, while 96 valid cases and 48 forged cases appear to include the zero-share runs.",
+          "why_it_matters": "A zero count does not establish a zero rate, and paired board conditions, repeated cases, and shared model behavior limit the effective sample size. Pooling different share sets can obscure comparisons.",
+          "suggested_fix": "Label the share set for each column and report exploratory intervals or paired, case-level resampling with assumptions stated. If time allows, repeat a few committee draws with new seeds rather than treating the paired board conditions as independent."
+        },
+        {
+          "id": "C6",
+          "severity": "minor",
+          "category": "validity",
+          "location": "Section 4.3 and Appendix B.4",
+          "issue": "The detector is evaluated on colluders who share a talking point and form a conspicuous voting minority, with parameters tuned on scripted runs. Its high F1 is therefore evidence for this planted signature rather than for general collusion detection.",
+          "why_it_matters": "Common legitimate dissent or colluders who vary their wording and votes could change both false-positive and detection rates.",
+          "suggested_fix": "Retain the existing qualification and, if feasible, run a small held-out perturbation with varied colluder wording or coordinated honest dissent; report both false positives and missed colluders."
+        },
+        {
+          "id": "C7",
+          "severity": "minor",
+          "category": "related-work",
+          "location": "Section 2 and References",
+          "issue": "The novelty claim is cautiously framed, but the manuscript says two candidate papers were inaccessible and asks for every reference to be verified. The broad claim that no prior work studies partially captured committees therefore remains provisional.",
+          "why_it_matters": "Accurate positioning affects whether the contribution is a new mechanism or a useful implementation and evaluation of established mechanisms.",
+          "suggested_fix": "Verify the cited sources and compare the closest accessible work specifically on committee capture, formal scope, and empirical adversaries. Qualify any comparison that cannot be checked."
+        }
+      ],
+      "verdict": "weak accept",
+      "confidence": 4
+    }
+  },
+  {
+    "model": "google/gemini-3.1-pro-preview",
+    "seconds": 31.4,
+    "ok": true,
+    "output_tokens": 2901,
+    "cost_usd": 0.0556,
+    "concerns": 2,
+    "scores": {
+      "impact_innovation": 5,
+      "execution": 5,
+      "presentation": 5
+    },
+    "verdict": "accept",
+    "retries": 0,
+    "review": {
+      "summary": "This report proposes a separation-of-powers kernel for multi-agent swarms, shifting the safety burden from aligning individual agents to mechanically verifying the institution's rules. The authors rigorously validate their approach through bounded model checking of the kernel and empirical stress-testing with 32,830 LLM calls across swarms with varying proportions of planted colluders. The findings clearly demonstrate that mechanical checks reliably prevent forgeries, while committee-based governance offers a predictable, mathematically bounded trade-off between safety and computational cost.",
+      "scores": {
+        "impact_innovation": 5,
+        "execution": 5,
+        "presentation": 5
+      },
+      "score_rationale": {
+        "impact_innovation": "The conceptual shift from per-agent alignment to verified institutional rules is highly promising and actionable. Implementing, formally verifying, and empirically testing this concept within a hackathon sets a new standard and opens a highly valuable direction for multi-agent oversight.",
+        "execution": "The execution is exceptionally rigorous for a 3-day sprint. Combining bounded exhaustive verification (including mutant testing) with a large-scale empirical sweep (32k calls, two reasoning models, multiple governance regimes) is outstanding. Limitations are accurately identified and mathematically bounded.",
+        "presentation": "The manuscript is exceptionally clear, dense with information but easy to follow, and perfectly structured. The explicit separation of mechanical guarantees from probabilistic behavioral assumptions is excellent."
+      },
+      "strengths": [
+        "Brilliant conceptual framing that shifts multi-agent safety from intractable per-agent alignment to verifiable institutional design.",
+        "Exceptional methodological rigor for a hackathon, combining bounded model checking (with mutation testing) and large-scale empirical LLM stress tests.",
+        "Highly transparent reporting, including a clear articulation of the mathematical bounds (G1-G3) and an honest appraisal of untested assumptions.",
+        "Excellent experimental design that successfully isolates the effects of mechanical checks from committee voting."
+      ],
+      "concerns": [
+        {
+          "id": "C1",
+          "severity": "minor",
+          "category": "confound",
+          "location": "Section 4.3 and Appendix C.1",
+          "issue": "The observation that colluders produce longer outputs is confounded by the fact that colluders received a longer, conflicting prompt.",
+          "why_it_matters": "It is impossible to determine if the increased token count is a reliable signal of the cognitive load of deception/collusion, or simply the model responding to a longer input prompt.",
+          "suggested_fix": "In future iterations, provide honest agents with a benign prompt of equivalent length and complexity to isolate the effect of the deceptive instruction."
+        },
+        {
+          "id": "C2",
+          "severity": "minor",
+          "category": "validity",
+          "location": "Section 4.3",
+          "issue": "Because the task relies on exact-match rules (e.g., valid vs. forged receipts), honest agents made almost zero errors, leaving the critical assumption of independent honest errors (G3) untested.",
+          "why_it_matters": "In real-world deployments, committees will face ambiguous judgement calls where honest models might fail in correlated ways (e.g., due to shared pre-training data or herding), potentially breaking the theoretical capture bounds.",
+          "suggested_fix": "As acknowledged in the Future Work section, test the kernel on a judgement-based task (e.g., evaluating borderline unsafe code) where honest agents have a natural, non-zero error rate to properly test the independence assumption."
+        }
+      ],
+      "verdict": "accept",
+      "confidence": 5
+    }
+  }
+]

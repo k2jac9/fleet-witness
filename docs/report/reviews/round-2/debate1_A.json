@@ -1,0 +1,223 @@
+{
+  "model": "openai/gpt-6.1-sol",
+  "judgements": [
+    {
+      "concern_ref": "B.C1",
+      "stance": "agree",
+      "reason": "Tables 1\u20132 use only 12 independent committee draws per share, making cross-regime rankings sensitive to seating noise, although resampling reviewer votes would require justification as a substitute for auditor decisions."
+    },
+    {
+      "concern_ref": "B.C2",
+      "stance": "agree",
+      "reason": "The one-case world in \u00a73.2 and Appendix B.1 cannot exercise cross-case leakage despite G1's claims about release binding and per-case uniqueness."
+    },
+    {
+      "concern_ref": "B.C3",
+      "stance": "agree",
+      "reason": "Section 4.3 acknowledges the conflicting, longer colluder prompt, and the non-target cases described in \u00a73.4 provide an informative additional comparison, though not a complete causal identification strategy."
+    },
+    {
+      "concern_ref": "B.C4",
+      "stance": "agree",
+      "reason": "Section 3.4 specifies what reviewers see but does not establish committee auditors' board exposure or audit timing, which affects both herding interpretation and standalone committee cost."
+    },
+    {
+      "concern_ref": "B.C5",
+      "stance": "agree",
+      "reason": "Appendix B.4 requires positive shared-minority evidence, which can disappear when colluders win target votes, while \u00a74.3 reports a false-positive cluster without an explicit run-level false-positive rate."
+    },
+    {
+      "concern_ref": "B.C6",
+      "stance": "agree",
+      "reason": "The References retain an explicit source-verification note and \u00a72 relies on substantive characterizations of those sources, warranting verification without establishing that any cited identifier is fabricated."
+    },
+    {
+      "concern_ref": "C.C1",
+      "stance": "agree",
+      "reason": "The zero main-sweep honest unsafe errors and Table 1's zero gated-majority captures support a cost\u2013capture trade-off, not evidence that committees improve safety on difficult judgments."
+    },
+    {
+      "concern_ref": "C.C2",
+      "stance": "agree",
+      "reason": "Although \u00a73.2 explicitly states the verification bound, the abstract's unqualified state-count claim does not distinguish that checked world from the larger live configurations."
+    },
+    {
+      "concern_ref": "C.C3",
+      "stance": "agree",
+      "reason": "Finding 1 explicitly identifies the HMAC baseline failure as architectural by construction, but the abstract reports the failure without that qualification."
+    },
+    {
+      "concern_ref": "C.C4",
+      "stance": "agree",
+      "reason": "The abstract presents the output-length ratio as a candidate monitoring signal without the prompt-confounding and hidden-reasoning qualifications explicitly given in \u00a74.3."
+    },
+    {
+      "concern_ref": "C.C5",
+      "stance": "factually_wrong",
+      "reason": "Figure 1's caption already states 'n = 24 per point, 12 independent committee draws,' and Finding 2 already reports the favorable 12-versus-18 seating realization."
+    },
+    {
+      "concern_ref": "C.C6",
+      "stance": "agree",
+      "reason": "Section 2 acknowledges inaccessible candidate papers while making broad comparative claims, so the asserted gap should remain provisional pending source verification."
+    },
+    {
+      "concern_ref": "D.C1",
+      "stance": "agree",
+      "reason": "Table 1 correctly acknowledges paired committee draws, but reporting counts by share in Table 2 does not quantify uncertainty in capture rates or paired regime differences."
+    },
+    {
+      "concern_ref": "D.C2",
+      "stance": "disagree",
+      "reason": "Section 3.3 defines realized seat capture and full-compliance G3, and Table 1's 24 and 36 reconcile as twice the 12 realized and 18 expected capturable independent draws explained in Finding 2."
+    },
+    {
+      "concern_ref": "D.C3",
+      "stance": "agree",
+      "reason": "Sections 3.3 and 4.3 explicitly leave G3's honest-error independence assumption untested, although that assumption is not required by mechanical G1 or zero-honest-error G2."
+    },
+    {
+      "concern_ref": "D.C4",
+      "stance": "factually_wrong",
+      "reason": "Table 1 already includes the crowd-plus-mechanical-verification gated-majority baseline, and Finding 1 explicitly explains both the symmetric-HMAC restriction and the untested public-key alternative."
+    },
+    {
+      "concern_ref": "D.C5",
+      "stance": "agree",
+      "reason": "Section 3.2 and Appendix A acknowledge that the small same-team verification exercise leaves larger configurations and multi-case interactions unverified, although Code and Data already identifies the released checker and tests."
+    },
+    {
+      "concern_ref": "D.C6",
+      "stance": "agree",
+      "reason": "Section 4.3 explicitly identifies the longer conflicting colluder prompt as a confound, so the output-length association cannot establish a cost of deception without additional controls."
+    },
+    {
+      "concern_ref": "D.C7",
+      "stance": "disagree",
+      "reason": "Section 4.3 already says the result demonstrates detection of 'this planted signature, not general collusion detection,' although reporting an explicit false-positive denominator would improve evaluation."
+    },
+    {
+      "concern_ref": "D.C8",
+      "stance": "disagree",
+      "reason": "Section 4.3 already calls the 0/14 and 0/16 observations weak evidence specific to a crisp rule, and Appendix A explicitly rejects generalizing the herding null result."
+    },
+    {
+      "concern_ref": "D.C9",
+      "stance": "agree",
+      "reason": "Section 2's novelty argument depends on specific claims about recent cited systems that should be checked against the original sources and qualified wherever verification remains incomplete."
+    }
+  ],
+  "revised_own_concerns": [
+    {
+      "id": "C1",
+      "severity": "major",
+      "issue": "Sections 3.4 and 4.2\u20134.3 test mostly exact-match receipt judgments with essentially no honest unsafe errors, yet \u00a76 says random committees matched gated-majority judgment despite 4-of-7 releasing 16/120 and 17/120 targets versus zero for gated majority; observing zero captures at 10% collusion also does not establish equivalent safety.",
+      "suggested_fix": "Replace equivalence language with the observed cost\u2013capture trade-off, state the majority threshold and tie rule, and keep G3's behavioral validity explicitly untested; clarify whether a deterministic receipt validator could solve the synthetic task and either report that baseline or explain that this is a mechanism demonstration rather than a semantic-oversight evaluation."
+    },
+    {
+      "id": "C2",
+      "severity": "major",
+      "issue": "Section 3.3's G3 expression predicts committee approval under its assumptions, but Table 1 labels 21.8 as the hybrid's expected capture without marking it committee-only; hybrid release additionally requires majority approval, which is dependent on committee approval.",
+      "suggested_fix": "Mark 21.8 as a committee-only opportunity estimate or replace it with not applicable; if predicting hybrid releases, calculate the joint majority-and-committee event and include the remaining gates, noting that zero honest error and a strict majority imply zero hybrid target releases at every tested colluder share."
+    },
+    {
+      "id": "C3",
+      "severity": "minor",
+      "issue": "Section 3.4 does not establish whether committee auditors receive reviewer-generated board information or when audits occur, leaving the standalone seven-call deployment interpretation and visible-versus-hidden committee comparison uncertain; request counts also do not establish proportional token, dollar, or latency savings.",
+      "suggested_fix": "Specify auditor prompts, information sets, and audit timing across conditions, and confirm whether committee-only deployment can omit reviewer calls; report token or dollar costs including retries if available, otherwise consistently describe seven versus fifty model requests rather than sevenfold lower cost."
+    },
+    {
+      "id": "C4",
+      "severity": "minor",
+      "issue": "Tables 1\u20132 and Figure 1 correctly disclose paired board conditions, but neither uncertainty nor the seed structure across colluder shares and nested committees is sufficiently documented to assess the precision of regime comparisons.",
+      "suggested_fix": "Provide a run-to-seed and shared-draw mapping, report draw-level or appropriately clustered uncertainty and paired contrasts, and distinguish seating randomness from behavioral variation; retain Figure 1's existing statement of 12 independent draws per point."
+    },
+    {
+      "id": "C5",
+      "severity": "minor",
+      "issue": "Sections 1 and 6 extend the assurance to arbitrary swarm sizes despite bounded implementation evidence, while \u00a75 incorrectly lists independent honest errors as an assumption of the undifferentiated guarantee; database release uniqueness also does not establish at-most-once external gateway effects.",
+      "suggested_fix": "Add an assumption-and-scope table distinguishing G1, G2, and G3, attach the verification bound to the abstract's state-count claim, and make scale-independent assurance conditional on establishing the invariants beyond that bound; clarify whether release denotes only a database transition and leave concurrency and external side effects outside the demonstrated claim unless separately supported."
+    }
+  ],
+  "withdrawn": [],
+  "new_concerns": [
+    {
+      "id": "N1",
+      "severity": "major",
+      "issue": "The one-case verification world in \u00a73.2 and Appendix B.1 cannot test cross-case isolation, including accidental reuse of another case's attestations, policy, or release records, despite G1's release-binding and per-case claims.",
+      "suggested_fix": "Clarify whether separate cross-case tests exist and report them; otherwise add a small two-case check with cross-case attestation and policy-reuse attempts plus a corresponding mutant, or explicitly identify cross-case isolation as unverified rather than covered by the bounded result."
+    },
+    {
+      "id": "N2",
+      "severity": "minor",
+      "issue": "The abstract's output-length monitoring suggestion omits the confound acknowledged in \u00a74.3, and the reported target-only contrast does not separate active target manipulation from the effects of receiving the colluder instruction.",
+      "suggested_fix": "Qualify the abstract's association and use existing non-target cases to compare colluder-versus-honest output lengths when both are instructed to answer honestly; treat this as an informative control rather than a complete causal estimate, and reserve causal claims for a matched-instruction experiment."
+    },
+    {
+      "id": "N3",
+      "severity": "minor",
+      "issue": "Section 2's novelty argument and strong descriptions of prior systems depend on references that the manuscript itself flags for checking, while two potentially relevant papers were inaccessible; the supplied manuscript does not establish that any reference is fabricated.",
+      "suggested_fix": "Verify cited identifiers, titles, versions, and substantive characterizations against original sources, and qualify the combination-of-methods novelty claim wherever the comparison remains incomplete."
+    },
+    {
+      "id": "N4",
+      "severity": "minor",
+      "issue": "Appendix B.4's mandatory shared-minority feature can lose identifying signal when colluders obtain a voting majority, and \u00a74.3 does not give an explicit denominator for zero-collusion false-positive clusters.",
+      "suggested_fix": "State the detector's dependence on minority-voting behavior and report false-positive runs over total evaluated zero-collusion runs by model and condition, alongside the existing planted-signature limitation."
+    },
+    {
+      "id": "N5",
+      "severity": "minor",
+      "issue": "Section 4.3 says near-miss errors were too rare to affect any committee, although its table reports two 1-of-1 captures from honest errors, making the stated consequence of those errors inconsistent with the reported outcomes.",
+      "suggested_fix": "Clarify that the no-capture observation applies to larger committees, if that is intended, and specify the evaluated configurations underlying the mixed-model null result."
+    }
+  ],
+  "rebuttals": [
+    {
+      "to": "B",
+      "about": "B.C1",
+      "response": "I agree that seating noise limits cross-regime comparisons, but \u00a73.4 describes reviewer votes and auditor attestations as separate decisions, so resampling all fifty reviewer votes is not automatically a valid resampling of auditor behavior; please establish the required exchangeability and logged coverage before using that proposed control."
+    },
+    {
+      "to": "B",
+      "about": "B.C6",
+      "response": "I support source verification because the novelty assessment depends on these works, but the manuscript's verification note does not itself establish that any citation is nonexistent or LLM-generated."
+    },
+    {
+      "to": "C",
+      "about": "C.C5",
+      "response": "The concern about effective sample size is important, but Figure 1 already explicitly reports twelve independent committee draws per point, and Finding 2 already explains the favorable twelve-versus-eighteen realization; the remaining issue is uncertainty quantification, not an undisclosed denominator."
+    },
+    {
+      "to": "D",
+      "about": "D.C2",
+      "response": "The reported counts are reconcilable: twelve realized capturable 1-of-1 draws become twenty-four paired target opportunities, while twelve draws at each of five shares give eighteen expected capturable draws and thirty-six paired opportunities under full compliance; the genuinely mislabeled prediction is the hybrid's committee-only 21.8."
+    },
+    {
+      "to": "D",
+      "about": "D.C3",
+      "response": "I agree that semantic-task validation is missing, but independence is an assumption of G3 rather than G1 or zero-error G2, so correlated-error concerns should not be presented as invalidating the mechanical or realized-seat implications."
+    },
+    {
+      "to": "D",
+      "about": "D.C4",
+      "response": "Table 1's gated-majority control already combines the same crowd votes with mechanical verification and isolates the architectural effect; a public-key or tool-assisted voting experiment would broaden applicability but is not necessary to interpret the existing controlled comparison."
+    },
+    {
+      "to": "D",
+      "about": "D.C7",
+      "response": "The manuscript already limits detector success to the planted signature, so I would not retain a general-collusion-detection overclaim concern; I would retain the narrower requests for explicit false-positive rates and the minority-feature failure regime."
+    },
+    {
+      "to": "D",
+      "about": "D.C8",
+      "response": "The manuscript already labels the herding result weak and task-specific; any added intervals should respect possible shared-run or shared-case dependence rather than automatically treating all exposures as independent Bernoulli trials."
+    }
+  ],
+  "updated_scores": {
+    "impact_innovation": 3,
+    "execution": 3,
+    "presentation": 4
+  },
+  "updated_verdict": "weak accept"
+}

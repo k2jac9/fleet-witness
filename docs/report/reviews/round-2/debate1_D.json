@@ -1,0 +1,175 @@
+{
+  "model": "qwen/qwen3.8-max-0902",
+  "judgements": [
+    {
+      "concern_ref": "A.C1",
+      "stance": "agree",
+      "reason": "Table 1 shows 4-of-7 released 16/17 unsafe targets while the gated majority released 0/0, so the conclusion\u2019s \u2018matched\u2019 language is broader than the pooled evidence even though elsewhere the paper frames the result as a cost\u2013capture trade-off."
+    },
+    {
+      "concern_ref": "A.C2",
+      "stance": "agree",
+      "reason": "The hybrid row\u2019s 21.8 is the committee-only G3 expectation, while hybrid release also requires a majority gate that was empirically zero under honest voting, so the table should label the number as committee-only or not applicable."
+    },
+    {
+      "concern_ref": "A.C3",
+      "stance": "agree",
+      "reason": "Section 3.4 reports calls per decision but does not state whether committee prompts include the fifty-reviewer stage or whether token/dollar costs track request counts, so the sevenfold cost claim needs the requested clarification."
+    },
+    {
+      "concern_ref": "A.C4",
+      "stance": "agree",
+      "reason": "The paper states shared seeds and 60 independent committee draws but does not document whether those draws are independent across colluder shares or provide draw-level uncertainty estimates."
+    },
+    {
+      "concern_ref": "A.C5",
+      "stance": "agree",
+      "reason": "The introduction and conclusion use size-independent language while Section 3.2 limits verification to a bounded one-case world, and Section 5 conflates independence needed for G3 with mechanical guarantees."
+    },
+    {
+      "concern_ref": "B.C1",
+      "stance": "agree",
+      "reason": "With only 12 draws per share, Table 1\u2019s nonmonotonic seat bounds and Table 2\u2019s differing captures across committee sizes can reflect seating noise, so the paper should resample logged decisions or flag the comparisons as finite-sample artifacts."
+    },
+    {
+      "concern_ref": "B.C2",
+      "stance": "agree",
+      "reason": "Appendix B.1 checks only one case, so it cannot detect cross-case binding or SQL filtering bugs even though G1 and the live system are explicitly per-case across 24 cases."
+    },
+    {
+      "concern_ref": "B.C3",
+      "stance": "agree",
+      "reason": "Section 4.3 admits the colluder prompt is longer, and the design includes colluders voting honestly on non-target cases, making the proposed within-agent length comparison a valid zero-call confound check."
+    },
+    {
+      "concern_ref": "B.C4",
+      "stance": "agree",
+      "reason": "The manuscript says committee draws are shared across visible and hidden conditions but does not specify whether committee auditors see the public board or when they audit relative to the voting waves."
+    },
+    {
+      "concern_ref": "B.C5",
+      "stance": "agree",
+      "reason": "Appendix B.4\u2019s shared-minority feature presupposes colluders are on the losing side, and the paper reports only one anecdotal zero-collusion false cluster, so the limitation and false-positive denominator should be explicit."
+    },
+    {
+      "concern_ref": "B.C6",
+      "stance": "agree",
+      "reason": "The References section contains a leftover editorial instruction and several 2026 arXiv identifiers whose status is not established in the manuscript, so verification and cleanup are needed."
+    },
+    {
+      "concern_ref": "C.C1",
+      "stance": "agree",
+      "reason": "The manuscript reports 0/746 honest auditor errors and labels G3\u2019s independence assumption untested, so claims about committees should remain framed as a cost\u2013capture trade-off rather than validated safety under honest judgment error."
+    },
+    {
+      "concern_ref": "C.C2",
+      "stance": "agree",
+      "reason": "The abstract\u2019s \u2018confirms\u2019 statement omits the one-case/three-seat/depth-6 bound disclosed in Section 3.2 and Appendix A, so readers may infer verification coverage of the live seven-seat, 24-case regime."
+    },
+    {
+      "concern_ref": "C.C3",
+      "stance": "agree",
+      "reason": "The abstract reports 48/48 forged approvals without the Section 4.2 caveat that voters could not verify symmetric HMACs, so the architectural nature of the baseline failure should be stated there."
+    },
+    {
+      "concern_ref": "C.C4",
+      "stance": "agree",
+      "reason": "The abstract presents the 1.9\u20132.8\u00d7 length association as a monitoring signal without the Section 4.3 caveat that colluders received a longer instruction, so the caveat belongs in the abstract."
+    },
+    {
+      "concern_ref": "C.C5",
+      "stance": "disagree",
+      "reason": "Figure 1\u2019s caption already states n=24 target trials but 12 independent committee draws, so the figure does not silently overstate independence, although adding the favorable 12-versus-18 draw count would improve clarity."
+    },
+    {
+      "concern_ref": "C.C6",
+      "stance": "agree",
+      "reason": "The gap claim relies on an explicitly incomplete scan and inaccessible 2026 candidates, so the novelty claim should be provisional until the cited works are verified."
+    }
+  ],
+  "revised_own_concerns": [
+    {
+      "id": "C1",
+      "severity": "major",
+      "issue": "The paper pools 120 target trials while stating there are only 60 independent committee draws and paired board conditions, but it provides no uncertainty estimates or paired statistical analysis.",
+      "suggested_fix": "Report denominators clearly and provide cluster-robust, exact binomial, or bootstrap intervals keyed to independent committee draws, treating visible and hidden conditions as paired rather than independent."
+    },
+    {
+      "id": "C2",
+      "severity": "major",
+      "issue": "G2 seat bounds and G3 expectations are not defined in units of committee draws versus target trials, making Table 1 values such as 24 versus 36 difficult to reconcile with the 120 pooled target trials.",
+      "suggested_fix": "Add a short formula or table distinguishing committee draws, target trials, board-condition pairings, model repetitions, and compliance-adjusted expected captures."
+    },
+    {
+      "id": "C3",
+      "severity": "major",
+      "issue": "Honest unsafe error is near zero, so the independence assumption underlying G3 is not tested, yet abstract and conclusion language can still read as broader than the exact-match evidence.",
+      "suggested_fix": "Scope committee-safety claims to mechanically checkable tasks in the abstract and conclusion, keep G3 labeled untested, and add a judgment task or injected-error calibration in future work."
+    },
+    {
+      "id": "C4",
+      "severity": "minor",
+      "issue": "The direct-majority failure on forged releases is architectural because voters lack HMAC verification, while the gated-majority success is by construction, so the result is task-specific.",
+      "suggested_fix": "State the by-construction caveat and the need for a public-key or tool-assisted voting baseline in the abstract or discussion rather than presenting the baseline failure as a general voting limitation."
+    },
+    {
+      "id": "C5",
+      "severity": "major",
+      "issue": "Bounded verification covers one case, three seats, quorum 2, and depth 6, while the live system uses 24 cases and up to seven seats, leaving cross-case and larger-committee interactions unverified.",
+      "suggested_fix": "Release the specification and mutants, add a small two-case bounded run or an explicit argument for why omitted dimensions cannot affect S1\u2013S4, and place the verification bound in the abstract."
+    },
+    {
+      "id": "C6",
+      "severity": "minor",
+      "issue": "The output-length association is confounded by the longer colluder instruction and hidden reasoning, and the abstract still presents it as a monitoring signal without that caveat.",
+      "suggested_fix": "Add the prompt-confound caveat to the abstract and, if possible, compare colluder versus honest length on non-target cases where the prompt is shared."
+    },
+    {
+      "id": "C7",
+      "severity": "minor",
+      "issue": "The detector demonstrates recovery of the planted signature, but the shared-minority feature assumes colluders remain on the losing side and the zero-collusion false-positive rate is not fully quantified.",
+      "suggested_fix": "Limit the detection claim to the planted signature, report the exact false-positive denominator across zero-collusion runs, and state the less-than-50%-capture assumption."
+    },
+    {
+      "id": "C9",
+      "severity": "minor",
+      "issue": "Several recent citations are not easily checkable, the novelty gap relies partly on inaccessible 2026 works, and the References section retains an editorial verification note.",
+      "suggested_fix": "Verify all arXiv IDs and titles, remove the leftover editorial note, and qualify the novelty gap as provisional if any cited works remain inaccessible."
+    }
+  ],
+  "withdrawn": [
+    "C8"
+  ],
+  "new_concerns": [
+    {
+      "id": "N1",
+      "severity": "major",
+      "issue": "Table 1 lists 21.8 as the hybrid regime\u2019s a-priori G3 expectation, but hybrid release also requires majority approval, which is zero under the observed honest voting, so this number is not the hybrid release expectation.",
+      "suggested_fix": "Label 21.8 as committee-only opportunity, replace it with not applicable for hybrid release, or compute a joint majority-and-committee probability with the dependence between committee members and the voting population stated."
+    },
+    {
+      "id": "N2",
+      "severity": "minor",
+      "issue": "The sevenfold cost comparison is expressed in model calls, but the manuscript does not specify the committee information set or whether tokens, dollars, and latency scale similarly.",
+      "suggested_fix": "Clarify whether committee auditors can be run without the fifty-reviewer stage, and report token or dollar cost per decision from existing logs or consistently describe the result as fewer model requests."
+    }
+  ],
+  "rebuttals": [
+    {
+      "to": "C",
+      "about": "C.C5",
+      "response": "I do not think the figure silently overstates independence because the caption already says 12 independent committee draws, but I support adding the favorable 12-versus-18 capturable-draw count for clarity."
+    },
+    {
+      "to": "B",
+      "about": "B.C6",
+      "response": "Concede that the references must be verified and the editorial note removed, but the manuscript alone does not prove the cited works are hallucinated, so the fix should be verification rather than asserting fabrication."
+    }
+  ],
+  "updated_scores": {
+    "impact_innovation": 4,
+    "execution": 4,
+    "presentation": 4
+  },
+  "updated_verdict": "weak accept"
+}

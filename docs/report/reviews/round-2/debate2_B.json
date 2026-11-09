@@ -1,0 +1,230 @@
+{
+  "model": "google/gemini-4-argon",
+  "judgements": [
+    {
+      "concern_ref": "A.C1",
+      "stance": "agree",
+      "reason": "Section 4.3 shows honest unsafe error was 0/746 in the main sweep and 0-0.3% on near-miss receipts, and Table 1 shows 4-of-7 released 16/120 and 17/120 targets versus 0/120 for gated majority, so Section 6's claim that committees 'matched a gated majority's judgement' overstates the observed cost-capture trade-off."
+    },
+    {
+      "concern_ref": "A.C2",
+      "stance": "agree",
+      "reason": "In Table 1, the hybrid row marks the G2 seat bound of 22 as '(committee only)' but leaves the G3 a-priori expected value of 21.8 unlabeled, even though hybrid release requires both majority vote and 4-of-7 committee approval (Sections 3.1 and 3.4)."
+    },
+    {
+      "concern_ref": "A.C3",
+      "stance": "agree",
+      "reason": "Section 3.4 does not clarify whether committee auditors observe the 50-reviewer board tally or comments in the visible condition, nor does Table 1 compare actual token or dollar costs alongside the nominal 7-versus-50 request count."
+    },
+    {
+      "concern_ref": "A.C4",
+      "stance": "agree",
+      "reason": "Sections 3.4 and 4.2 state that models and board conditions share seeds across 60 independent committee draws (12 per share), but do not document the seed schedule across colluder shares or provide draw-level uncertainty intervals."
+    },
+    {
+      "concern_ref": "A.C5",
+      "stance": "agree",
+      "reason": "Sections 1 and 6 claim mechanical guarantees and oversight scale 'regardless of swarm size' despite bounded verification covering only 1 case and 3 seats (Section 3.2), and Section 5 lists independent honest errors as an assumption of 'the guarantee' rather than specifically G3."
+    },
+    {
+      "concern_ref": "A.N1",
+      "stance": "agree",
+      "reason": "The bounded checker in Section 3.2 and Appendix B.1 explores only a single release case, leaving cross-case SQLite isolation untested despite G1's per-case binding and uniqueness claims."
+    },
+    {
+      "concern_ref": "A.N2",
+      "stance": "agree",
+      "reason": "The Abstract frames the 1.9-2.8x colluder output-length ratio as a candidate monitoring signal without noting the prompt-length confound acknowledged in Section 4.3, and the logged non-target cases are not used as a control."
+    },
+    {
+      "concern_ref": "A.N3",
+      "stance": "agree",
+      "reason": "Section 2's gap claim relies on citations followed by an unremoved verification note in the References section and notes that two candidate papers were inaccessible."
+    },
+    {
+      "concern_ref": "A.N4",
+      "stance": "agree",
+      "reason": "Appendix B.4's shared-minority feature requires colluders to vote on the losing side, and Section 4.3 reports one false-positive cluster at 0% collusion without specifying the denominator of evaluated zero-collusion runs."
+    },
+    {
+      "concern_ref": "A.N5",
+      "stance": "agree",
+      "reason": "Section 4.3 states in prose that near-miss errors 'were too rare to affect any committee' even though the accompanying table reports 2/108 captures by honest error for 1-of-1 committees and 0 only for larger committees."
+    },
+    {
+      "concern_ref": "C.C1",
+      "stance": "agree",
+      "reason": "Because honest auditor unsafe error is 0/746 in the main sweep (Section 4.2) and 0-0.3% on near-miss receipts (Section 4.3), the experiments test G1 and G2 rather than G3's honest-error independence assumption, and Section 6's claim that committees matched gated-majority judgment conflicts with Table 1's 16/120 and 17/120 unsafe releases."
+    },
+    {
+      "concern_ref": "C.C2",
+      "stance": "agree",
+      "reason": "The Abstract states that bounded exploration of 23,376 states 'confirms' the kernel's invariants without stating the checked bound (1 case, 3 seats, quorum 2, depth 6 in Section 3.2), which omits multi-case isolation and the live 7-seat configuration."
+    },
+    {
+      "concern_ref": "C.C3",
+      "stance": "agree",
+      "reason": "Section 4.2 (Finding 1) explicitly notes that plain majority's 48/48 forgery approval is architectural by construction because voters lack access to the symmetric HMAC key, a qualification omitted from the Abstract."
+    },
+    {
+      "concern_ref": "C.C4",
+      "stance": "agree",
+      "reason": "Section 4.3 notes that the 1.9-2.8x colluder output-length increase includes hidden reasoning tokens and is confounded by a longer colluder prompt, which the Abstract omits and which could be checked against non-target cases in the logs."
+    },
+    {
+      "concern_ref": "C.C5",
+      "stance": "agree",
+      "reason": "Because all committee regimes share a single 7-seat draw per case with only 12 independent draws per share (Section 3.4), Table 1's realized G2 seat bounds and Table 2's capture counts are non-monotonic across committee sizes without being flagged in the text or captions as seating artifacts."
+    },
+    {
+      "concern_ref": "C.C6",
+      "stance": "agree",
+      "reason": "Section 2 acknowledges an incomplete scan with two inaccessible candidate papers, and the References section ends with an unremoved draft instruction to verify every reference against its source before submission."
+    },
+    {
+      "concern_ref": "C.N1",
+      "stance": "agree",
+      "reason": "Table 1 lists 21.8 as the hybrid regime's a-priori G3 expectation without marking it '(committee only)', even though hybrid release also requires majority approval, which yielded 0 unsafe target approvals."
+    },
+    {
+      "concern_ref": "C.N2",
+      "stance": "agree",
+      "reason": "Sections 1 and 6 make size-independent assurance claims beyond the bounded world in Section 3.2, and Section 5 lists independent honest errors under 'the guarantee' even though independence applies only to G3."
+    },
+    {
+      "concern_ref": "C.N3",
+      "stance": "agree",
+      "reason": "Section 3.4 does not specify whether seated auditors observe the visible-board tally or comments, and Table 1 compares 7 versus 50 model calls without reporting token or dollar costs per decision."
+    },
+    {
+      "concern_ref": "D.C1",
+      "stance": "agree",
+      "reason": "Tables 1 and 2 pool 120 target trials across paired visible and hidden board conditions that share 60 independent committee draws without reporting draw-level confidence intervals or paired uncertainty estimates."
+    },
+    {
+      "concern_ref": "D.C2",
+      "stance": "disagree",
+      "reason": "Table 1's caption and Section 4.2 (Finding 2) explicitly explain the units: 5 shares x 12 targets = 60 independent draws (18 expected and 12 realized capturable draws for 1-of-1 at mean 30% collusion), which double to 36.0 expected and 24 realized trials across the two paired board conditions."
+    },
+    {
+      "concern_ref": "D.C3",
+      "stance": "agree",
+      "reason": "As stated in Sections 3.3 and 4.3, near-zero honest unsafe error (0/746 in the main sweep, 0-0.3% on near-miss receipts) leaves G3's error-independence assumption empirically untested."
+    },
+    {
+      "concern_ref": "D.C4",
+      "stance": "agree",
+      "reason": "Section 4.2 (Finding 1) notes that plain majority fails on 48/48 forged releases by construction because voters cannot check symmetric HMACs, a task-specific qualification that should also be stated in the Abstract and Conclusion."
+    },
+    {
+      "concern_ref": "D.C5",
+      "stance": "agree",
+      "reason": "Section 3.2 and Appendix B.1 specify that bounded model checking covers only 1 case, 3 seats, quorum 2, and depth 6 against a same-team specification, leaving multi-case isolation and 7-seat committees outside the checked state space."
+    },
+    {
+      "concern_ref": "D.C6",
+      "stance": "agree",
+      "reason": "Section 4.3 acknowledges that colluders received a longer prompt with a conflicting instruction, confounding the 1.9-2.8x output token length difference reported in the Abstract and Figure 2."
+    },
+    {
+      "concern_ref": "D.C7",
+      "stance": "agree",
+      "reason": "While Section 4.3 restricts its claim to the planted signature, Appendix B.4's shared-minority feature assumes colluders are on the losing side (<50% of active votes) and Section 4.3 does not give the total zero-collusion run denominator for the false-positive cluster."
+    },
+    {
+      "concern_ref": "D.C8",
+      "stance": "disagree",
+      "reason": "Section 4.3 already explicitly characterizes the 0/14 and 0/16 observations as 'weak evidence of absence, specific to a crisp rule,' and Appendix A states that the herding null result does not generalize."
+    },
+    {
+      "concern_ref": "D.C9",
+      "stance": "agree",
+      "reason": "Several 2026 arXiv citations in Section 2 and the References list are accompanied by an unremoved verification note and two inaccessible candidate papers, requiring source verification and provisional qualification of the gap claim."
+    },
+    {
+      "concern_ref": "D.N1",
+      "stance": "agree",
+      "reason": "Table 1 prints the committee-only G3 value of 21.8 for the hybrid regime without labeling it '(committee only)', even though hybrid release requires both majority and committee approval."
+    },
+    {
+      "concern_ref": "D.N2",
+      "stance": "agree",
+      "reason": "Section 3.4 and Table 1 report 7 versus 50 calls per decision without stating whether committee auditors see information from the 50-reviewer stage or how token and dollar costs scale."
+    }
+  ],
+  "revised_own_concerns": [
+    {
+      "id": "C1",
+      "severity": "major",
+      "issue": "Only 12 independent committee seating draws exist per colluder share (60 across all shares, doubled to 120 pooled target trials via paired visible/hidden board conditions), and all committee regimes (1-of-1, 2-of-3, 3-of-5, 4-of-7, 7-of-7) share the same 7-seat draw per case. Because of finite-sample variance in the RNG seating alone, the realized seat bounds (G2) and empirical capture rates violate theoretical monotonicity across committee sizes: in Table 1, 3-of-5 has a higher seat bound (26) and more DeepSeek captures (23) than 1-of-1 (bound 24, captures 21); in Table 2 at 50% collusion, 4-of-7 has 12/13 captures vs. 8/9 for 1-of-1. Furthermore, Section 3.4 does not document whether seating seeds are independent across shares, and Tables 1-2 and Figure 1 do not report draw-level uncertainty intervals.",
+      "suggested_fix": "Document the run-to-seed schedule across shares, report draw-level cluster or bootstrap confidence intervals in Tables 1-2 and Figure 1 (treating visible/hidden board conditions and models as paired on the 60 draws), state explicitly in Section 4.2 and Table 1's caption that cross-row non-monotonicity between 1-of-1, 2-of-3, 3-of-5, and 4-of-7 is a seating-sample artifact of sharing 12 draws per share rather than a behavioral effect, and include compliance-adjusted hypergeometric expectations (using the observed 89.3% and 92.4% auditor compliance rates) to separate seating noise from agent behavior."
+    },
+    {
+      "id": "C2",
+      "severity": "major",
+      "issue": "The bounded model checker explores a world with only a single release case (1 case, 3 seated auditors, quorum 2, 1 outsider, depth 6; Section 3.2 and Appendix B.1), whereas live runs use 24 cases and 7 seats, and the Abstract claims that 23,376 states 'confirm' the invariants without stating these bounds. In particular, a 1-case state space is structurally blind to cross-case isolation bugs (such as an attestation or policy for Case A being accepted for Case B due to a missing `WHERE case_id = ?` filter in SQLite queries), despite G1 claiming per-case binding and uniqueness.",
+      "suggested_fix": "State the verification bounds (1 case, 3 seats, quorum 2, depth 6) directly in the Abstract alongside the 23,376 state count, and either add a 2-case bounded verification check (with an action submitting a valid attestation for Case 1 and attempting execution on Case 2, plus a cross-case mutant) or explicitly state in Section 3.2 that cross-case SQLite isolation and m=7 quorums are outside the verified state space."
+    },
+    {
+      "id": "C3",
+      "severity": "minor",
+      "issue": "The finding that colluders generate 1.9-2.8x more output tokens than honest agents (Abstract, Section 4.3, Figure 2) is confounded by prompt differences: colluders received a longer prompt containing the covert instruction and shared talking point. The authors note this confound in Section 4.3 (though not in the Abstract), and do not use the built-in within-agent control already present in their logged data.",
+      "suggested_fix": "Qualify the 1.9-2.8x bullet in the Abstract to note the prompt-length confound and hidden reasoning tokens, and use the existing run logs to compare output token lengths of colluders vs. honest agents on the non-target cases (the 8 valid and 4 forged cases per run, where colluders had the exact same longer system prompt but were instructed to vote honestly) as an informative control."
+    },
+    {
+      "id": "C4",
+      "severity": "minor",
+      "issue": "Section 3.4 does not specify whether the 7 seated committee auditors observe the 50-reviewer public voting board/comments in the 'visible' condition, or whether their prompts are identical across visible and hidden conditions and independent of the 50-reviewer stage. In addition, Table 1 compares 'Calls per decision' (7 vs. 50) without reporting actual token or dollar cost per decision from the logs.",
+      "suggested_fix": "Clarify in Section 3.4 whether committee auditors receive any information from the 50-reviewer board in the 'visible' condition (and confirm that committee-only deployment omits all 50 reviewer calls), and report mean token/dollar cost per decision alongside request counts in Table 1."
+    },
+    {
+      "id": "C5",
+      "severity": "minor",
+      "issue": "The blue-team collusion detector (Section 4.3, Appendix B.4) requires `z_minority >= 3.0` and a positive `shared-minority score` (voting on the losing side). This metric breaks down if a colluding bloc achieves >50% of active votes on targets, which flips honest agents into the shared minority. Moreover, false-positive clusters at 0% collusion are reported without stating the denominator of total evaluated zero-collusion runs.",
+      "suggested_fix": "Explicitly note in Section 4.3 and Appendix B.4 that the shared-minority feature assumes the colluding cell comprises less than 50% of active voters, and report the exact false-positive cluster rate across all evaluated 0%-collusion runs for both models."
+    },
+    {
+      "id": "C6",
+      "severity": "minor",
+      "issue": "The References section retains a draft editorial prompt at the end (`*(Verify every reference against its source before submission; do not add uncited claims.)*`), and Section 2's novelty gap claim relies on 2026 arXiv preprints that are flagged by that note for verification as well as two inaccessible candidate papers.",
+      "suggested_fix": "Verify all arXiv IDs, titles, and substantive characterizations in Section 2 and References against their original sources, qualify the combination-of-methods gap claim in Section 2 as provisional where candidate papers remain inaccessible, and delete the leftover verification note."
+    }
+  ],
+  "withdrawn": [],
+  "new_concerns": [
+    {
+      "id": "N1",
+      "severity": "major",
+      "issue": "Table 1 mislabels the hybrid regime's a-priori expected capture (G3), and the Abstract, Section 4.3, Section 5, and Section 6 blur the boundary between G1, G2, and G3 when summarizing what was validated: (1) Table 1 lists 'A-priori expected (G3)' as 21.8 for 'hybrid (majority + 4-of-7)' without marking it '(committee only)', even though hybrid release requires both majority approval and 4-of-7 committee approval, so with near-zero honest error and <=50% colluders the true hybrid target-release expectation is 0, not 21.8; (2) Section 6 claims that random committees 'matched a gated majority's judgement at a fraction of the cost', whereas 4-of-7 released 16/120 and 17/120 unsafe targets vs. 0/120 for gated majority on an exact-match task where honest error was ~0%; (3) the Abstract omits that plain majority's 48/48 forgery failure is architectural by construction because voters lack the symmetric HMAC key; (4) Section 5 lists independent honest errors as an assumption of 'the guarantee' without restricting it to G3 (and Sections 1 and 6 claim size-independent guarantees beyond the bounded check); and (5) Section 4.3 states that near-miss honest errors 'were too rare to affect any committee' even though the table immediately above shows 2/108 captures for 1-of-1 committees.",
+      "suggested_fix": "In Table 1, label the hybrid G3 value of 21.8 as '(committee only)' or 'n/a' (and state the majority tie rule). In the Abstract, state that voters in plain majority had no way to verify symmetric HMACs. In Section 4.3, clarify that near-miss errors did not affect any committee with k >= 2 (since 1-of-1 had 2/108 captures). In Sections 1, 5, and 6, separate the scope and assumptions of G1, G2, and G3, and replace the claim that committees 'matched a gated majority's judgement' with the observed cost-capture trade-off on this exact-match task."
+    }
+  ],
+  "rebuttals": [
+    {
+      "to": "A",
+      "about": "B.C1",
+      "response": "I concede that reviewer votes (50 per case) and committee auditor attestations (7 per case) are distinct calls in the 57-call-per-case trace, so reviewer votes should not be assumed exchangeable with auditor attestations without justification. I have revised C1's suggested fix to recommend reporting compliance-adjusted hypergeometric expectations (using the logged auditor compliance rates) and explicitly flagging the cross-row non-monotonicity in Tables 1-2 as a seating artifact of the 12 draws per share."
+    },
+    {
+      "to": "A",
+      "about": "B.C6",
+      "response": "I concede that the manuscript text alone does not establish that any citation is fabricated; I have revised C6 to request source verification of the 2026 arXiv citations, removal of the editorial note, and provisional qualification of the Section 2 gap claim without asserting fabrication."
+    },
+    {
+      "to": "C",
+      "about": "B.C4",
+      "response": "I concede that '12 / 13' in Table 2 is the DeepSeek / gpt-oss split rather than two gpt-oss board conditions. I removed that misreading in Round 1 and retain only the core reproducibility question (shared with A.C3, C.N3, and D.N2): clarifying in Section 3.4 whether committee auditors receive any public board state in the visible condition and reporting token/dollar costs alongside request counts in Table 1."
+    },
+    {
+      "to": "D",
+      "about": "B.C6",
+      "response": "I concede that the unverified status of the 2026 references does not prove they are hallucinated, and I have updated C6 to call strictly for source verification, removal of the editorial note, and qualification of the novelty gap."
+    }
+  ],
+  "updated_scores": {
+    "impact_innovation": 4,
+    "execution": 4,
+    "presentation": 4
+  },
+  "updated_verdict": "weak accept"
+}
