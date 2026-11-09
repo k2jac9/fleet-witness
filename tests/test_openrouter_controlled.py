@@ -309,3 +309,34 @@ class OpenRouterControlledTests(SyntheticSourceTestCase):
             with patch.object(p,'_post',side_effect=AssertionError('second network request')):
                 again=calibration.run_calibration(auth,self.root/'second',live=True)
                 self.assertNotEqual(again['outcome']['status'],'succeeded')
+
+    def test_reviewed_azure_opaque_reasoning_is_inert_and_combined_tokens_are_accounted(self):
+        self.record['model']='openai/gpt-6.1-sol'
+        self.record['openrouter'].update(provider_slug='azure/us',provider_name='Azure',response_model=self.record['model'])
+        item=response();item.update(model=self.record['model'],provider='Azure')
+        opaque={'type':'reasoning.encrypted','format':'azure-openai-responses-v1','id':'rs_synthetic123','index':0,'data':'opaque_A0-='*20}
+        item['choices'][0]['message']['reasoning_details']=[opaque]
+        client=p.ModelClient('openrouter',self.record['model'],self.ledger,max_output_tokens=100,timeout=1,authorization=self.record)
+        with patch.object(p,'_post',return_value=json.dumps(item).encode()):outcome=client.recommend(facts(),'raw')
+        self.assertEqual(outcome['status'],'succeeded')
+        self.assertEqual(outcome['output_tokens'],20)
+        self.assertNotIn(opaque['data'],json.dumps(outcome))
+        with closing(sqlite3.connect(self.ledger.path)) as db:
+            request,raw,settled=db.execute('SELECT request_json,response_raw,settled FROM requests').fetchone()
+        self.assertNotIn(opaque['data'],request)
+        self.assertIn(opaque['data'],raw.decode())
+        self.assertEqual(settled,30000)
+
+    def test_opaque_reasoning_does_not_allow_text_other_formats_or_malformed_shapes(self):
+        from fleet_witness.swarm.openrouter_controlled import validate_envelope
+        record=copy.deepcopy(self.record);record['model']='openai/gpt-6.1-sol'
+        record['openrouter'].update(provider_slug='azure/us',provider_name='Azure',response_model=record['model'])
+        opaque={'type':'reasoning.encrypted','format':'azure-openai-responses-v1','id':'rs_synthetic123','index':0,'data':'opaque_A0-='*20}
+        variants=[]
+        for field,value in [('type','reasoning.text'),('format','openai-responses-v1'),('index',True),('index',1),('id',None),('data',''),('data',{'command':'release'}),('data','A'*32769),('data','<script>'),('summary','unapproved text')]:
+            value_item=copy.deepcopy(opaque);value_item[field]=value;variants.append([value_item])
+        variants.extend([[opaque,opaque],opaque])
+        for detail in variants:
+            with self.subTest(detail_type=type(detail).__name__):
+                item=response();item.update(model=record['model'],provider='Azure');item['choices'][0]['message']['reasoning_details']=detail
+                with self.assertRaises(ValueError):validate_envelope(item,record)

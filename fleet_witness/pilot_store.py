@@ -6,6 +6,7 @@ import hashlib
 import json
 import math
 import os
+import re
 from pathlib import Path
 import sqlite3
 import time
@@ -172,6 +173,10 @@ def export_report(database, ledger_path):
                 attempt['request_sha256'] = digest(attempt['request'])
                 attempt['response_sha256'] = hashlib.sha256(request['response_raw']).hexdigest() if request['response_raw'] is not None else None
                 if attempt['request_sha256'] != link['request_sha256']: raise ValueError('request mapping mismatch')
+                if attempt['status'] == 'reconciled_invalid_output':
+                    reconciliations = list(ledger.execute("SELECT data FROM audit WHERE request_id=? AND kind='operator_charge_reconciled'", (attempt['id'],)))
+                    if len(reconciliations) != 1: raise ValueError('unique reconciliation audit required')
+                    attempt['reconciliation'] = json.loads(reconciliations[0]['data'])
             outcome = json.loads(row['outcome']) if row['outcome'] else None
             decision, evaluation, attempts, events, releases = None, None, [], [], []
             if 'decisions' in tables:
@@ -289,13 +294,14 @@ def _validate_provider_evidence(call, auth):
                 {'role':'user','content':canonical_json(call['supervisor_input']['facts'])}]):
         raise ValueError('provider request/provenance mismatch')
     receipt = row['receipt']
+    reconciled = _validate_reconciliation(call, row, auth)
     if call['state'] == 'unstarted': raise ValueError('unstarted call has a reservation')
     if receipt is not None:
-        if (receipt['attempt_id'] != row['id'] or receipt['status'] != row['status'] or
+        if (receipt['attempt_id'] != row['id'] or (not reconciled and receipt['status'] != row['status']) or
                 receipt['provider'] != row['provider'] or receipt['model'] != auth['model'] or
                 receipt['request_sha256'] != row['request_sha256'] or receipt['response_sha256'] != row['response_sha256'] or
                 receipt['provider_attempts'] != int(row['dispatched'] is not None) or
-                units(receipt['cost_usd']) != row['settled'] or receipt['held_usd'] != dollars(int(row['held']))):
+                (not reconciled and (units(receipt['cost_usd']) != row['settled'] or receipt['held_usd'] != dollars(int(row['held']))))):
             raise ValueError('canonical receipt/accounting mismatch')
     if outcome is not None:
         if receipt is None or outcome['attempts'] != [receipt] or row['dispatched'] is None:
@@ -354,3 +360,35 @@ def _validate_effects(call):
                 e['details'] != {'attempt_id':attempt['id'], 'execution_authorized_at_attempt':attempt['execution_authorized_at_attempt'],
                                  'effect_occurred':attempt['effect_occurred'], 'policy_version':attempt['policy_version']}):
             raise ValueError('effect audit mismatch')
+
+
+def _validate_reconciliation(call, row, auth):
+    """An operator audit links new accounting to the unchanged failed receipt.
+
+    Hashes bind retained evidence; they do not independently verify an account.
+    No successful proposal or permission to resume is created by reconciliation.
+    """
+    if row['status'] != 'reconciled_invalid_output':
+        if row.get('reconciliation') is not None: raise ValueError('unexpected reconciliation')
+        return False
+    value = row.get('reconciliation'); receipt = row['receipt']
+    fields = {'schema_version','request_id','run_id','prior_status','prior_held_units','settled_units',
+              'provider_reported_cost_usd','response_sha256','receipt_sha256',
+              'account_evidence_sha256','generation_evidence_sha256'}
+    if (not isinstance(value, dict) or set(value) != fields or not isinstance(receipt, dict) or
+            value['schema_version'] != 'operator-charge-reconciliation-v1' or
+            value['request_id'] != row['id'] or value['run_id'] != auth['run_id'] or
+            value['prior_status'] != 'unresolved' or receipt['status'] != value['prior_status'] or
+            type(value['prior_held_units']) is not int or value['prior_held_units'] != row['reserved'] or
+            receipt['held_usd'] != dollars(value['prior_held_units']) or receipt['cost_usd'] != 0 or
+            type(value['settled_units']) is not int or not 0 <= value['settled_units'] <= row['reserved'] or
+            row['settled'] != value['settled_units'] or int(row['held']) != 0 or
+            units(value['provider_reported_cost_usd']) > row['settled'] or
+            Decimal(value['provider_reported_cost_usd']) != Decimal(receipt['provider_reported_cost_usd']) or
+            value['response_sha256'] != row['response_sha256'] or value['receipt_sha256'] != digest(receipt) or
+            any(not isinstance(value[name], str) or not re.fullmatch(r'[0-9a-f]{64}', value[name]) for name in
+                ('response_sha256','receipt_sha256','account_evidence_sha256','generation_evidence_sha256')) or
+            call['outcome'] is not None or call['decision'] is not None or receipt['proposal'] is not None or
+            call['state'] not in ('provider_failed','interrupted')):
+        raise ValueError('accounting reconciliation does not match preserved failure')
+    return True

@@ -122,9 +122,10 @@ def validate_envelope(data, record):
             not (isinstance(message.get('content'), str) or
                  (choice['finish_reason'] == 'length' and message.get('content') is None)) or
             message.get('refusal') is not None or message.get('reasoning') not in (None, '') or
-            message.get('reasoning_details') not in (None, []) or message.get('tool_calls') not in (None, []) or
+            message.get('tool_calls') not in (None, []) or
             message.get('function_call') is not None or message.get('annotations') not in (None, [])):
         raise ValueError('unexpected controlled message content')
+    _opaque_reasoning(message.get('reasoning_details'), record)
     usage = data.get('usage')
     if (not isinstance(usage, dict) or not {'cost', 'prompt_tokens', 'completion_tokens', 'total_tokens'} <= set(usage) or
             set(usage) - {'cost', 'prompt_tokens', 'completion_tokens', 'total_tokens', 'is_byok',
@@ -165,3 +166,24 @@ def validate_envelope(data, record):
                 raise ValueError('invalid controlled token count')
             if name in zero_only and count != 0:
                 raise ValueError('unqualified nontext usage')
+
+
+def _opaque_reasoning(details, record):
+    """Accept a reviewed inert wrapper, not a claim that its bytes are authentic.
+
+    Never decode or replay this payload. The caller uses only assistant content;
+    bounded raw response evidence is retained privately for reconciliation.
+    """
+    if details is None or details == []:
+        return
+    profile = record['openrouter']
+    if (record['model'] != 'openai/gpt-6.1-sol' or profile['provider_slug'] != 'azure/us' or
+            profile['provider_name'] != 'Azure' or not isinstance(details, list) or len(details) != 1):
+        raise ValueError('unqualified reasoning metadata')
+    item = details[0]
+    if (not isinstance(item, dict) or set(item) != {'type', 'format', 'id', 'index', 'data'} or
+            item['type'] != 'reasoning.encrypted' or item['format'] != 'azure-openai-responses-v1' or
+            type(item['index']) is not int or item['index'] != 0 or
+            not isinstance(item['id'], str) or not re.fullmatch(r'rs_[A-Za-z0-9_-]{1,125}', item['id']) or
+            not isinstance(item['data'], str) or not re.fullmatch(r'[A-Za-z0-9_.=\-]{1,32768}', item['data'])):
+        raise ValueError('invalid opaque reasoning metadata')

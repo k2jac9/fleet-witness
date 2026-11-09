@@ -332,3 +332,29 @@ class PilotRunnerTests(PilotCase):
         second['ledger_attempt']['receipt']['attempt_id']=identity
         second['outcome']['attempts'][0]['attempt_id']=identity
         with self.assertRaises(ValueError):pilot_store.validate_report(report)
+
+    def test_reconciled_failed_call_preserves_receipt_and_requires_matching_audit(self):
+        from fleet_witness import pilot_store
+        from fleet_witness.swarm.ledger import dollars
+        import hashlib
+        def invalid(*args,**kwargs):
+            value=json.loads(self.reply());value['choices'][0]['message']['reasoning']='unexpected text';return json.dumps(value).encode()
+        report,_=self.run_fixture(invalid)
+        attempt=report['calls'][0]['ledger_attempt'];original=copy.deepcopy(attempt['receipt'])
+        record={'schema_version':'operator-charge-reconciliation-v1','request_id':attempt['id'],'run_id':self.record['run_id'],
+            'prior_status':'unresolved','prior_held_units':int(attempt['held']),'settled_units':30000,
+            'provider_reported_cost_usd':'0.00003','response_sha256':attempt['response_sha256'],
+            'receipt_sha256':design.digest(original),'account_evidence_sha256':'a'*64,'generation_evidence_sha256':'b'*64}
+        with closing(sqlite3.connect(self.ledger.path)) as db,db:
+            db.execute("UPDATE requests SET status='reconciled_invalid_output',held='0',settled=30000 WHERE id=?",(attempt['id'],))
+        with self.assertRaises(ValueError):pilot_store.export_report(self.root/'output/pilot.sqlite3',self.ledger.path)
+        with closing(sqlite3.connect(self.ledger.path)) as db,db:
+            db.execute('INSERT INTO audit(request_id,kind,data) VALUES(?,?,?)',(attempt['id'],'operator_charge_reconciled',canonical_json(record)))
+        recovered=pilot_store.export_report(self.root/'output/pilot.sqlite3',self.ledger.path)
+        self.assertEqual(recovered['summary']['provider_failed'],1)
+        self.assertEqual(recovered['summary']['settled_usd'],.00003)
+        self.assertEqual(recovered['summary']['held_usd'],0)
+        self.assertEqual(recovered['calls'][0]['ledger_attempt']['receipt'],original)
+        self.assertIsNone(recovered['calls'][0]['decision'])
+        corrupted=copy.deepcopy(recovered);corrupted['calls'][0]['ledger_attempt']['reconciliation']['receipt_sha256']='c'*64
+        with self.assertRaises(ValueError):pilot_store.validate_report(corrupted)

@@ -1,3 +1,30 @@
+# First cohort stop and compatibility iteration — November 9, 2026
+
+PR #10 merged as `92754a906aa6618034abd5b3886800550a4c67ed`, with the exact tree
+verified against the independent review/fix pass and hosted run `42583353665`:
+301 Python tests, five viewer checks and all 11 pinned runtime lanes passed.
+The first paid exploratory cohort then stopped on its first response because
+Azure returned encrypted reasoning metadata excluded by the original envelope.
+There were zero accepted decisions/effects and 159 unstarted calls. The failed
+cohort is preserved in `paired-pilot-20261109/pilot/` under the artifact root.
+
+Read-only generation/key reconciliation found a matching $0.0016104 charge and
+$49.9954636 remaining. The initial request receipt has null token fields because
+validation failed before accepted usage was copied, so the first reconciliation
+packet correctly remains unaccepted. The original raw usage and generation both
+show 287 input/89 output, including 28 reasoning; the compatibility iteration
+prepares an explicitly reviewed $0.00176825 conservative accounting settlement.
+That accounting action is pending at this source snapshot.
+
+The iteration adds strict inert encrypted-wrapper support and audit-linked
+failed-charge recovery. RED/GREEN receipts are retained under
+`paired-pilot-20261109/iteration-reasoning/`. Full checks, independent review,
+hosted CI, integration, settlement and any new calibration/cohort are still
+pending here. Nothing is pooled into or resumed within the failed cohort.
+Historical evidence follows.
+
+---
+
 # Paired exploratory pilot preparation — November 9, 2026
 
 Task `paired-pilot-20261109` extends source `d0dae65491bf7c8204ca71dbde4114f08901123e`.
