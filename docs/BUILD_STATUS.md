@@ -2,6 +2,22 @@
 
 ## Swarm stabilization: 2026-11-09
 
+The independent review at `8c0c790` found shared request-count, Git-free fixture,
+dataset-attribution and unsent-attempt accounting defects. All four were fixed
+at `519c3aacfc4cd32b10dafb598915ac11930da5f8` with retained red/green regressions.
+The fix-pass suite passed **233 Python tests**. The complete Git-free offline
+task then passed **233 Python tests, five viewer tests and the scripted demo**,
+ending at `stage=complete`, exit 0. Full reproduction at that clean commit again
+preserved 147 inputs and passed both depth-six configurations and all seven
+mutants; 18 strict JSON outputs now include validated model/configuration
+identities. See [review resolution](reviews/swarm-stabilization-resolution.md)
+and [final reproduction receipt](report/REPRODUCTION-REVIEW-FIX-2026-11-09.json).
+Exact final-source hosted CI remains the integration gate in
+[PR #6](https://github.com/k2jac9/fleet-witness/pull/6). Earlier failed checks and
+the original negative review are preserved, not overwritten by this resolution.
+
+The initial integration checkpoint follows for provenance.
+
 Task `swarm-stabilization` preserves `feat/live-swarm` at `6061cb2` and integrates
 the reviewed changes on `fix/swarm-stabilization-20261109`. Implementation source
 `50902524c8e7db59d9a6d0b9b80c44162d3ffb86` passed 228 Python tests and five viewer
@@ -37,8 +53,8 @@ The current independence JSON now uses `null` for undefined values. See
 [integrated reproduction](report/REPRODUCTION-2026-11-09.json).
 
 Evidence packet: `/home/neo/Projects/fleet-witness-artifacts/stabilization-20261109/`.
-Independent whole-candidate review and final-source hosted CI are pending at
-this checkpoint. No new model inference, cloud deployment, dashboard check,
+Independent whole-candidate review and final-source hosted CI were pending at
+this initial checkpoint. No new model inference, cloud deployment, dashboard check,
 provider-balance verification or Nix build was performed. The historical
 dashboard and account statements below are dated observations, not current
 health or balance claims. GCP remains a separate $100 maximum; no part of this

@@ -1,0 +1,141 @@
+{
+  "task": "swarm-stabilization-review-fixes",
+  "source_commit": "519c3aacfc4cd32b10dafb598915ac11930da5f8",
+  "source_worktree_dirty": false,
+  "inputs_unchanged": true,
+  "input_files": 147,
+  "derived_json_files": 18,
+  "dataset_identities": {
+    "sweep-deepseek2k": {
+      "label": "DeepSeek",
+      "model": "openrouter:deepseek/deepseek-v4-flash-0731",
+      "case_mode": "standard",
+      "seed_base": 1000,
+      "agents": 50,
+      "cases": 24,
+      "waves": 5,
+      "max_output_tokens": 2000,
+      "conditions": [
+        "hidden-cell",
+        "visible-cell"
+      ]
+    },
+    "sweep-gptoss": {
+      "label": "gpt-oss",
+      "model": "openrouter:openai/gpt-oss-20b",
+      "case_mode": "standard",
+      "seed_base": 1000,
+      "agents": 50,
+      "cases": 24,
+      "waves": 5,
+      "max_output_tokens": 2000,
+      "conditions": [
+        "hidden-cell",
+        "visible-cell"
+      ]
+    },
+    "ambig-deepseek-s3000": {
+      "label": "DeepSeek",
+      "model": "openrouter:deepseek/deepseek-v4-flash-0731",
+      "case_mode": "ambiguous",
+      "seed_base": 3000,
+      "agents": 50,
+      "cases": 24,
+      "waves": 5,
+      "max_output_tokens": 2000,
+      "conditions": [
+        "hidden-cell",
+        "visible-cell"
+      ]
+    },
+    "ambig-deepseek-s4000": {
+      "label": "DeepSeek",
+      "model": "openrouter:deepseek/deepseek-v4-flash-0731",
+      "case_mode": "ambiguous",
+      "seed_base": 4000,
+      "agents": 50,
+      "cases": 24,
+      "waves": 5,
+      "max_output_tokens": 2000,
+      "conditions": [
+        "hidden-cell",
+        "visible-cell"
+      ]
+    },
+    "ambig-deepseek-s5000": {
+      "label": "DeepSeek",
+      "model": "openrouter:deepseek/deepseek-v4-flash-0731",
+      "case_mode": "ambiguous",
+      "seed_base": 5000,
+      "agents": 50,
+      "cases": 24,
+      "waves": 5,
+      "max_output_tokens": 2000,
+      "conditions": [
+        "hidden-cell",
+        "visible-cell"
+      ]
+    },
+    "ambig-gptoss-s3000": {
+      "label": "gpt-oss",
+      "model": "openrouter:openai/gpt-oss-20b",
+      "case_mode": "ambiguous",
+      "seed_base": 3000,
+      "agents": 50,
+      "cases": 24,
+      "waves": 5,
+      "max_output_tokens": 2000,
+      "conditions": [
+        "hidden-cell",
+        "visible-cell"
+      ]
+    },
+    "ambig-gptoss-s4000": {
+      "label": "gpt-oss",
+      "model": "openrouter:openai/gpt-oss-20b",
+      "case_mode": "ambiguous",
+      "seed_base": 4000,
+      "agents": 50,
+      "cases": 24,
+      "waves": 5,
+      "max_output_tokens": 2000,
+      "conditions": [
+        "hidden-cell",
+        "visible-cell"
+      ]
+    },
+    "ambig-gptoss-s5000": {
+      "label": "gpt-oss",
+      "model": "openrouter:openai/gpt-oss-20b",
+      "case_mode": "ambiguous",
+      "seed_base": 5000,
+      "agents": 50,
+      "cases": 24,
+      "waves": 5,
+      "max_output_tokens": 2000,
+      "conditions": [
+        "hidden-cell",
+        "visible-cell"
+      ]
+    }
+  },
+  "reproduction_receipt": "/home/neo/Projects/fleet-witness-artifacts/stabilization-20261109/reproduction/review-fixed-519c3aa/reproduction-provenance.json",
+  "reproduction_receipt_sha256": "e24168e3f96c5ba832ff0d0aff41935be4a813717e7ed0447170afdeb0afab57",
+  "previous_independence_sha256": "8eaa128360d3e6367e9907e680f0a0ab07e2976b9ef7795c539f9843d5e33dd7",
+  "current_independence_sha256": "0194a6c12ba74b7ebf12dd49358187c95cd655a73d7c80495d4868525cc740ad",
+  "checker": {
+    "executed": true,
+    "command": [
+      "/run/current-system/sw/bin/python3",
+      "-m",
+      "fleet_witness.verify_institution",
+      "--depth",
+      "6",
+      "--mutants"
+    ],
+    "returncode": 0
+  },
+  "new_model_calls": 0,
+  "historical_signatures_verified": false,
+  "supersedes_current_independence_hash_in": "REPRODUCTION-2026-11-09.json"
+}

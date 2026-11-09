@@ -2,11 +2,11 @@
 
 ## Current checkpoint: 2026-11-09
 
-The swarm stabilization at `5090252` passes 228 local Python tests, five viewer
-tests and full archive reconstruction with the depth-six checker and mutants.
-Its corrected report preserves historical inputs and states their limits.
-Independent whole-candidate review and exact final-source hosted CI remain to
-be recorded before integration. See [BUILD_STATUS.md](BUILD_STATUS.md).
+The reviewed swarm stabilization fixes at `519c3aa` pass 233 local Python tests,
+the full Git-free offline launcher (233 Python/five viewer tests and demo), and
+archive reconstruction with the depth-six checker and mutants. The independent
+review and tested integrator resolution are retained; exact final-source hosted
+CI remains a merge gate in PR #6. See [BUILD_STATUS.md](BUILD_STATUS.md).
 
 The new shared SQLite provider ledger and single-attempt transport have offline
 security regressions, not live qualification. Production CLI entrypoints require
@@ -22,6 +22,9 @@ provider/host gates below. Controlled colluder instructions are not observation
 of external swarms. New public-web sensors, a live dashboard refresh and paid
 calibration require their applicable evidence; this stabilization performs none
 of those operations. The $100 GCP ceiling remains separate from provider credits.
+The inherited heuristic swarm vote/sign parsers preserve the historical research
+treatment; they are not ADR-0010's closed-schema supervisor contract. Scope and
+validate the intended parser/treatment explicitly before new paid qualification.
 
 ## Historical checkpoint: 2026-11-08
 

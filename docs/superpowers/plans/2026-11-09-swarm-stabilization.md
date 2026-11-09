@@ -68,8 +68,8 @@ clean and committed; review acceptance remains an independently recorded gate.
 **Files:** Evidence packet and current build-status handoff only, plus narrowly justified tested fixes.
 **Interfaces:** Exact final commits, full logs and archive/artifact hashes from Tasks 1–3.
 
-- [ ] Independent reviewer checks the full candidate and five Review Focus items.
-- [ ] Reproduce and fix material findings with failing tests; preserve all receipts.
+- [x] Independent reviewer checks the full candidate and five Review Focus items.
+- [x] Reproduce and fix material findings with failing tests; preserve all receipts.
 - [ ] Run complete checks on final source, push the stabilization branch and verify hosted CI before integration.
 - [ ] Integrate only the reviewed exact candidate; report source, results and any remaining paid-canary gates.
 

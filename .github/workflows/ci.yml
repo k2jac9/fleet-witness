@@ -44,13 +44,21 @@ jobs:
         with:
           persist-credentials: false
       - name: Download and verify the exact runtime artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p ci-results
           # Use a fresh download request and bounded retries after upstream 504s.
           # The selected version and mandatory archive digest remain unchanged.
-          curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --max-time 180 \
+          if ! curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --max-time 180 \
             --retry 2 --retry-delay 2 --retry-max-time 180 \
-            "${FW_URL}?fleet-witness-ci=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" -o "$RUNNER_TEMP/runtime-archive"
+            "${FW_URL}?fleet-witness-ci=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" -o "$RUNNER_TEMP/runtime-archive"; then
+            test "$FW_FAMILY" = python
+            gh --version > ci-results/download-tool.txt
+            timeout 180 gh release download "$(basename "$(dirname "$FW_URL")")" \
+              --repo actions/python-versions --pattern "$(basename "$FW_URL")" \
+              --output "$RUNNER_TEMP/runtime-archive" --clobber
+          fi
           python3 scripts/ci_runtime.py verify-archive --lane "$FW_LANE" --archive "$RUNNER_TEMP/runtime-archive" | tee ci-results/archive-sha256.txt
           mkdir "$RUNNER_TEMP/fleet-runtime"
           if [ "$FW_FAMILY" = python ]; then

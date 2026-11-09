@@ -14,7 +14,9 @@ python scripts/fleet.py plan
 git diff --check
 ```
 
-The 2026-11-09 stabilization at `5090252` passes 228 Python tests and 5 Node tests.
+The 2026-11-09 stabilization fixes at `519c3aa` pass 233 Python tests and 5 Node tests,
+including the full Git-free worker launcher with synthetic source identities
+restricted to offline test fixtures. Production missing-source rejection remains tested.
 The earlier 49-test baseline remains historical evidence. Record the exact commit,
 versions, commands, exit codes, and real results when reporting a new run; counts
 may change as meaningful coverage grows. A green planner is scheduling validation,
