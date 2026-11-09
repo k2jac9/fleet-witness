@@ -49,6 +49,29 @@ submission was performed. Public hashes identify bytes; they do not independentl
 authenticate private provider execution. The unfavorable blanket-denial result
 and historical provenance limitations remain explicit in every public narrative.
 
+## Independent review fixes
+
+The read-only whole-branch review of `078c4cfbc573e0ea783852d8ae7be6c1e93196af`
+found one important exporter flaw: recognized scalar fields could hold nested
+objects while still passing the private report's consistency validator. A new
+regression reproduced eleven accepted invalid values, then passed after strict
+token/numeric/boolean, enum and provenance-format checks were added. The real
+public trial rows and aggregates are unchanged. Five publication regressions
+pass; the full post-fix suite passed **309 Python tests** and **five viewer tests**.
+
+Both minor findings were also fixed: the launch link now matches GitHub's
+emoji-prefixed heading slug, and the report/public-data limitations explicitly
+state that the supervisor cannot verify private HMACs. The regenerated PDF still
+has six main pages, eight total; all pages were inspected again, and the
+14-member ZIP was rebuilt and rechecked. The independent reviewer did not
+re-review the fixes; the implementer retained their red/green evidence and
+accepted the fixes against that review.
+
+The original reviewed head passed all eleven hosted runtime lanes plus selection
+in run `42590667112`. This is **pre-fix** CI, with 308 tests in each Python lane;
+it does not qualify the new exporter. Final-source CI is tracked by PR #13 and
+retained separately in the task packet. No runtime policy or accepted ADR changed.
+
 ---
 
 # Completed real-model paired pilot — November 9, 2026

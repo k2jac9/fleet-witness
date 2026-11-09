@@ -4,6 +4,7 @@
     "Derived table permits aggregate recomputation, not independent authentication of private provider receipts.",
     "No prompts, free-text responses, account metadata, credentials, raw receipts or encrypted reasoning.",
     "Evaluations are observer labels; they were not supervisor inputs.",
+    "The supervisor cannot verify private HMAC signatures; forgery scores use sealed evaluator truth.",
     "The paired schedule is balanced; independent model seeds are not established."
   ],
   "model": "openai/gpt-6.1-sol",

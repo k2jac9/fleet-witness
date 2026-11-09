@@ -54,6 +54,30 @@ class PublicPilotExportTests(PilotCase):
         with self.assertRaises(ValueError):
             public_export(incomplete)
 
+    def test_recognized_scalar_fields_cannot_carry_nested_private_values(self):
+        from scripts.export_public_pilot import public_export
+        from fleet_witness.pilot_design import digest
+        report = self.report()
+        sentinel = {'transport': {'credential': 'SYNTHETIC-REVIEW-SENTINEL'}}
+        for field in ('input_tokens', 'output_tokens'):
+            for value in (sentinel, True, -1, 1.5, 'PRIVATE-PATH'):
+                with self.subTest(field=field, value_type=type(value).__name__):
+                    tampered = copy.deepcopy(report)
+                    call = tampered['calls'][0]
+                    call['outcome'][field] = value
+                    call['outcome']['attempts'][0][field] = value
+                    call['ledger_attempt']['receipt'][field] = value
+                    self.assertTrue(pilot_store.validate_report(tampered))
+                    with self.assertRaises(ValueError):
+                        public_export(tampered)
+        tampered = copy.deepcopy(report)
+        tampered['source_commit'] = sentinel
+        tampered['authorization']['source_commit'] = sentinel
+        tampered['authorization_sha256'] = digest(tampered['authorization'])
+        self.assertTrue(pilot_store.validate_report(tampered))
+        with self.assertRaises(ValueError):
+            public_export(tampered)
+
 
 class PackageBoundaryTests(unittest.TestCase):
     def test_public_package_inputs_exclude_workstation_paths(self):

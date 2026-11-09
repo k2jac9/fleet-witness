@@ -53,7 +53,7 @@ this plan and its spec. Task receipts only in the sibling latest-submission-2026
 ### Task 3: Verify and integrate
 
 - [x] Run full Python/viewer suites and publication checks; retain commands/results and failures.
-- [ ] Independent whole-branch evidence/code/visual review; root fixes material findings with behavioral regressions where applicable.
+- [x] Independent whole-branch evidence/code/visual review; root fixes material findings with behavioral regressions where applicable.
 - [ ] Run exact-source hosted CI, retain identities, merge green PR and fast-forward clean main.
 - [ ] Deliver latest.pdf, ZIP and current README links with explicit remaining submission steps.
 
@@ -66,3 +66,7 @@ this plan and its spec. Task receipts only in the sibling latest-submission-2026
 - Evidence: public-export module missing (RED), canonical receipt fixture corrected, export tests GREEN; package module missing (RED), symlink/traversal checks GREEN; existing historical receipt path disclosure (RED), linked receipt plus package input regression GREEN.
 - Local verification: 308 Python tests; five viewer checks; all eight PDF pages visually reviewed; six main pages; 218-word abstract; 14 package members verified and extracted aggregate commands executed. Full receipts are in the sibling latest-submission-20261109 artifact directory.
 - Pending: fresh whole-branch review and exact-source hosted CI/integration. No paid calls or external form submission belong to this publication task.
+
+- Final: fixed recognized-field nested-object leak — `test_recognized_scalar_fields_cannot_carry_nested_private_values` RED (11 failures) to GREEN; strict scalar formats reject containers, booleans as counts, negatives and noninteger counts. Full suite 309/309, viewer 5/5. Real trial rows and summaries unchanged.
+- Final: fixed both minor findings — GitHub emoji heading anchor; HMAC observability caveat restored in the report and public dataset. PDF/HTML/ZIP regenerated, all eight pages visually rechecked and package arithmetic/checksums passed.
+- Final: Ruling: accept the review's declined areas as separate acceptance boundaries — paid execution/billing authentication, historical depth-six rerun, current cloud state, event-form acceptance, independent reproduction of cited research, hosted GitHub visual acceptance and new runtime upgrades are outside this publication task. Exact-source hosted CI remains required for the branch.

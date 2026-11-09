@@ -6,7 +6,7 @@
   <strong>🛰️ SWARM ALIGNMENT HACKATHON · MISSION CONTROL FOR AGENT AUTHORITY</strong><br>
   <a href="docs/report/latest.pdf">Read the latest paper</a> ·
   <a href="docs/submission/latest-submission.zip">Get the submission package</a> ·
-  <a href="#launch-the-local-lab">Launch the lab</a> ·
+  <a href="#-launch-the-local-lab">Launch the lab</a> ·
   <a href="docs/experiments/2026-11-09-openrouter-paired-pilot.md">Inspect the live pilot</a>
 </p>
 

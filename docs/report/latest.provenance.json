@@ -31,11 +31,11 @@
   "private_generation_records_sha256": "1d1915f087fd34aa7b686a75afc7277259e26d8f0a962d542985d029cb776d8f",
   "private_pilot_report_sha256": "57442e4842377db4d5fb1711914a6580a1973fffc74535b1bc73fd93c4c962ea",
   "public_file_sha256": {
-    "data/paired-pilot-2026-11-09.json": "3b9eef9522739c84900055c0da305dc9a673c5e97cf8b4c7302280c2d1e242dd",
+    "data/paired-pilot-2026-11-09.json": "6d3d681eb39c5af5bb7d08a9b82c50498729c336507c7eb26db7f1881a728c15",
     "docs/report/latest-figures/paired-pilot.svg": "4b4dea6d5f8c9d11cfcc8611ab1e9a7beb147c07ea24a18e6adb12359c7aac54",
-    "docs/report/latest.html": "222179dd45a5d21edfb57021e4bc524e450640270a629c86e35399cf01cb4722",
-    "docs/report/latest.md": "d8bc5bd1dfc127dc4e906fc85055f998b3565ebd9f66469b35f119bc5dc36ac6",
-    "docs/report/latest.pdf": "8e11f17794275d01b775a8b3089abc774a7403ee069a63b91f079a392e1813b4",
+    "docs/report/latest.html": "44b10d3441e2b4dffcd5cf50c1d1bf2801bc12be2f297e8b18263dca811c05ea",
+    "docs/report/latest.md": "001a9f99dad24de5f17a2028115650d58698917234138f221fbac1eb1cd08b7e",
+    "docs/report/latest.pdf": "c14d2471dc389e96bdf9284c6eee0ba7de2446505a698db916dc74cd20c4807a",
     "docs/report/latest.references.json": "22895e1186dd06758dde9ee7cbac2ca101e87519ff1400c6606c5166a03f57bf"
   },
   "publication_base_commit": "ee7c17e6f8b50684084caf6f6900c577801351c5",
