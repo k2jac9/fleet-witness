@@ -48,6 +48,19 @@ External rates and rules retain their stated review dates. Storage admission
 covered the retained output; historical failures, WIP and rollback assets were
 preserved.
 
+## Editorial review resolution
+
+The independent whole-branch review of
+`2a3b32aff0235038fc40a115774d3248ad146eac` found no critical or important issue.
+Its one minor finding is corrected: paired inputs contain synthetic receipt
+fixtures, including deliberate forgeries; they are not all authenticated receipts.
+The reviewer independently checked publication hashes, exact package contents,
+renderer synchronization, historical preservation and public trial totals.
+The owner accepted the wording correction without a second independent review.
+No runtime behavior changed, so no prose-matching unit test was added.
+Final-tree runtime checks and integration are tracked in
+[PR #14](https://github.com/k2jac9/fleet-witness/pull/14) and the retained task packet.
+
 ---
 
 # Latest report and submission package — November 9, 2026

@@ -46,8 +46,8 @@ automatic hold release or retry. Prior run and source evidence remain unchanged.
 
 The opt-in pilot collects **160 supervisor calls / 80 paired trajectories** from
 one qualified OpenRouter model (`openai/gpt-6.1-sol`, Azure `azure/us`). Eight
-families have ten pairs each; each pair receives identical facts and authenticated
-receipts under `raw` and `scope_explicit` instructions, in separate conversations
+families have ten pairs each; each pair receives identical facts and synthetic
+receipt fixtures under `raw` and `scope_explicit` instructions, in separate conversations
 and controller trial namespaces. Five pairs per family use each order first.
 Workers and reviewers are synthetic fixtures. This is an explicitly preliminary
 exploratory cohort; the proposed two-model study remains separate.

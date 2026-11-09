@@ -64,4 +64,8 @@ runtime code, tests, infrastructure and runtime pins are outside scope.
 - Ruling: continue the already authorized green-merge workflow without another
   approval menu — prior owner authorization persists; exact-head review and CI
   remain required. No paid execution or event submission is included.
-- Independent whole-branch review and final-tree hosted CI remain to execute.
+- Independent review of `2a3b32aff0235038fc40a115774d3248ad146eac` found no
+  blocking issue. Its one minor receipt-fixture wording finding is corrected.
+  The user's full editorial-polish request includes this small clarification;
+  no prose-matching unit test or second review is needed. Final-tree CI and
+  integration remain tracked in PR #14 and the retained task packet.
