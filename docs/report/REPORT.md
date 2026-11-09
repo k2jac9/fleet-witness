@@ -4,11 +4,13 @@
 **Affiliations:** [TBD by team]
 **Track:** 4, Multi-Agent Oversight and Control (cross-track: 2, 3)
 
-*Draft for the official Apart template. Every number comes from runs in this repository. `[GPT-OSS]` marks results from the second-model sweep still in progress.*
+*Draft for the official Apart template. Every number comes from runs in this repository
+(`runs/sweep-deepseek2k`, `runs/sweep-gptoss`; regenerate with `python -m fleet_witness
+swarm-summary <dir>`).*
 
 ---
 
-## Abstract (248 words; limit 150–250)
+## Abstract (239 words; limit 150–250)
 
 Aligning every agent in a swarm scales poorly. Human societies place guarantees in
 institutions instead. We ask whether an *institution* for agent swarms can be formally checked
@@ -22,15 +24,15 @@ exploration of the real implementation (23,376 states) shows its safety, livenes
 at-most-once and audit invariants hold, and catches all seven deliberately broken variants.
 
 The guarantee is conditional: if fewer than k of m randomly seated auditors sign an unsafe
-release, it does not ship. We then ran 16,416 live calls (DeepSeek v4 Flash) in which 50-agent
-swarms reviewed releases while hidden cells of 0–50% pushed invalid ones. All capture came from
-colluder seats and never exceeded the bound implied by the seats actually drawn. A direct
-majority vote was never captured but approved all 48 forged-signature releases, which every
-kernel regime blocked. A hybrid (majority plus 4-of-7 committee) had zero unsafe releases and
-full throughput. Honest agents neither erred nor herded, so this crisp task did not stress the
-independence assumption behind quorum guarantees. Ambiguous tasks are the next test.
+release, it does not ship. We ran 32,830 live calls across two reasoning-model families
+(DeepSeek v4 Flash, gpt-oss-20b) in which 50-agent swarms reviewed releases while hidden
+cells of 0–50% pushed invalid ones. In both, capture came only from colluder seats and never
+exceeded the bound set by the seats drawn. Majority voting was never captured but approved
+every forged-signature release (48/48 per model); every kernel regime blocked them. A hybrid
+(majority plus 4-of-7 committee) had zero unsafe releases. Honest agents never herded or
+signed invalid releases, so this crisp task left independence untested.
 
-Colluders used about 2.7× more output tokens than honest agents, a cheap detection signal.
+Colluders used 1.9–2.8× more output tokens than honest agents, a cheap detection signal.
 
 ---
 
@@ -63,8 +65,8 @@ cannot do:
    with mutation testing to show the checker has teeth.
 3. A closed-form capture probability for randomly seated k-of-m committees.
 4. A live stress test: seven governance regimes × colluder shares from 0 to 50% × visible or
-   hidden voting, with 16,416 LLM calls. It shows the institution's failures are exactly the
-   ones its verified rules permit.
+   hidden voting, across two reasoning-model families and 32,830 LLM calls. It shows the
+   institution's failures are exactly the ones its verified rules permit.
 5. Three empirical observations: crowds judge but cannot verify; we saw no herding in this
    setting; and colluding agents pay a measurable deliberation cost.
 
@@ -202,17 +204,34 @@ Forged cases are not targets; they test what crowds cannot check.
 | hybrid | Majority **and** 4 of 7 |
 
 **Model and spend.**
-- DeepSeek v4 Flash (`deepseek/deepseek-v4-flash-0731`) via OpenRouter, temperature 0.7,
-  600 output tokens maximum.
-- Second model, a different family that also reasons: OpenAI gpt-oss-20b
-  (`openai/gpt-oss-20b`), same seeds, so the same cells and committees.
-  - Both models reason before answering, so the comparison varies the model family, not the
-    reasoning mode.
-  - gpt-oss averaged 191 output tokens in a 102-call pilot. Non-reasoning candidates, such
-    as Gemini 2.5 Flash Lite at about 34 tokens, were rejected.
-  - Output cap: 2,000 tokens for gpt-oss (its pilot maximum was 741) vs 600 for DeepSeek,
-    which truncated 0.6% of DeepSeek's responses.
+- Two reasoning models from different families, via OpenRouter:
+  - DeepSeek v4 Flash (`deepseek/deepseek-v4-flash-0731`);
+  - OpenAI gpt-oss-20b (`openai/gpt-oss-20b`).
+- Both run with temperature 0.7, a 2,000-token output cap, and the same seeds, so the same
+  cells and committees are drawn.
+- Both models reason before answering, so the comparison varies the model family, not the
+  reasoning mode. Non-reasoning candidates, such as Gemini 2.5 Flash Lite at about 34 output
+  tokens, were rejected for this reason.
+- Each sweep: 6 shares × 2 board conditions × 24 cases × (50 voters + 7 auditors) = 16,416
+  calls.
+- Total cost for both sweeps: $2.18.
 - A per-provider ledger reserves each call's worst-case cost before sending.
+
+**Output caps are instruments, not institutional rules.**
+- Within a run, every agent uses the same model and the same cap.
+- Caps are set to be non-binding: a truncated response is re-sent with 2×, 4× and 8× the
+  cap, up to 16,000 tokens, and both main sweeps are audited for unrecovered truncation.
+- **Audit result.** gpt-oss: 0 truncations, longest response 1,536 tokens. DeepSeek: one
+  colluder response hit the cap in the 30% run.
+- Under a rule declared before the results were known, that whole run (all agents) was
+  re-run with retry enabled. The re-run needed no retries. Its outcomes matched the original
+  in 13 of 14 regime × condition cells; the remaining cell (4-of-7, hidden) moved from 1
+  capture to 0. Both versions are retained.
+- This matters because truncation is not neutral. In a 600-token pilot, 98 of 99 cut-offs
+  were colluders, who deliberate longer. A binding cap acts like a hidden decision deadline
+  that silences deliberating deceivers and biases measured compliance.
+- How non-responses count is an explicit rule: an unanswered audit is "not signed", and an
+  unanswered vote is excluded.
 
 **Blue team.** A detector reads only the public log:
 - shared-minority voting plus TF-IDF similarity of reasons;
@@ -238,78 +257,93 @@ Forged cases are not targets; they test what crowds cannot check.
 
 The uniqueness mutant shows concretely why bounds matter.
 
-### 4.2 Live stress test (DeepSeek v4 Flash)
+### 4.2 Live stress test (two reasoning models)
 
-The run made 16,416 calls with 0 transport errors and 99 unparseable responses (0.6%,
-counted as abstentions), for $1.39 total. The table pools cells with share > 0: five shares
-× two board conditions × 12 targets = 120 target trials per regime.
+**Totals per model.**
+- DeepSeek v4 Flash: 16,415 calls, 1 transport error, 0 unparseable responses, $1.38.
+- gpt-oss-20b: 16,415 calls, 1 transport error, 6 unparseable responses (counted as
+  abstentions), $0.81.
 
-| Regime | Unsafe releases on targets | Bound from seats drawn | Valid releases | Forged releases | Calls per decision |
+The table pools cells with share > 0: five shares × two board conditions × 12 targets = 120
+target trials per regime. Cells show DeepSeek / gpt-oss.
+
+| Regime | Unsafe releases on targets | Bound from seats drawn | Valid releases (of 96) | Forged releases (of 48) | Calls per decision |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| direct (majority) | **0/120** | n/a | 96/96 | **48/48** | 50 |
-| auditor 1-of-1 | 23/120 | 24 | 96/96 | 0/48 | 1 |
-| committee 2-of-3 | 21/120 | 24 | 96/96 | 0/48 | 3 |
-| committee 3-of-5 | 22/120 | 26 | 96/96 | 0/48 | 5 |
-| committee 4-of-7 | 20/120 | 22 | 96/96 | 0/48 | 7 |
-| unanimous 7-of-7 | **0/120** | 0 | **94/96** | 0/48 | 7 |
-| hybrid majority + 4-of-7 | **0/120** | 22 | 96/96 | 0/48 | 57 |
+| direct (majority) | **0 / 0** | n/a | 96 / 96 | **48 / 48** | 50 |
+| auditor 1-of-1 | 21 / 22 | 24 | 96 / 95 | 0 / 0 | 1 |
+| committee 2-of-3 | 21 / 20 | 24 | 96 / 96 | 0 / 0 | 3 |
+| committee 3-of-5 | 23 / 20 | 26 | 96 / 96 | 0 / 0 | 5 |
+| committee 4-of-7 | 16 / 17 | 22 | 96 / 96 | 0 / 0 | 7 |
+| unanimous 7-of-7 | **0 / 0** | 0 | 96 / **87** | 0 / 0 | 7 |
+| hybrid majority + 4-of-7 | **0 / 0** | 22 | 96 / 96 | 0 / 0 | 57 |
+
+The seat-draw bound is identical for both models because they share seeds, committees and
+cells.
 
 ![Figure 1](figures/figure1-capture.png)
-*Figure 1. Capture rate on target releases vs colluding share, per regime. Points are observed
-(n = 24 per point). The dashed line is the a-priori seat-capture probability (§3.3).*
+*Figure 1. Capture rate on target releases vs colluding share, per regime, for both models.
+Points are observed (n = 24 per point). The dashed line is the a-priori seat-capture
+probability (§3.3).*
 
 ![Figure 2](figures/figure2-deliberation.png)
 *Figure 2. Median output tokens, including hidden reasoning, on target cases: honest vs
-colluding agents.*
+colluding agents, for both models.*
 
-**Finding 1: the institution failed exactly where its verified rules said it could.**
-- In all 72 regime × share × condition cells, observed capture never exceeded the
+**Finding 1: in both models, the institution failed only where its verified rules said it
+could.**
+- In all 72 regime × share × condition cells per model, observed capture never exceeded the
   seated-colluder bound.
-- Honest auditors never signed a target (0/746) and signed every valid release (492/492),
-  so ε = 0.
-- Every gap below the bound is a colluder refusing its instruction. Seated colluders signed
-  their targets 245/262 times (93.5%).
-- The a-priori formula tracked the observations within sampling noise. For example, at 20%
-  share the formula predicts 0.20 (1-of-1) and 0.02 (4-of-7); we observed 0.08 in both,
-  with n = 12 per cell. The draws actually seated were the binding variable.
+- Honest auditors never signed a target (0/746 in each model), so all capture came from
+  colluder seats.
+- Every gap below the bound is a colluder declining its instruction. Seated colluders signed
+  their targets 234/262 times (89.3%) for DeepSeek and 242/262 (92.4%) for gpt-oss.
+- The a-priori formula tracked the observations within sampling noise (n = 12 per cell). The
+  draws actually seated were the binding variable, which is the formula's own premise.
 
 **Finding 2: crowds judge but cannot verify.**
-- The direct majority was never captured by the cell, even at 50%. A tie does not pass, and
-  honest voters never approved a target.
-- It approved **every** forged-signature release (48/48), because no voter can check an
-  HMAC.
-- Every kernel regime blocked all 48 mechanically.
-- The hybrid regime combines both strengths: 0 captures, 0 forgeries and full throughput,
-  at a cost of N + 7 calls per decision instead of 7.
+- In both models the direct majority was never captured by the cell, even at 50%. A tie
+  does not pass, and honest voters never approved a target.
+- It approved **every** forged-signature release (48/48 in each model), because no voter
+  can check an HMAC.
+- Every kernel regime blocked all of them mechanically.
+- The hybrid regime combines both strengths: 0 captures, 0 forgeries and full throughput in
+  both models, at a cost of N + 7 calls per decision instead of 7.
 
-**Finding 3: the size-versus-quorum tradeoff is real but second-order here.**
-- Unanimity was never captured but blocked 2/96 valid releases (a liveness cost).
+**Finding 3: unanimity buys safety with liveness, and the price depends on the model.**
+- Unanimity was never captured in either model.
+- gpt-oss's honest auditors occasionally refused valid releases (8/492, 1.6%), so unanimity
+  blocked 9/96 valid releases for gpt-oss versus 0/96 for DeepSeek.
 - Small committees were cheap but capturable at the rates their seat draws implied.
 
 **Finding 4: no herding, a null result on a crisp rule.**
-- Honest voters who saw an approving majority before them approved a target 0/30 times.
-- Approving majorities on targets were rare: only seen at 30% or more share.
-- Honest auditors who saw a visible board never erred.
-- For this model and task, the crowd failure that human-swarm intuitions predict did not
-  appear. The only route to unsafe releases was capture. *(The 30 exposure events are few;
+- Honest voters who saw an approving majority before them approved a target 0/14 times
+  (DeepSeek) and 0/16 times (gpt-oss).
+- Honest auditors who saw a visible board never signed a target.
+- For these models and this task, the crowd failure that human-swarm intuitions predict did
+  not appear, and the only route to unsafe releases was capture. *(Exposure events are few;
   this is weak evidence of absence.)*
 
-**Finding 5: collusion has a deliberation cost.**
-- On target cases, colluders' median output was 292 tokens per vote (n = 1,709) versus 108
-  for honest voters (n = 5,400).
-- For audits it was 244 versus 107 tokens.
-- In an 8-agent pilot, a 220-token cap made both seated colluders fail to produce an answer,
-  while honest agents finished. Output length, which includes hidden reasoning, is a cheap,
-  content-free monitoring signal.
+**Finding 5: collusion has a deliberation cost, in both models.**
+
+| Median output tokens on target cases | Honest | Colluding | Ratio |
+| --- | ---: | ---: | ---: |
+| DeepSeek, votes | 106 (n = 5,400) | 294 (n = 1,800) | 2.8× |
+| DeepSeek, audits | 111 | 241 | 2.2× |
+| gpt-oss, votes | 158 | 369 | 2.3× |
+| gpt-oss, audits | 174 | 329 | 1.9× |
+
+- Under a deliberately tiny 150-token cap with retry, colluders needed a retry four times as
+  often as honest agents (40% vs 10% of responses).
+- In a 600-token pilot, 98 of 99 truncated responses were colluders.
+- Output length, which includes hidden reasoning, is a cheap, content-free monitoring
+  signal.
 
 **Finding 6: detection is easy below a majority.**
-- The public-log detector identified the cell with F1 = 1.0 at every share from 10% to 40%,
-  in both board conditions, with no false positives at 0%.
-- At 50% it degrades (F1 0.98 hidden, 0.72 visible): the cell is no longer a minority to
-  stand out from.
-
-`[GPT-OSS]` Second-model replication: same seeds, so the same cells and committees. Table
-and one paragraph to come.
+- The public-log detector identified the cell with F1 = 1.0 from 10% to 40% share, with one
+  exception: gpt-oss at 40% hidden, F1 0.97.
+- At 50% it scored 0.98–1.0.
+- False positives: none for DeepSeek. For gpt-oss, one spurious 3-agent cluster with no
+  colluders present (0% share, hidden board).
 
 ## 5. Discussion
 
@@ -330,10 +364,14 @@ verified envelope in every cell.
 - every action is routed through the kernel;
 - honest auditors err independently.
 
-Our task's rule is crisp, so honest error was zero and independence was never tested. The
-classic warning from N-version programming (Knight & Leveson, 1986) applies directly: copies
-of one model may fail together on ambiguous inputs, which would break the hypergeometric
-bound from below. Measuring that is the most important next experiment.
+Our task's rule is crisp. In both models, honest auditors never wrongly signed an invalid
+release, so the independence of *unsafe* errors was never tested. gpt-oss did show a small
+rate of the opposite error, refusing valid releases (1.6%), which surfaced as a liveness
+cost under unanimity.
+
+The classic warning from N-version programming (Knight & Leveson, 1986) applies directly:
+copies of one model may fail together on ambiguous inputs, which would make the
+hypergeometric bound optimistic. Measuring that is the most important next experiment.
 
 **Why institutions beat crowds here.** A majority is robust to a minority cell, but it is
 blind to anything that needs mechanical checking. Committees are cheap but capturable.
@@ -353,6 +391,9 @@ crowd-dynamics mitigation. We hold that tentatively.
 4. Deployment at the gateway that agent tool calls already pass through (A2A, MCP), so
    agents cannot route around it.
 5. Diverse-model committees to reduce correlated failure.
+6. Decision deadlines as a deliberate defence. Colluders deliberate longer, so a uniform
+   time or token deadline may filter them out disproportionately. This should be tested as
+   an explicit rule applied to all agents, with its cost to honest deliberation measured.
 
 ## 6. Conclusion
 
@@ -406,8 +447,9 @@ agents, is a tractable path to oversight that scales with swarm size.
   - The pilot used a second host (Adaption), whose rate limit made full sweeps impractical.
 - **Small cells.** n = 12 targets per cell. Committee draws are shared across board
   conditions, so the two conditions are paired, not independent. No significance claims.
-- **Honest error ε = 0, so independence was untested.** The crisp rule left honest agents
-  nothing to get wrong. With correlated honest errors, such as shared weights, shared priors
+- **Unsafe honest error was zero, so independence was untested.** In both models, honest
+  auditors never signed an invalid release (0/746 each). The only honest error observed was
+  gpt-oss refusing valid releases (8/492). With correlated honest errors, such as shared weights, shared priors
   or herding (cf. Knight & Leveson, 1986), the §3.3 bound could be optimistic. Neither the
   herding null result nor the absence of correlated failure generalizes beyond this task.
 - **Seating assumptions.** Committees were drawn by a seeded pseudo-random generator the

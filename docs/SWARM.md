@@ -41,7 +41,10 @@ OpenRouter LLM judge act as an audit-of-auditors branch.
 
 - Depth-6 bounded check: 23,376 distinct kernel states, all invariants hold. All 7 mutants
   are caught, each with a shortest counterexample trace.
-- 17 unit tests: `python -m unittest tests.test_swarm tests.test_institution`.
+- 19 unit tests: `python -m unittest tests.test_swarm tests.test_institution`.
+- Live sweeps: DeepSeek v4 Flash and gpt-oss-20b, both with a 2,000-token cap plus
+  truncation retry, sharing seeds. 32,830 calls, $2.18. Results are in
+  `docs/report/REPORT.md` §4.2.
 
 ## Run
 
