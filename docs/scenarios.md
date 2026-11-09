@@ -1,5 +1,9 @@
 # Expanded offline regression scenarios
 
+> **Historical task record, 8 November 2026.** Counts and pending work below refer
+> to that source checkpoint. See [testing](TESTING.md), [current gates](GATES.md)
+> and the [latest report](report/latest.md) for subsequent acceptance.
+
 Task: `expanded-scenarios`. These are scripted behavioral checks of the existing
 public interfaces, using test-only HMAC keys and real SQLite transactions. They
 provide no empirical model result or hostile-process containment evidence.

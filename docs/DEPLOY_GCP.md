@@ -7,10 +7,11 @@ global fleet. Default development costs nothing; provisioning below is a separat
 **manual cloud phase that creates billable resources**. Review [costs](COSTS.md)
 and choose a run window before starting it. Adaption credit is a separate budget.
 
-[BUILD_STATUS](BUILD_STATUS.md) records observed checks. A real committed lock,
-Nix evaluation, and demo/offline derivation builds are available; full GCE image
-build, VM boot, worker containment, OS Login/IAP, and deployed TLS acceptance
-remain unverified until actually executed. Keep each evidence level distinct.
+[BUILD_STATUS](BUILD_STATUS.md) records dated image, boot, worker and dashboard
+checks. [Current gates](GATES.md) identifies remaining host, recovery and accounting
+work. This runbook does not establish current cloud inventory or availability.
+For each deployment, record image construction, boot, constrained-worker probes,
+administration access and any public TLS acceptance separately.
 The design extends [ADR-0008](adr/0008-ephemeral-nixos-workers.md) and
 [ADR-0005](adr/0005-replay-and-viewer.md); see [ADR-0009](adr/0009-gcp-deployment.md).
 
@@ -484,18 +485,19 @@ other uses; never delete the project, inherited policy, or shared resources.
 | Generic rebuild throws | Use the explicit `--flake /etc/fleet-witness/source#fleet-gcp` or reviewed updated checkout; the source-preservation guard is intentional. |
 | Worker times out / output absent | Inspect outer and inner journals/results and limits; collect before the active lifetime or VM stop. Outer active state is not task success. See OPERATIONS. |
 | TLS fails | Check public A/AAAA, static IP, real tracked hostname, Caddy logs, outbound ACME, and matching GCP/guest 80/443 TCP and 443 UDP rules. |
-| Provider API unavailable / budget unknown | No live provider exists in this image. Follow the separate [Adaption proposal](ADAPTION.md); never put provider keys in workers or treat GCP billing as the Adaption ledger. |
+| Provider API unavailable / budget unknown | No live provider exists in this image. Follow the separate [controlled-pilot runbook](CONTROLLED_PILOT.md) and [Adaption qualification](ADAPTION.md); never put provider keys in workers or treat GCP billing as a provider ledger. |
 
 ## Separate authenticated Cloud Run dashboard (ADR-0011)
 
-This static service is independent of the stopped NixOS worker VM. Prepare a new
+This static service is independent of the NixOS worker VM. Its observed deployment
+and last recorded VM state are dated evidence, not a current inventory. Prepare a new
 campaign with `python3 -m fleet_witness.campaign --output ABSOLUTE_NEW_DIRECTORY`.
 It preserves all databases/replays outside `public/`; only the four regular files
 in `public/`, plus `deploy/dashboard/{Dockerfile,Caddyfile}`, enter the dedicated
 container build context. Never build this image from the repository root.
 
 The operator injects only a bcrypt dashboard-password hash at runtime; the
-plaintext random password stays in an owner-private file. The Adaption key is
+plaintext random password stays in an owner-private file. Provider API keys are
 never part of this service. Platform ingress is public, while Caddy requires
 Basic authentication over managed HTTPS for every asset. There is no Google
 sign-in or multi-user audit. Caddy administration is disabled, UID is 65532,
@@ -526,11 +528,13 @@ This withdraws the dashboard only. The reviewed image and four-file bundle remai
 available for a new bounded deployment. It does not roll back experiment data.
 
 
-Observed pilot URL: https://fleet-dashboard-353247593595.us-central1.run.app .
+Recorded deployment, 8 November 2026: [pilot dashboard](https://fleet-dashboard-353247593595.us-central1.run.app).
+This URL is not a current availability claim.
 Username: `owner`; password file (owner-private, not in Git):
 `/home/neo/.local/state/fleet-witness/secrets/dashboard-password-20261108`.
-Expiry task `expire-dashboard-20261109` in queue `fleet-dashboard` is scheduled
-for 2026-11-09 18:06:36 UTC. Its DELETE query pins the final service etag. After
+Expiry task `expire-dashboard-20261109` in queue `fleet-dashboard` was scheduled
+for 2026-11-09 18:06:36 UTC; verify the task and eventual service absence.
+Its DELETE query pins the final service etag. After
 any service update, cancel/verify the previous task and replace it with a task
 bound to the new etag; otherwise expiry can fail. Do not reuse a service name
 while an old deletion task or retry remains pending. Check service absence when

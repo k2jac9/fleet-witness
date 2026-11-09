@@ -1,8 +1,9 @@
 # Security boundaries and research policy
 
 This is the operating and research scope for Fleet Witness, a team project by
-Alejandro Castellanos (`k2jac9`, repository owner) and `IPBin` (teammate). It is not a security certification, a live
-incident-attribution service, or authorization to test someone else's systems.
+Alejandro Castellanos (`k2jac9`, repository owner) and Ignatius Pio Binawan (`IPBin`).
+It is not a security certification, a live incident-attribution service or
+authorization to test someone else's systems.
 The [architecture](architecture.md) and accepted [ADR-0002](adr/0002-evidence-and-authority.md)
 and [ADR-0008](adr/0008-ephemeral-nixos-workers.md) remain authoritative.
 
@@ -77,8 +78,9 @@ for an attached identity. [VPC firewall rules do not apply to metadata traffic](
 Private worker/task network namespaces must prevent access to **both** metadata
 addresses and any host proxy or gateway that could relay those requests.
 Test from the constrained unprivileged task service, with bounded probes,
-rather than an administrative shell. This is a pending host acceptance check,
-not a claim already proven by documentation.
+rather than an administrative shell. Dated bounded probes appear in the build
+record; remaining host/proxy cases require their own acceptance. Documentation
+alone does not prove confinement on a selected host.
 
 The trusted host still needs metadata for GCE guest services and OS Login;
 blocking metadata across the entire host is not the worker-isolation strategy.
@@ -86,13 +88,13 @@ DNS failure alone is insufficient: direct IP routes and IPv6 must also be
 unreachable from workers. No workload service account reduces credential
 exposure but does not make metadata suitable for worker access.
 
-Future provider credentials belong only to a separately reviewed host-side
-gateway, injected at runtime. Never place them in Git, Nix expressions/store
+Provider credentials belong only to the reviewed trusted-host gateway,
+loaded at runtime under its qualified operator record. Never place them in Git, Nix expressions/store
 paths, VM images/metadata, CI artifacts, worker inputs, or replay exports. Redact
 request headers and secrets from logs, rotate/revoke on suspected exposure,
-and stop dispatch while investigating. The proposed
-[Adaption budget ledger](ADAPTION.md) also stays outside worker authority; it
-is not implemented by the current fleet.
+and stop dispatch while investigating. The implemented shared accounting and
+[controlled-pilot authorization](CONTROLLED_PILOT.md) also stay outside worker
+authority. Adaption still needs its own provider-specific qualification.
 
 ## Public dashboard and separate honeypot research
 
@@ -141,10 +143,13 @@ model/prompt versions, sample sizes, budget, exclusions, and analysis; report
 failures, variance, limitations, and dual-use risks. Follow the
 [official submission requirements](SUBMISSION.md) and [AI provenance record](AI_ASSISTANCE.md).
 
-Current traces support mechanism demonstrations only. A real-model behavioral
-study, global dashboard, live swarm detection, geolocation map, cross-provider
-attribution, independent attestation, and automated coding fleet remain roadmap
-work requiring design, authorization, implementation, and observed validation.
+The scripted demo, historical model study and completed live-supervisor pilot
+support different claims; the [latest report](report/latest.md) separates them.
+The public pilot export contains allowlisted trial scalars and summaries, with
+no free-text prompts, model reasons or private response envelopes. A global
+activity dashboard, live swarm detection, geolocation map, cross-provider
+attribution, independent notarization and automated coding fleet remain future
+work requiring design, authorization, implementation and observed validation.
 
 ## Authenticated static publication
 
@@ -154,5 +159,6 @@ HTTPS. No model key, database, worker report, environment file or control API is
 packaged. The separate dashboard credential is random and owner-private; only its
 bcrypt hash is injected at runtime. It is a shared password, not identity-based
 access. Browser credential caching requires rotation or service withdrawal for
-reliable revocation. The initial hosting window is bounded and independently
-scheduled for deletion. No public observation sensor is implied by publication.
+reliable revocation. The initial hosting window was bounded and independently
+scheduled for deletion; actual withdrawal requires observed service absence.
+No public observation sensor is implied by publication.

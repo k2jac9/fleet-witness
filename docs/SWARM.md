@@ -3,7 +3,8 @@
 The swarm extension was added on 2026-11-08 by IPBin (with Claude Code).
 The 2026-11-09 stabilization preserves those experimental records and repairs
 spending, provenance and reproduction. Earlier scripted mechanism studies remain
-separate. See the corrected [report](report/REPORT.md),
+separate. Start with the [latest synthesis](report/latest.md); see the preserved
+[earlier report](report/REPORT.md),
 [artifact provenance](report/ARTIFACT_PROVENANCE-2026-11-09.json) and
 [current gates](GATES.md).
 
@@ -36,13 +37,13 @@ reuse seating draws and must not be treated as independent binomial trials.
 ## Offline execution
 
 ```sh
-python -m unittest discover -s tests -v
+python3 -m unittest discover -s tests -v
 node --test tests/viewer.test.mjs
-python -m fleet_witness swarm --provider fake --agents 7 --cases 6 --output runs/fake-new
-python -m fleet_witness.verify_institution --depth 6 --mutants
-python scripts/extract_run_archive.py --archive data/fleet-witness-runs-2026-11-08.zip \
+python3 -m fleet_witness swarm --provider fake --agents 7 --cases 6 --output runs/fake-new
+python3 -m fleet_witness.verify_institution --depth 6 --mutants
+python3 scripts/extract_run_archive.py --archive data/fleet-witness-runs-2026-11-08.zip \
   --destination /absolute/fresh/extracted
-python scripts/reproduce_tables.py --input-root /absolute/fresh/extracted/runs \
+python3 scripts/reproduce_tables.py --input-root /absolute/fresh/extracted/runs \
   --output-root /absolute/fresh/derived
 ```
 
@@ -83,7 +84,7 @@ must match the record; they cannot silently raise a cap. A paid `--dry-run` also
 requires qualification, but reads no key and makes no provider request.
 
 ```sh
-python -m fleet_witness swarm --provider adaption --model VERIFIED_MODEL \
+python3 -m fleet_witness swarm --provider adaption --model VERIFIED_MODEL \
   --authorization /private/path/qualified-record.json --output runs/live-new --dry-run
 ```
 

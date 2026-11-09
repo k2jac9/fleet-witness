@@ -1,4 +1,53 @@
-# Adaption access and bounded research plan
+# Adaption access and qualification
+
+**Adaption inference remains unqualified.** The completed live-supervisor pilot
+used OpenRouter, not Adaption. Its [operator runbook](CONTROLLED_PILOT.md) and
+[observed results](experiments/2026-11-09-openrouter-paired-pilot.md) describe that
+separate provider path. The default scripted lab still needs no key or SDK.
+
+## Recorded access and budget
+
+The owner supplied an account statement showing **1,500 credits**, **$1 per
+credit**, with **no expiry**. This is recorded owner evidence, not a fresh balance
+query. An earlier authenticated model-list request returned seven hosted model
+IDs; it did not make an inference request or establish billing semantics.
+The verified key was stored outside the repository in an owner-private host file.
+Team membership does not pool accounts or grant credential access.
+
+Adaption credit, the OpenRouter allowance and the $100 GCP ceiling are separate.
+The authorized calibration ceiling was raised to **up to $15 when required**;
+that ceiling does not remove qualification checks or automatically authorize a
+larger cohort. See [costs](COSTS.md) for the recorded amounts and their limits.
+
+## Before the first Adaption inference
+
+[ADR-0010](adr/0010-trusted-live-model-gateway.md) requires applicable account and
+source evidence, bounded transport and accounting, and an accepted activation
+record. Resolve the provider-specific facts before issuing that record:
+
+- Confirm applicable model/revision, rates, all billable reasoning/output bounds,
+  extra charges or minimums, and the account's per-request reconciliation source.
+- Establish applicable retention, deletion, training and upstream handling terms.
+  Request controls alone do not establish zero retention.
+- Qualify the actual host, credential loading, runtime, trust and egress boundary
+  for this provider; keep workers and supervisor inputs outside secret authority.
+- Use the canonical shared ledger, preserve outstanding liabilities, and reconcile
+  the bounded calibration before planning a new cohort.
+
+Public model tables and API listings do not establish account-specific billing.
+No new approval of the unchanged budget is needed to research these facts. The
+[current gates](GATES.md) records the separation from completed OpenRouter work.
+
+## Historical integration research
+
+The November 8 notes below preserve the initial proposal, SDK example and dated
+prices. They are **not current setup instructions, fresh prices or activation
+permission**. Their proposed amounts and “future” status predate the implemented
+host gateway and the later calibration ceiling. Use the maintained runbook above
+for operational work; do not run a standalone SDK example around its controls.
+
+<details>
+<summary>November 8 access, SDK and planning notes</summary>
 
 ## Controlled-pilot continuation: 2026-11-08
 
@@ -173,3 +222,5 @@ cost drivers from Responses inference. Do not start an unbounded automated
 research loop on the strength of the inference table. Any later study needs
 its own small-data estimate, bounded runs, stop criteria, billing reconciliation,
 and explicit budget. See [research and policy scope](SECURITY_POLICY.md).
+
+</details>

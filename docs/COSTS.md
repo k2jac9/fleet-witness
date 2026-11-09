@@ -1,10 +1,31 @@
 # Deployment costs and spending controls
 
-Planning snapshot: **2026-11-08**, USD list prices, `us-central1`, ordinary
-on-demand Linux Compute Engine. The local `scripted-demo`, tests, and replay
-viewer need no external spend. No cloud resources or paid model calls were
-created for this handoff. The owner's [Adaption balance](ADAPTION.md) is separate
-from GCP billing; no GCP promotional credit or discount is assumed here.
+The local `scripted-demo`, tests and replay viewer need no external spend.
+Cloud and model budgets are separate; a credit statement is not a current
+balance query or a provider-enforced spending ceiling.
+
+## Recorded budgets and charges
+
+| Scope | Recorded amount | What it means |
+| --- | ---: | --- |
+| GCP | $100 | Owner-authorized overall ceiling; credits do not raise it |
+| Adaption | 1,500 credits, $1 each, no expiry | Owner-supplied statement; not a refreshed balance or qualified inference path |
+| OpenRouter | $50 | Original sponsored-key allowance; not the current remaining balance |
+| Bounded calibration | Up to $15 when required | Authorized ceiling, subject to applicable qualification; not a charge or automatic cohort budget |
+| Completed OpenRouter cohort | $0.2605526 provider charge; $0.288090 conservative settlement | Reconciled 160-request cohort only; no remaining holds in its accepted record |
+
+Calibration, the stopped one-call cohort and historical study costs remain
+separate. See the [pilot record](experiments/2026-11-09-openrouter-paired-pilot.md),
+[latest report](report/latest.md#43-cost-and-provenance) and
+[operator runbook](CONTROLLED_PILOT.md) for accounting and immutable run caps.
+No account balance or cloud bill was refreshed for this editorial pass.
+
+## Dated GCP planning assumptions
+
+The tables below retain the **2026-11-08** planning snapshot: USD list prices,
+`us-central1`, ordinary on-demand Linux Compute Engine. They exclude promotional
+credits and discounts; they are not a fresh quote or a reconciliation of actual
+spend. Recheck applicable account rates before provisioning.
 
 ## One VM with offline workers
 
@@ -49,7 +70,7 @@ named owner, and a cleanup checklist. Set alert thresholds below the planning
 allowance; monitor billing and the resource inventory during the experiment.
 Alerts can arrive after usage and are not a Compute Engine spending ceiling.
 
-Google now offers [spend cap budgets](https://docs.cloud.google.com/billing/docs/how-to/budgets-spend-caps)
+The November 8 planning review documented [spend cap budgets](https://docs.cloud.google.com/billing/docs/how-to/budgets-spend-caps)
 for eligible API services: Gemini API, Gemini Enterprise Agent Platform, Cloud
 Run, and Cloud Run functions. They do **not** pause ongoing fixed usage such as
 Compute Engine and storage. Even eligible in-flight requests can finish and

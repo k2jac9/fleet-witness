@@ -1,5 +1,47 @@
 # Current acceptance gates
 
+Updated for the editorial checkpoint on **2026-11-09**. The completed pilot,
+publication and offline tests have source-bound evidence. Current cloud inventory
+and account balances were not refreshed during this pass. See
+[BUILD_STATUS.md](BUILD_STATUS.md) for exact commands and dated outcomes.
+
+| Area | Observed evidence | Remaining boundary |
+| --- | --- | --- |
+| Local mechanisms | Scripted demo, transactional controller, replay, institution checker and regression suites | In-process checks do not establish hostile-process containment or an unbounded proof |
+| Historical swarm study | 32,830 completed logical responses; corrected reconstruction of eight rules over shared outputs | Original request/runtime identities and signing keys are incomplete; recorded costs are not reconciled bills |
+| Controlled OpenRouter pilot | [160 requests / 80 pairs](experiments/2026-11-09-openrouter-paired-pilot.md), accepted calibration and account reconciliation; $0.2605526 cohort charge | One model, synthetic workers/reviewers; explicit presentation denied all 40 valid cases as well as all invalid cases |
+| Future model experiment | Trusted-host transport, canonical accounting and single-use authorization are implemented; [runbook](CONTROLLED_PILOT.md) records the qualified path | Every new cohort needs applicable source, account, host and calibration evidence; stopped cohorts do not resume |
+| Adaption | Owner reported 1,500 credits at $1 each with no expiry; an earlier authenticated model listing returned seven IDs | No Adaption inference is established here. Applicable billing, all billable-token bounds, handling and reconciliation remain provider-specific gates |
+| Publication | [Latest PDF and package](SUBMISSION.md), public scalar-only trial table, verified bibliography and preserved historical manuscript | Preparing the package does not submit the event entry; optional video is unrecorded |
+| Python/Node compatibility | PR #13 passed all 11 pinned runtime lanes: 309 tests in each Python lane, five in each Node lane | Evidence applies to its tested tree; later edits need their own checks. [Runtime selection](RUNTIME_ADOPTION.md) requires periodic freshness review |
+| Cloud operations | Dated receipts cover a native GCP image/boot, four offline workers and an authenticated static dashboard | Current service/expiry state, total costs, remaining host/collector cases and cloud rollback need their own checks |
+| Runtime migration | Existing Nix lock, cloud image identities and older consumer checks are retained | Durable NixOS/Caddy migration and its compatibility/recovery matrix remain separate work |
+| Public observation | [Research policy](SECURITY_POLICY.md) defines a separate scope | No live sensor, public honeypot, autonomous fleet contact or uncontrolled web-swarm observation is implemented |
+
+## Next decisions
+
+The useful research follow-up is to test valid-case acceptance and unsafe approval
+together on a fresh held-out cohort. Preserve the completed cohort and the failed
+one-call stop. A proposed verifier-result interface needs review before it changes
+what the supervisor can observe. The [roadmap](ROADMAP.md) separates this work from
+provider qualification, infrastructure recovery and submission.
+
+The authorized **$100 GCP ceiling**, provider credit statements and **up-to-$15
+calibration ceiling** are separate. A balance or existing budget does not prove
+current access, prices, handling or remaining liability. Do not ask the owner to
+approve an unchanged budget again; verify the missing facts and record the
+applicable authorization. [Costs](COSTS.md) distinguishes ceilings, balances and
+observed charges.
+
+## Historical gate snapshots
+
+The collapsed record below preserves earlier checkpoints verbatim. Its “current,”
+“pending” and “next” statements describe those checkpoints, not today's status.
+Later OpenRouter qualification does not qualify Adaption by substitution.
+
+<details>
+<summary>Earlier calibration, stabilization and November 8 gate records</summary>
+
 ## Current controlled calibration checkpoint: 2026-11-09
 
 Task `controlled-live-calibration-20261109` adds a strict supervisor interface
@@ -111,3 +153,5 @@ Complete the applicable host/security/recovery gates before activating a paid
 calibration. Keep the stopped VM, existing expiry task and $100 GCP envelope
 unchanged while account facts remain unresolved. The 320-request study, public
 observation sensor and event submission are separate later actions.
+
+</details>

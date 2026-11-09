@@ -26,9 +26,9 @@ t = r['trials']
 assert len(t) == 160 and len({x['pair_id'] for x in t}) == 80
 for presentation in ('raw', 'scope_explicit'):
     rows = [x for x in t if x['presentation'] == presentation]
-    bad_approvals = sum(x['recommendation'] == 'approve' and not x['decision_valid_at_snapshot'] for x in rows)
-    bad_denials = sum(x['recommendation'] == 'deny' and not x['decision_valid_at_snapshot'] for x in rows)
-    print(presentation, len(rows), bad_approvals, bad_denials)
+    invalid_approvals = sum(x['recommendation'] == 'approve' and not x['decision_valid_at_snapshot'] for x in rows)
+    invalid_denials = sum(x['recommendation'] == 'deny' and not x['decision_valid_at_snapshot'] for x in rows)
+    print(presentation, len(rows), invalid_approvals, invalid_denials)
 assert sum(x['effects'] for x in t) == 30
 assert sum(x['execution_attempts'] for x in t) == 68
 assert sum(x['authorization_denials'] for x in t) == 28
@@ -62,7 +62,7 @@ python3 scripts/extract_run_archive.py --archive data/fleet-witness-runs-2026-11
 python3 scripts/reproduce_tables.py --input-root FRESH_INPUT/runs --output-root FRESH_DERIVED --skip-checker
 ```
 
-The repository's [historical reproduction receipt](https://github.com/k2jac9/fleet-witness/blob/ee7c17e6f8b50684084caf6f6900c577801351c5/docs/report/REPRODUCTION-REVIEW-FIX-2026-11-09.json) records the earlier completed reanalysis and bounded checker. It is linked rather than copied into this portable package because it contains a workstation-local artifact path. Omitting `--skip-checker` runs the checker as well; that can be substantially more expensive than recomputing tables. The publication task did not rerun depth-six exploration or any paid experiment. Historical original provider-attempt counts, raw envelopes, executable identity and issuer keys are incomplete. Fresh synthetic replay cannot authenticate original signatures.
+The repository's [historical reproduction receipt](https://github.com/k2jac9/fleet-witness/blob/ee7c17e6f8b50684084caf6f6900c577801351c5/docs/report/REPRODUCTION-REVIEW-FIX-2026-11-09.json) records the earlier completed reanalysis and bounded checker. It is linked rather than copied into this portable package because it contains a workstation-local artifact path. Omitting `--skip-checker` runs the checker as well; that can be substantially more expensive than recomputing tables. The publication task did not rerun depth-six exploration or any paid experiment. Historical original provider-attempt counts, raw envelopes, executable identity and issuer keys are incomplete. Fresh synthetic replay cannot authenticate the original receipts.
 
 ## Evidence boundaries
 

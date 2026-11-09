@@ -4,7 +4,8 @@ Operate a reviewed checkout on a disposable NixOS VM. Provisioning, image
 build/upload, IAP/OS Login SSH, optional public HTTPS, updates, and teardown are in
 [DEPLOY_GCP](DEPLOY_GCP.md); spending and retained-resource costs are in
 [COSTS](COSTS.md). These instructions describe operation, not evidence that a VM
-has been deployed. Check [BUILD_STATUS](BUILD_STATUS.md) for observed verification.
+is currently running. Check [BUILD_STATUS](BUILD_STATUS.md) for dated verification
+and [current gates](GATES.md) for remaining acceptance before operating it.
 
 ## Inspect the replay service
 
@@ -55,7 +56,7 @@ Wait until the inner service leaves `activating`; task success requires
 `active/exited`, `Result=success`, and `ExecMainStatus=0`. An active outer
 container alone establishes none of these. Record outer and inner status and
 collect output promptly. Inspect actual cgroups and confinement with the
-[NixOS acceptance checklist](NIXOS_FLEET.md#required-boot-acceptance-checks-not-yet-executed).
+[NixOS acceptance checklist](NIXOS_FLEET.md#required-boot-acceptance-checks).
 
 | Budget | Configured value |
 | --- | --- |
@@ -108,18 +109,20 @@ ending in `#fleet-gcp` in the deployment update procedure. Configuration rollbac
 restores a reviewed NixOS generation; retain administration access while testing it.
 It does not resume a historical experiment. Signing keys exist only in memory,
 saved databases are inspection artifacts, and no database resume command exists.
-Generate a new replay into a fresh output for a fresh run. Keep exact commit,
+The controlled pilot has a separate [export-only recovery path](CONTROLLED_PILOT.md#stopping-recovery-and-evidence);
+it cannot resume dispatch. Generate a new replay into a fresh output for a fresh
+scripted run. Keep exact commit,
 configuration, status, and collected evidence with an incident report.
 
 ## Managed dashboard pilot
 
-The Cloud Run `fleet-dashboard` service serves an immutable scripted campaign
-snapshot. New experiments require a newly reviewed bundle and image; the page is
+The recorded Cloud Run `fleet-dashboard` deployment served an immutable scripted
+campaign snapshot. Verify the service exists before treating it as available. New experiments require a newly reviewed bundle and image; the page is
 not live worker telemetry. Use the separately stored dashboard password and the
-username `owner`. Never paste the Adaption key into its login prompt.
+username `owner`. Never paste a provider API key into its login prompt.
 
 Inspect Cloud Run status, current image digest, service IAM, the `fleet-dashboard`
-Cloud Tasks queue and its pending expiry task before extending the hosting window.
+Cloud Tasks queue and its expiry/deletion state before extending the hosting window.
 Do not reset or lift a spend cap merely to keep a page available. Cloud Run gross
 spend limits do not cover retained Compute disks, images, registry or other
 services. Check actual billing separately; enforcement/reporting can lag.

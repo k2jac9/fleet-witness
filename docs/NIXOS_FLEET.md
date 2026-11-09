@@ -1,16 +1,17 @@
 # Optional ephemeral NixOS workers
 
-**Status: Nix evaluation, the pinned offline test build, and the packaged demo
-build pass. Full image construction, boot, and isolation checks remain pending.**
-The verification environment has Nix but no usable KVM device. Read
-[BUILD_STATUS.md](BUILD_STATUS.md) for observed evidence. Python tests and Nix
-builds do not establish container confinement. Complete the host checks below
-before relying on the configured isolation.
+**Observed evidence includes Nix builds, a native GCP image and boot, four
+offline workers and bounded isolation probes.** Read [BUILD_STATUS.md](BUILD_STATUS.md)
+for their exact source and host identities and [current gates](GATES.md) for
+remaining acceptance. These dated results do not establish current service state
+or every containment property. Complete the applicable checks below on the
+selected host before relying on its configured isolation.
 
 This runs the repository's offline Python tests, optional Node viewer tests,
 and the deterministic `scripted-demo`. It does not dispatch coding agents,
 connect a provider, or spend model credit. The owner still reviews changes and
-controls integration. A mediated tool/provider gateway needs a later ADR.
+controls integration. The separate [ADR-0010 gateway](CONTROLLED_PILOT.md) runs
+on the trusted host; these offline workers receive no provider credentials.
 
 ## What is configured
 
@@ -77,7 +78,9 @@ sends system-manager readiness only after its boot jobs drain. The worker
 oneshot is attached to `multi-user.target`, so the upstream one-minute
 container startup default could terminate a legitimate task still within its
 ten-minute budget. The configured 12-minute startup timeout addresses this
-source-established interaction; it has not yet been validated by booting.
+source-established interaction. Dated boot and timeout probes are recorded in
+[BUILD_STATUS.md](BUILD_STATUS.md); verify the applicable timing cases for each
+new host configuration.
 
 The automatic UID range makes writable host-output mounts error-prone. This
 module adds none: collect bounded files before stopping the container instead.
@@ -226,10 +229,14 @@ the database, replay assets, arbitrary patches, and directories. Any future
 patch collection needs an explicit filename/size allowlist and human review;
 never automatically apply a patch. Stop/expiry destroys uncollected output.
 
-## Required boot acceptance checks (not yet executed)
+<a id="required-boot-acceptance-checks-not-yet-executed"></a>
 
-On the disposable host, record the pin, kernel, systemd version, lock, and
-actual results for these checks:
+## Required boot acceptance checks
+
+This is the acceptance checklist, not a claim that every item has passed.
+[Build status](BUILD_STATUS.md) retains partial and completed checks separately.
+On the disposable host, record the pin, kernel, systemd version, lock and actual
+results for each applicable check:
 
 1. Evaluate disabled/default and enabled fleets; evaluate duplicate, underscore,
    slash, and overlong names and require clear failure. Build the test
@@ -265,7 +272,9 @@ actual results for these checks:
    the old `/work/task` must be absent before the new task creates it, and a
    fresh successful run must not reuse old results.
 
-Until these checks pass, the configured confinement remains unverified.
+An unexecuted item remains an open acceptance gap. A passing item applies only
+to its recorded source, configuration and host; do not generalize it to all
+container confinement.
 References: [systemd service timeout semantics](https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html),
 [resource controls](https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html),
 and [execution namespaces](https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html).
