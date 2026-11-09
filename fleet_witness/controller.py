@@ -76,7 +76,9 @@ class Controller:
 
     def record_decision(self, decision_id: str, run_id: str, artifact_digest: str,
                         recommendation: str, reason: str, receipts: list,
-                        supervisor_input: dict | None = None) -> dict:
+                        supervisor_input: dict | None = None, *, actor: str = 'scripted-supervisor') -> dict:
+        if actor not in ('scripted-supervisor', 'live-supervisor'):
+            raise ValueError('unknown supervisor actor')
         if recommendation not in ('approve', 'deny'):
             raise ValueError('unknown recommendation')
         with closing(self._connect()) as conn, conn:
@@ -86,7 +88,7 @@ class Controller:
                 (decision_id, self.trial_id, run_id, artifact_digest, recommendation, reason,
                  json.dumps(receipts), json.dumps(snapshot), json.dumps(supervisor_input or {})))
             self._event(conn, 'decision_recorded', reason, decision_id,
-                        {'recommendation': recommendation}, actor='scripted-supervisor')
+                        {'recommendation': recommendation}, actor=actor)
             return {'id': decision_id, 'recommendation': recommendation, 'reason': reason,
                     'policy_snapshot': snapshot}
 

@@ -1,3 +1,33 @@
+# Paired exploratory pilot preparation — November 9, 2026
+
+Task `paired-pilot-20261109` extends source `d0dae65491bf7c8204ca71dbde4114f08901123e`.
+A new calibration on that corrected, reviewed main source succeeded and its
+response charge, generation charge and original-key usage delta agreed at
+$0.0014344. The sponsored key then reported $49.997074 remaining. The preceding
+failed calibration remains failed and reconciled separately. These are dated
+observations, not a claim about future balance.
+
+The additive runner preserves the shared ledger and introduces a one-use cohort
+claim, atomic schedule/attempt links, explicit calibration acceptance, private
+partial-run export and live-supervisor event labels. Its scope and limitations
+are in [CONTROLLED_PILOT.md](CONTROLLED_PILOT.md). The ledger adds two tables;
+existing accounting rows, caps, authorities and historical receipts are retained.
+Keep a private SQLite backup before first use of this source on the live ledger.
+
+Observed local checks: the existing 279-test Python baseline passed on pinned
+Python 3.15.2; design/profile implementation passed 287 tests. Behavioral RED
+receipts precede the new design, controlled profile and runner implementation.
+Five viewer checks passed. The complete final suite, independent implementation
+review, exact-source hosted matrix, green integration and actual paired collection
+are still pending at this preparation snapshot. No new GCP or Adaption action
+occurred. No claim of public-web observation or live dashboard is made here.
+
+Private task evidence: `/home/neo/Projects/fleet-witness-artifacts/paired-pilot-20261109/`.
+The complete calibration result/reconciliation and later integration/collection
+receipts are retained there; credentials are excluded. Historical status follows.
+
+---
+
 # Build and deployment verification
 
 ## First real calibration and schema correction: 2026-11-09

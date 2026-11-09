@@ -16,7 +16,7 @@
 - One in-flight call, no retry, at most 256 output tokens, 4096 input bytes, 30 seconds, $15 pilot/$50 provider, at most two hours.
 - Canonical ledger and original credential file; no workers/listeners/cloud changes.
 - Keep original failed calibration, accounting reconciliation, accepted ADRs and runtime rollback unchanged.
-- Literal owned paths: `fleet_witness/{pilot_design,pilot_store,controlled_pilot}.py`, `fleet_witness/swarm/{authorization,openrouter_controlled,providers}.py`, `fleet_witness/controller.py`, `tests/{test_pilot_design,test_controlled_pilot,test_openrouter_controlled,test_controller}.py`, `docs/{CONTROLLED_PILOT,BUILD_STATUS}.md`, this plan and its spec. Artifacts under `/home/neo/Projects/fleet-witness-artifacts/paired-pilot-20261109/`.
+- Literal owned paths: `fleet_witness/{pilot_design,pilot_store,controlled_pilot}.py`, `fleet_witness/swarm/{authorization,openrouter_controlled,providers,ledger}.py`, `fleet_witness/controller.py`, `tests/{test_pilot_design,test_controlled_pilot,test_openrouter_controlled,test_controller,test_swarm_ledger}.py`, `docs/{CONTROLLED_PILOT,BUILD_STATUS}.md`, this plan and its spec. Artifacts under `/home/neo/Projects/fleet-witness-artifacts/paired-pilot-20261109/`.
 
 ## Review focus
 
@@ -86,3 +86,14 @@ do not replace calls. Reconcile every dispatched generation and key delta,
 preserving holds where uncertainty remains. Retain inputs, outputs, findings,
 costs/timing and provenance. Report exploratory limitations and remaining future
 two-model/worker/public-observation scope separately.
+
+## Design review resolution
+
+D1: Extend owned scope to ledger.py/test_swarm_ledger.py before implementation.
+Persist a single-use cohort claim and exact scheduled request hashes in the
+canonical ledger; bind each attempt before dispatch in the reservation transaction.
+D2: Suppress fixed-n interval after early stopping; full cohort uses range-two
+Hoeffding radius sqrt(2*log(40)/80).
+D3: Calibration acceptance does not select on recommendation correctness. Keep
+its complete acceptance packet and source applicability statement; disclose the
+forged-HMAC information limit in design and every report.

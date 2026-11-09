@@ -50,10 +50,13 @@ def validate_authorization(value, *, provider, model, ledger, max_output_tokens,
                     'source_commit', 'source_sha256', 'provider', 'model', 'endpoint', 'ledger_path', 'run_id',
                     'run_cap_usd', 'provider_cap_usd', 'request_limit', 'max_input_bytes', 'max_output_tokens',
                     'max_response_bytes', 'timeout_s', 'pricing', 'qualification'}
-        controlled = value.get('schema_version') == 'controlled-openrouter-v1'
+        pilot = value.get('schema_version') == 'controlled-openrouter-pilot-v1'
+        controlled = value.get('schema_version') in ('controlled-openrouter-v1', 'controlled-openrouter-pilot-v1')
+        if pilot:
+            required.add('study')
         if controlled:
             required.add('openrouter')
-        if set(value) != required or value['schema_version'] not in ('swarm-paid-v1', 'controlled-openrouter-v1'):
+        if set(value) != required or value['schema_version'] not in ('swarm-paid-v1', 'controlled-openrouter-v1', 'controlled-openrouter-pilot-v1'):
             raise ValueError('invalid operator authorization schema')
         checked = json.loads(canonical_json(value))
         for name in ('authorization_id', 'approved_by', 'model', 'run_id'):
@@ -100,11 +103,11 @@ def validate_authorization(value, *, provider, model, ledger, max_output_tokens,
         if not isinstance(qualification, dict) or set(qualification) != {'access_verified', 'retention_reviewed',
                 'transport_reviewed', 'calibration_accepted', 'evidence_sha256'}:
             raise ValueError('invalid qualification record')
-        if (checked['purpose'] not in ('calibration', 'confirmatory') or
+        if (checked['purpose'] not in (('exploratory',) if pilot else ('calibration', 'confirmatory')) or
                 any(qualification[name] is not True for name in ('access_verified', 'retention_reviewed', 'transport_reviewed')) or
                 not isinstance(qualification['calibration_accepted'], bool) or
                 not _hash(qualification['evidence_sha256']) or
-                (checked['purpose'] == 'confirmatory' and qualification['calibration_accepted'] is not True)):
+                (checked['purpose'] in ('confirmatory', 'exploratory') and qualification['calibration_accepted'] is not True)):
             raise ValueError('provider qualification incomplete')
         if controlled:
             from .openrouter_controlled import validate_profile

@@ -18,6 +18,7 @@ import threading
 import time
 from urllib.parse import urlsplit
 
+from .openrouter_controlled import SCHEMAS, PILOT_SCHEMA
 from .authorization import ADAPTION_URL, OPENROUTER_URL, source_identity, validate_authorization, validate_record
 from .ledger import (Ledger as _Ledger, BudgetExceeded, ProviderError, DEFAULT_LIFETIME_CAP,
                      canonical_json, decimal_usd, dollars, units)
@@ -227,7 +228,7 @@ class ModelClient:
         body = {'model': self.model, 'messages': [{'role': 'system', 'content': system},
                     {'role': 'user', 'content': user}], 'max_tokens': cap, 'temperature': self.temperature,
                 'usage': {'include': True}, 'stream': False, 'tools': [], 'tool_choice': 'none', **extra}
-        if authorization['schema_version'] == 'controlled-openrouter-v1':
+        if authorization['schema_version'] in SCHEMAS:
             from .openrouter_controlled import request_fields
             if self.extra_body:
                 raise ProviderError('controlled request extensions refused')
@@ -239,11 +240,11 @@ class ModelClient:
         return body
 
     def complete(self, system, user, meta=None):
-        if self.authorization['schema_version'] == 'controlled-openrouter-v1':
+        if self.authorization['schema_version'] in SCHEMAS:
             raise ProviderError('controlled profile requires the supervisor input boundary')
         return self._attempt(system, user, self.max_output_tokens)
 
-    def recommend(self, facts, presentation):
+    def recommend(self, facts, presentation, *, call_id=None, cohort_token=None):
         """Closed supervisor contract; returns data, with no controller authority.
 
         The trusted caller supplies only the visible fact schema. Orchestration,
@@ -252,12 +253,12 @@ class ModelClient:
         """
         from ..gateway import provider_input
         visible = provider_input(facts, presentation)
-        if self.provider != 'adaption' and self.authorization['schema_version'] != 'controlled-openrouter-v1':
+        if self.provider != 'adaption' and self.authorization['schema_version'] not in SCHEMAS:
             raise ProviderError('controlled OpenRouter requires its qualified profile')
         return self._attempt(visible['instruction'], canonical_json(visible['facts']),
-                             self.max_output_tokens, contract='supervisor-v1')
+                             self.max_output_tokens, contract='supervisor-v1', call_id=call_id, cohort_token=cohort_token)
 
-    def _attempt(self, system, user, cap, *, contract=None):
+    def _attempt(self, system, user, cap, *, contract=None, call_id=None, cohort_token=None):
         started = time.monotonic()
         authorization = validate_authorization(self.authorization, provider=self.provider, model=self.model,
                 ledger=self.ledger, max_output_tokens=cap, timeout=self.timeout)
@@ -274,8 +275,10 @@ class ModelClient:
             if units(reserved) > units(self.ledger.run_cap):
                 raise BudgetExceeded('calibration request exceeds its full reserved envelope')
             reserved = self.ledger.run_cap
+        if authorization['schema_version'] == PILOT_SCHEMA:
+            self.ledger.validate_cohort_call(authorization, call_id, cohort_token, body)
         transport_options = {}
-        if authorization['schema_version'] == 'controlled-openrouter-v1':
+        if authorization['schema_version'] in SCHEMAS:
             from . import secure_transport
             if contract != 'supervisor-v1':
                 raise ProviderError('controlled profile requires the supervisor contract')
@@ -289,7 +292,8 @@ class ModelClient:
             key = _env_key('ADAPTION_API_KEY' if self.provider == 'adaption' else 'OPENROUTER_API_KEY')
         if key in system or key in user:
             raise ProviderError('credential material forbidden in model inputs')
-        identity = self.ledger.reserve(reserved, request=body, authorization=authorization)
+        identity = self.ledger.reserve(reserved, request=body, authorization=authorization,
+                                       call_id=call_id, cohort_token=cohort_token)
         attempt = {'attempt_id': identity, 'provider': self.provider, 'model': self.model,
                    'status': 'reserved', 'provider_attempts': 0, 'provider_request_id': None,
                    'input_tokens': None, 'output_tokens': None, 'cost_usd': 0.0,
@@ -313,7 +317,7 @@ class ModelClient:
             # Excess tokens remain billable even though they invalidate the outcome.
             usage = data.get('usage')
             if isinstance(usage, dict):
-                if authorization['schema_version'] == 'controlled-openrouter-v1':
+                if authorization['schema_version'] in SCHEMAS:
                     from .openrouter_controlled import known_cost_liability
                     liability = known_cost_liability(usage)
                 names = ('input_tokens', 'output_tokens') if self.provider == 'adaption' else ('prompt_tokens', 'completion_tokens')
@@ -377,7 +381,7 @@ class ModelClient:
                         self._accounting_identity(failure_data, attempt, key)
                         usage = failure_data.get('usage')
                         if isinstance(usage, dict):
-                            if authorization['schema_version'] == 'controlled-openrouter-v1':
+                            if authorization['schema_version'] in SCHEMAS:
                                 from .openrouter_controlled import known_cost_liability
                                 liability = max(liability or Decimal(0), known_cost_liability(usage))
                             names = ('input_tokens', 'output_tokens') if self.provider == 'adaption' else ('prompt_tokens', 'completion_tokens')
@@ -503,7 +507,7 @@ class ModelClient:
                 raise ValueError('unexpected tool/role output')
             text = message.get('content')
             if (text is None and truncated and
-                    self.authorization['schema_version'] == 'controlled-openrouter-v1'):
+                    self.authorization['schema_version'] in SCHEMAS):
                 # A reasoning-only completion may exhaust the combined cap
                 # without visible content. It is a billed invalid proposal.
                 text = ''

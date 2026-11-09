@@ -5,13 +5,17 @@ known overrun beyond SQLite's signed 64-bit range remains representable; sums
 use Python integers. Caps and ordinary settled charges fit SQLite INTEGER.
 A reservation is a persistent liability, even
 when the process dies before dispatch. Reconciliation is deliberately external;
-this module never resets a hold, changes a cap, or migrates historical ledgers.
+this module never resets a hold, changes a cap, or rewrites historical rows.
+Additive cohort tables retain the existing accounting schema and records.
 """
 from contextlib import contextmanager
 from decimal import Decimal, InvalidOperation, ROUND_CEILING, localcontext
 import hashlib
 import json
 import os
+import hmac
+import re
+import secrets
 from pathlib import Path
 import sqlite3
 import stat
@@ -111,6 +115,12 @@ class Ledger:
                     created REAL NOT NULL, dispatched REAL, request_json TEXT,
                     response_raw BLOB, receipt_json TEXT)''',
                 'CREATE TABLE IF NOT EXISTS audit(seq INTEGER PRIMARY KEY, request_id TEXT, kind TEXT NOT NULL, data TEXT NOT NULL)',
+                '''CREATE TABLE IF NOT EXISTS cohorts(run_id TEXT PRIMARY KEY, authorization_json TEXT NOT NULL,
+                    plan_sha256 TEXT NOT NULL, output_dir TEXT NOT NULL UNIQUE, token_sha256 TEXT NOT NULL,
+                    status TEXT NOT NULL)''',
+                '''CREATE TABLE IF NOT EXISTS cohort_calls(call_id TEXT PRIMARY KEY, run_id TEXT NOT NULL,
+                    position INTEGER NOT NULL, request_sha256 TEXT NOT NULL, attempt_id TEXT UNIQUE,
+                    completed INTEGER NOT NULL DEFAULT 0, UNIQUE(run_id,position))''',
             ):
                 c.execute(statement)
             row = c.execute('SELECT cap FROM providers WHERE provider=?', (provider,)).fetchone()
@@ -165,7 +175,86 @@ class Ledger:
         if provider is None or run is None or provider[0] != self._provider_cap or run[0] != self._run_cap:
             raise BudgetExceeded('persisted caps changed unexpectedly')
 
-    def reserve(self, usd, *, request=None, authorization=None):
+    def claim_cohort(self, authorization, calls, *, plan_sha256, output_dir):
+        """Consume a cohort once; the session capability is never persisted in clear."""
+        if (authorization.get('schema_version') != 'controlled-openrouter-pilot-v1' or
+                authorization.get('run_id') != self.run_id or len(calls) != 160 or
+                not isinstance(plan_sha256, str) or not re.fullmatch(r'[0-9a-f]{64}', plan_sha256) or
+                not Path(output_dir).is_absolute() or str(Path(output_dir).resolve()) != output_dir):
+            raise BudgetExceeded('invalid cohort claim')
+        for call in calls:
+            if (set(call) != {'call_id', 'request_sha256'} or
+                    not re.fullmatch(r'[0-9a-f]{32}', call['call_id']) or
+                    not re.fullmatch(r'[0-9a-f]{64}', call['request_sha256'])):
+                raise BudgetExceeded('invalid scheduled call')
+        if len({c['call_id'] for c in calls}) != 160:
+            raise BudgetExceeded('duplicate scheduled call')
+        token = secrets.token_hex(32)
+        with self._transaction() as c:
+            self._check_caps(c)
+            if (c.execute('SELECT 1 FROM cohorts WHERE run_id=? OR output_dir=?', (self.run_id, output_dir)).fetchone() or
+                    c.execute('SELECT 1 FROM requests WHERE run_id=?', (self.run_id,)).fetchone()):
+                raise BudgetExceeded('cohort already consumed; recovery is export-only')
+            if c.execute("SELECT 1 FROM requests WHERE status IN ('reserved','dispatched','unresolved','overrun') LIMIT 1").fetchone():
+                raise BudgetExceeded('unresolved liability blocks cohort')
+            pricing = authorization['pricing']
+            bound = ((6 * authorization['max_input_bytes'] + 4096) * decimal_usd(pricing['input_per_million']) +
+                     authorization['max_output_tokens'] * decimal_usd(pricing['output_per_million'])) / Decimal(1000000)
+            for field, value, cap in (('run_id', self.run_id, self._run_cap), ('provider', self.provider, self._provider_cap)):
+                totals = self._totals(c, field, value)
+                if totals['settled'] + totals['held'] + units(bound) * 160 > cap:
+                    raise BudgetExceeded('whole cohort exceeds remaining budget')
+            c.execute('INSERT INTO cohorts VALUES(?,?,?,?,?,?)', (self.run_id, canonical_json(authorization),
+                      plan_sha256, output_dir, hashlib.sha256(token.encode()).hexdigest(), 'active'))
+            c.executemany('INSERT INTO cohort_calls(call_id,run_id,position,request_sha256) VALUES(?,?,?,?)',
+                          [(call['call_id'], self.run_id, i, call['request_sha256']) for i, call in enumerate(calls)])
+            self._audit(c, None, 'cohort_claimed', {'run_id': self.run_id, 'plan_sha256': plan_sha256,
+                                                  'output_dir': output_dir, 'scheduled_calls': 160})
+        return token
+
+    def _cohort(self, c, token):
+        row = c.execute('SELECT * FROM cohorts WHERE run_id=?', (self.run_id,)).fetchone()
+        if (row is None or row['status'] != 'active' or not isinstance(token, str) or
+                not hmac.compare_digest(row['token_sha256'], hashlib.sha256(token.encode()).hexdigest())):
+            raise BudgetExceeded('active cohort capability required; no resume')
+        return row
+
+    def _cohort_call(self, c, authorization, call_id, token, request):
+        row = self._cohort(c, token)
+        if row['authorization_json'] != canonical_json(authorization):
+            raise BudgetExceeded('cohort authorization changed')
+        call = c.execute('SELECT * FROM cohort_calls WHERE run_id=? AND call_id=?', (self.run_id, call_id)).fetchone()
+        if (call is None or call['attempt_id'] is not None or
+                call['request_sha256'] != hashlib.sha256(canonical_json(request).encode()).hexdigest()):
+            raise BudgetExceeded('scheduled request mismatch or already attempted')
+        if c.execute('''SELECT 1 FROM cohort_calls cc LEFT JOIN requests r ON r.id=cc.attempt_id
+                WHERE cc.run_id=? AND cc.position<? AND
+                (cc.completed=0 OR r.status IS NULL OR r.status!='succeeded') LIMIT 1''',
+                     (self.run_id, call['position'])).fetchone():
+            raise BudgetExceeded('earlier scheduled call incomplete or failed')
+
+    def validate_cohort_call(self, authorization, call_id, token, request):
+        with self._transaction() as c:
+            self._cohort_call(c, authorization, call_id, token, request)
+
+    def finish_cohort_call(self, call_id, token):
+        with self._transaction() as c:
+            self._cohort(c, token)
+            row = c.execute('''SELECT cc.completed,r.status FROM cohort_calls cc
+                JOIN requests r ON r.id=cc.attempt_id WHERE cc.run_id=? AND cc.call_id=?''',
+                (self.run_id, call_id)).fetchone()
+            if row is None or row['completed'] or row['status'] != 'succeeded':
+                raise BudgetExceeded('only successful uncheckpointed calls can complete')
+            c.execute('UPDATE cohort_calls SET completed=1 WHERE call_id=?', (call_id,))
+            self._audit(c, None, 'cohort_call_completed', {'run_id': self.run_id, 'call_id': call_id})
+
+    def stop_cohort(self, token, reason):
+        with self._transaction() as c:
+            self._cohort(c, token)
+            c.execute("UPDATE cohorts SET status='closed' WHERE run_id=?", (self.run_id,))
+            self._audit(c, None, 'cohort_closed', {'run_id': self.run_id, 'reason': reason})
+
+    def reserve(self, usd, *, request=None, authorization=None, call_id=None, cohort_token=None):
         amount = units(usd)
         request_json = canonical_json(request or {})
         if len(request_json.encode()) > 2_000_000:
@@ -178,6 +267,12 @@ class Ledger:
                 totals = self._totals(c, field, value)
                 if totals['settled'] + totals['held'] + amount > cap:
                     raise BudgetExceeded(f'{field} budget exhausted')
+            claimed = c.execute('SELECT 1 FROM cohorts WHERE run_id=?', (self.run_id,)).fetchone()
+            pilot = authorization is not None and authorization.get('schema_version') == 'controlled-openrouter-pilot-v1'
+            if claimed or pilot:
+                self._cohort_call(c, authorization, call_id, cohort_token, request)
+            elif call_id is not None or cohort_token is not None:
+                raise BudgetExceeded('scheduled context requires a pilot claim')
             auth_id = None
             if authorization is not None:
                 envelope = {field: authorization[field] for field in
@@ -205,7 +300,11 @@ class Ledger:
             identity = uuid.uuid4().hex
             c.execute('''INSERT INTO requests(id,run_id,provider,authorization_id,status,reserved,held,created,request_json)
                 VALUES(?,?,?,?,?,?,?,?,?)''', (identity, self.run_id, self.provider, auth_id, 'reserved', amount, amount, time.time(), request_json))
-            self._audit(c, identity, 'reserved', {'reserved_units': amount})
+            if pilot:
+                c.execute('UPDATE cohort_calls SET attempt_id=? WHERE run_id=? AND call_id=?',
+                          (identity, self.run_id, call_id))
+            self._audit(c, identity, 'reserved', {'reserved_units': amount,
+                                                **({'call_id': call_id} if pilot else {})})
             return identity
 
     def dispatch(self, identity):
