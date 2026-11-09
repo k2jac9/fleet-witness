@@ -76,6 +76,7 @@ jobs:
         if: matrix.family == 'python'
         run: |
           python -m unittest discover -s tests -v 2>&1 | tee ci-results/python.log
+          python -m scripts.verify_submission | tee ci-results/submission-verification.json
           python scripts/fleet.py validate | tee ci-results/fleet-validation.log
           python scripts/fleet.py plan | tee ci-results/fleet-plan.log
           python -m fleet_witness demo --output runs/ci --seed 42 | tee ci-results/demo.log

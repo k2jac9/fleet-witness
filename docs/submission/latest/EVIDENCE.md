@@ -1,44 +1,47 @@
 # Evidence map and reproduction
 
-This package contains the report, editable source, one original figure, bibliography/provenance records, copy-ready submission text and a derived public trial table. It excludes credentials, private account records, provider response envelopes and the large historical archive. The complete implementation and historical archive are in the linked repository.
+This package contains the report, editable source, one original figure, bibliography/provenance records, copy-ready submission text, two PNG images, a standalone verifier and a derived public trial table. It excludes credentials, private account records, provider response envelopes and the large historical archive. The complete implementation and historical archive are in the linked repository.
 
 ## Verify the package
 
-From the extracted package directory on Linux:
+From the repository checkout (Python standard library only):
 
 ```sh
-sha256sum -c SHA256SUMS
+python3 -m scripts.verify_submission
 ```
 
-The manifest covers every member except itself. SHA-256 identifies the distributed bytes; it is not an external signature or an attestation of provider execution.
-
-## Recompute the new pilot's public totals
-
-Run this standard-library script from the extracted directory. It reads only the included JSON and makes no network calls:
+This checks the ZIP against the current repository bytes. To check a downloaded
+ZIP without extracting it, use a trusted copy of the verifier:
 
 ```sh
-python3 - <<'PY'
-import json
-from decimal import Decimal
-from pathlib import Path
-r = json.loads(Path('paired-pilot-2026-11-09.json').read_text())
-t = r['trials']
-assert len(t) == 160 and len({x['pair_id'] for x in t}) == 80
-for presentation in ('raw', 'scope_explicit'):
-    rows = [x for x in t if x['presentation'] == presentation]
-    invalid_approvals = sum(x['recommendation'] == 'approve' and not x['decision_valid_at_snapshot'] for x in rows)
-    invalid_denials = sum(x['recommendation'] == 'deny' and not x['decision_valid_at_snapshot'] for x in rows)
-    print(presentation, len(rows), invalid_approvals, invalid_denials)
-assert sum(x['effects'] for x in t) == 30
-assert sum(x['execution_attempts'] for x in t) == 68
-assert sum(x['authorization_denials'] for x in t) == 28
-assert sum(x['duplicate_noops'] for x in t) == 10
-assert sum(Decimal(x['provider_reported_cost_usd']) for x in t) == Decimal('0.2605526')
-print('effects=30; denied attempts=28; duplicate no-ops=10; charge=$0.2605526')
-PY
+python3 -m scripts.verify_submission --package PATH_TO_ZIP
 ```
 
-Expected presentation rows: `raw 80 18 0` and `scope_explicit 80 0 40`. These numbers describe 80 pairs, not 160 independent samples. Decision-time labels are evaluator outputs, not model inputs. Public rows omit prompts and reasons; they support aggregate recomputation, not full private-trace replay or independent provider/account authentication.
+From an extracted package directory, the included standalone copy also works:
+
+```sh
+python3 -B verify_submission.py
+```
+
+Use a verifier obtained from a trusted checkout. A script inside an arbitrary
+archive is code; checksums alone do not establish its authenticity.
+
+The verifier rejects unexpected, missing, duplicate, linked and oversized files.
+It checks exact checksum coverage, current provenance hashes, title/author/abstract
+consistency and every public trial's closed scalar schema. It recomputes balanced
+pairs, cell outcomes, effects, attempts, token totals and charges. It makes no
+network calls, extracts nothing, executes no bundled code and never repairs inputs.
+Success is JSON on stdout; failure is a nonzero exit with a sanitized message.
+
+Expected results: **160 trials, 80 pairs; raw 18 invalid approvals and zero invalid
+denials; scope explicit zero invalid approvals and 40 invalid denials; 30 effects,
+68 attempts, 28 authorization denials, ten duplicate no-ops; $0.2605526 provider
+charge**. These are 80 pairs, not 160 independent samples. `valid_decisions` in the
+source summary means schema-accepted decisions, not correct recommendations.
+
+SHA-256 identifies bytes; it is not a signature or evidence of provider execution.
+Public rows omit prompts and reasons, so aggregate consistency is not full private
+trace replay. PDF layout and the separate video are inspected independently.
 
 ## Test the code without paid calls
 

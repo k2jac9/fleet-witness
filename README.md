@@ -6,6 +6,7 @@
   <strong>🛰️ SWARM ALIGNMENT HACKATHON · MISSION CONTROL FOR AGENT AUTHORITY</strong><br>
   <a href="docs/report/latest.pdf">Read the latest paper</a> ·
   <a href="docs/submission/latest-submission.zip">Get the submission package</a> ·
+  <a href="docs/submission/media/fleet-witness-demo.mp4">Watch the three-minute walkthrough</a> ·
   <a href="#-launch-the-local-lab">Launch the lab</a> ·
   <a href="docs/experiments/2026-11-09-openrouter-paired-pilot.md">Inspect the live pilot</a> ·
   <a href="docs/README.md">Browse the docs</a>
@@ -44,6 +45,20 @@ Permission can be revoked after a valid approval. An invalid approval stays inva
 | **Pilot accounting** | $0.2605526 reconciled provider charge; $0.288090 conservative settlement | This cohort's cost only; calibration and historical records are separate |
 
 **The plot twist:** removing unsafe approvals by refusing everything is not useful model judgment. The pilot exposes that failure while showing the controller's enforcement boundary. The new [paper](docs/report/latest.pdf), [public trial table](data/paired-pilot-2026-11-09.json) and [evidence guide](docs/submission/latest/EVIDENCE.md) retain both results. No uncontrolled web swarms were observed.
+
+## 🎥 Step inside mission control
+
+[Watch the captioned three-minute walkthrough](docs/submission/media/fleet-witness-demo.mp4) ([captions](docs/submission/media/fleet-witness-demo.vtt), [media provenance](docs/submission/media/README.md)). It shows actual scripted viewer states, followed by the separately recorded live-supervisor findings.
+
+![Actual seed-42 Fleet Witness viewer, clearly labeled Scripted demo: 10 evidence pairs, seven invalid recommendations, nine denied attempts and four local effects.](docs/assets/fleet-witness-viewer.png)
+
+Verify the portable submission from this checkout with one offline command:
+
+```sh
+python3 -m scripts.verify_submission
+```
+
+This checks the allowlist, checksums, repository bytes, publication metadata and recomputed pilot totals. It does not authenticate private provider execution. The [evidence guide](docs/submission/latest/EVIDENCE.md) also covers the standalone package.
 
 ## 🚀 Launch the local lab
 

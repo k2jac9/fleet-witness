@@ -1,0 +1,52 @@
+{
+  "artifact_sha256": {
+    "docs/assets/fleet-witness-cover.png": "7dd3878f399ec87677eb8534ddadf29ee90453cc7fe9fff7482496ac3a5dadde",
+    "docs/assets/fleet-witness-viewer.png": "5da3a1ef0f35529d53ffc37ddd44a78e830db5012e537cb04eb5f2152a59bd72",
+    "docs/submission/media/fleet-witness-demo.mp4": "e95518877e97b89682f12decbaba18dc63bfc5b5a678c4a8d9413768186daf44",
+    "docs/submission/media/fleet-witness-demo.vtt": "3754324477c18d4f3edda328efb23d88805bbf41933d722d7c45a2069c050b82"
+  },
+  "base_commit": "2ce59d34f92516cfb6666b891a4b35da2b46c9ba",
+  "capture_actions_sha256": "c86c6c4248150ef0b1ae99353e79bde46932de4222c57dd77a9cb1089f1d590b",
+  "capture_scripts_sha256": {
+    "capture.mjs": "47e26e275147de976eb044b4bfde18222bc4c349f277e826bd6b7fa92f7a6516",
+    "make-media.py": "03b9f6b07e80cd03979261a5205969bdb3cc7989c5e525ab8165530ccc66602a"
+  },
+  "date": "2026-11-09",
+  "inspection": "Both PNGs and all 16 scene frames visually inspected. FFprobe duration/codec checked. Full video decoding checked separately in the retained task packet.",
+  "scenes": 16,
+  "scope": "Actual local seed-42 scripted viewer; separately recorded live-supervisor pilot figure; editorial command/result summary cards. No new model run, account data, credentials, cloud mutation or public web observation.",
+  "scripted_replay_sha256": "a0c840784a0e1508eaace8a8086a42949f03ee06f603ecc5244386d6de841236",
+  "source_identity": "The containing Git commit identifies the final source; file hashes bind captured assets.",
+  "source_sha256": {
+    "data/paired-pilot-2026-11-09.json": "6d3d681eb39c5af5bb7d08a9b82c50498729c336507c7eb26db7f1881a728c15",
+    "docs/assets/fleet-witness-hero.svg": "8cdaf6d346d8dbaa9adc042dc02b82a092af1e2fd9c4000f533904a0b31df0f1",
+    "docs/report/latest-figures/paired-pilot.svg": "4b4dea6d5f8c9d11cfcc8611ab1e9a7beb147c07ea24a18e6adb12359c7aac54",
+    "fleet_witness/web/app.js": "69f16f6e1a04d91f2ff7343b1394d962795998889b72b25bab189042fa9cb1b0",
+    "fleet_witness/web/index.html": "a76ad03dc14fa2824b1a7b5223d59c0111e060de12a6bee6138ed9f1047865c3",
+    "fleet_witness/web/styles.css": "a81a1c81281d6f0de3ce90742107386ecc8e29c90c0b01f306d5ac0170382072"
+  },
+  "style": "Edited sequence of 16 browser states and caption cards; no audio, no continuous real-time capture.",
+  "task": "submission-finalization-20261109",
+  "tools": {
+    "chrome": "155.0.8059.39",
+    "ffmpeg": "9.0.2",
+    "node": "26.11.1"
+  },
+  "video": {
+    "format": {
+      "duration": "180.000000",
+      "size": "2506489"
+    },
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "height": 900,
+        "pix_fmt": "yuv420p",
+        "r_frame_rate": "25/1",
+        "width": 1600
+      }
+    ]
+  }
+}
