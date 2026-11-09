@@ -94,14 +94,16 @@ class ReproductionTest(unittest.TestCase):
         path.write_text(json.dumps(data))
 
     def test_real_kernel_reconstruction_dynamic_counts_and_read_only_input(self):
-        before = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in self.run.iterdir()}
+        before = {str(p.relative_to(self.run)): hashlib.sha256(p.read_bytes()).hexdigest()
+                  for p in self.run.rglob('*') if p.is_file()}
         result = baselines.summarize_root(self.root)
         self.assertEqual(result['denominators'], {'targets': 6, 'forged': 2, 'valid': 4})
         self.assertIn('committee-3of5', result['totals'])
         self.assertEqual(result['totals']['gated-majority']['forged'], 0)
         self.assertEqual(result['provenance']['mode'], 'synthetic-reconstruction')
         self.assertFalse(result['provenance']['historical_signatures_verified'])
-        self.assertEqual(before, {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in self.run.iterdir()})
+        self.assertEqual(before, {str(p.relative_to(self.run)): hashlib.sha256(p.read_bytes()).hexdigest()
+                                 for p in self.run.rglob('*') if p.is_file()})
         real_execute = baselines.Institution.execute
         calls = []
         def counted(kernel, case_id, attempt):

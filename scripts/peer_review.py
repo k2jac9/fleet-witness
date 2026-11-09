@@ -17,20 +17,21 @@ a data audit, OpenRouter support and a spend ledger.
 
 Usage:
   python scripts/peer_review.py --paper docs/report/REPORT.md --data docs/report/review-data.md \
-      --out docs/report/reviews/round-1 --max-usd 8
-Keys: OPENROUTER_API_KEY. Spend: per-run cap via the shared ledger (tag 'review').
+      --out runs/review-new --authorization /private/path/review-authorization.json
+Keys: OPENROUTER_API_KEY. All models must share the authorized SQLite run envelope.
 """
 import argparse
-from concurrent.futures import ThreadPoolExecutor
+import hashlib
 import json
-import os
 from pathlib import Path
 import re
 import sys
+import uuid
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-os.environ.setdefault('FLEET_WITNESS_LEDGER_TAG', 'review')
-from fleet_witness.swarm.providers import Ledger, ModelClient  # noqa: E402
+from fleet_witness.swarm.operator import authorized_clients  # noqa: E402
+from fleet_witness.swarm.providers import ProviderError  # noqa: E402
+from fleet_witness.swarm.run_records import PrivateRunLog, public_attempts, runtime_identity  # noqa: E402
 
 REVIEWERS = ['openai/gpt-6.1-sol', 'google/gemini-4-argon', 'x-ai/grok-4.7', 'qwen/qwen3.8-max-0902']
 AUDITOR = 'google/gemini-4-argon'
@@ -143,9 +144,24 @@ def extract_json(text):
     return {'unparsed': (text or '')[:20000]}
 
 
-def call(client, task):
-    result = client.complete(SYSTEM, task)
-    return result['text'], result['cost_usd']
+def call(client, task, receipts):
+    response, attempts, status = None, [], 'provider_error'
+    result = None
+    try:
+        result = client.complete(SYSTEM, task)
+        response = result['text']
+        attempts = public_attempts(result.get('attempts', []))
+        status = result.get('status', 'completed')
+        if result.get('truncated') or status not in ('succeeded', 'completed', 'settled'):
+            raise ProviderError('incomplete review response; no retry', attempts=attempts, status=status)
+        return response, result['cost_usd']
+    except Exception as error:
+        if result is None:
+            attempts = public_attempts(getattr(error, 'attempts', []))
+            status = getattr(error, 'status', 'provider_error')
+        raise
+    finally:
+        receipts.write(uuid.uuid4().hex, SYSTEM, task, response, status, attempts)
 
 
 def main():
@@ -153,36 +169,56 @@ def main():
     parser.add_argument('--paper', required=True)
     parser.add_argument('--data', required=True)
     parser.add_argument('--out', required=True)
-    parser.add_argument('--max-usd', type=float, default=8.0)
+    parser.add_argument('--authorization', type=Path, required=True,
+                        help='private explicit authorizations for all models, sharing one run envelope')
+    parser.add_argument('--max-usd', type=float, help='must match the frozen shared run cap')
     parser.add_argument('--debate-rounds', type=int, default=2)
     parser.add_argument('--reasoning', default='high', help='OpenRouter reasoning effort for all models')
     args = parser.parse_args()
+    if not 0 <= args.debate_rounds <= 3:
+        parser.error('--debate-rounds must be between zero and three')
     out = Path(args.out)
-    out.mkdir(parents=True, exist_ok=False)
+    if out.exists():
+        parser.error('output already exists; preserve it and choose a fresh directory')
     paper = Path(args.paper).read_text(encoding='utf-8')
     data = Path(args.data).read_text(encoding='utf-8')
-    ledger = Ledger('openrouter', run_cap_usd=args.max_usd, lifetime_cap_usd=30)
-    clients = {m: ModelClient('openrouter', m, ledger, max_output_tokens=8000, temperature=0.3,
-                              timeout=900, max_concurrency=4) for m in set(REVIEWERS + [AUDITOR, CHAIR])}
+    clients = authorized_clients('openrouter', REVIEWERS + [AUDITOR, CHAIR], args.authorization,
+                                 max_usd=args.max_usd, temperature=0.3)
     for client in clients.values():
         client.extra_body = {'reasoning': {'effort': args.reasoning}}
-    letters = {m: chr(ord('A') + i) for i, m in enumerate(REVIEWERS)}
-    spent = 0.0
+    out.mkdir(mode=0o700, parents=True, exist_ok=False)
+    receipts = PrivateRunLog(out)
+    from fleet_witness.swarm.providers import source_identity
+    manifest = {'schema_version': 'swarm-review-2', 'status': 'started', 'source': source_identity(),
+                'runtime': runtime_identity(), 'paper_sha256': hashlib.sha256(paper.encode()).hexdigest(),
+                'data_sha256': hashlib.sha256(data.encode()).hexdigest(),
+                'script_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                'debate_rounds': args.debate_rounds, 'attempt_policy': 'one-attempt-no-retries',
+                'private_receipts': 'private/requests.jsonl'}
+    try:
+        manifest.update(review_pipeline(out, paper, data, clients, args.debate_rounds, receipts))
+        manifest['status'] = 'completed'
+    except Exception as error:
+        manifest.update(status='failed', error=type(error).__name__)
+        raise
+    finally:
+        manifest.update(receipts.summary())
+        (out / 'manifest.json').write_text(json.dumps(manifest, indent=2, allow_nan=False), encoding='utf-8')
+        receipts.close()
+    print(f'Done. See {out / "manifest.json"}')
 
-    print('Round 1: independent reviews + data audit ...', flush=True)
-    with ThreadPoolExecutor(len(REVIEWERS) + 1) as pool:
-        futures = {m: pool.submit(call, clients[m], REVIEW_TASK.format(paper=paper)) for m in REVIEWERS}
-        audit_future = pool.submit(call, clients[AUDITOR], AUDIT_TASK.format(paper=paper, data=data))
-        reviews = {}
-        for m, f in futures.items():
-            text, cost = f.result()
-            spent += cost
-            reviews[m] = extract_json(text)
-            (out / f'review_{letters[m]}.json').write_text(json.dumps({'model': m, **reviews[m]}, indent=2), encoding='utf-8')
-        audit_text, cost = audit_future.result()
-        spent += cost
-        audit = extract_json(audit_text)
-        (out / 'data_audit.json').write_text(json.dumps({'model': AUDITOR, **audit}, indent=2), encoding='utf-8')
+
+def review_pipeline(out, paper, data, clients, debate_rounds, receipts):
+    letters = {m: chr(ord('A') + i) for i, m in enumerate(REVIEWERS)}
+    print('Independent reviews, then data audit (one paid request at a time) ...', flush=True)
+    reviews = {}
+    for m in REVIEWERS:
+        text, _ = call(clients[m], REVIEW_TASK.format(paper=paper), receipts)
+        reviews[m] = extract_json(text)
+        (out / f'review_{letters[m]}.json').write_text(json.dumps({'model': m, **reviews[m]}, indent=2), encoding='utf-8')
+    audit_text, _ = call(clients[AUDITOR], AUDIT_TASK.format(paper=paper, data=data), receipts)
+    audit = extract_json(audit_text)
+    (out / 'data_audit.json').write_text(json.dumps({'model': AUDITOR, **audit}, indent=2), encoding='utf-8')
 
     debate, transcript = {}, []
 
@@ -192,37 +228,32 @@ def main():
             latest['latest_debate_response'] = debate[m]
         return json.dumps(latest, indent=1)
 
-    for round_no in range(1, args.debate_rounds + 1):
+    for round_no in range(1, debate_rounds + 1):
         print(f'Debate round {round_no} ...', flush=True)
-        with ThreadPoolExecutor(len(REVIEWERS)) as pool:
-            futures = {}
-            for m in REVIEWERS:
-                others = '\n\n'.join(f'Reviewer {letters[o]}:\n{position(o)}' for o in REVIEWERS if o != m)
-                futures[m] = pool.submit(call, clients[m], DEBATE_TASK.format(own=position(m), others=others, paper=paper))
-            new = {}
-            for m, f in futures.items():
-                text, cost = f.result()
-                spent += cost
-                new[m] = extract_json(text)
-                (out / f'debate{round_no}_{letters[m]}.json').write_text(json.dumps({'model': m, **new[m]}, indent=2),
-                                                                           encoding='utf-8')
+        tasks = {}
+        for m in REVIEWERS:
+            others = '\n\n'.join(f'Reviewer {letters[o]}:\n{position(o)}' for o in REVIEWERS if o != m)
+            tasks[m] = DEBATE_TASK.format(own=position(m), others=others, paper=paper)
+        new = {}
+        for m in REVIEWERS:
+            text, _ = call(clients[m], tasks[m], receipts)
+            new[m] = extract_json(text)
+            (out / f'debate{round_no}_{letters[m]}.json').write_text(json.dumps({'model': m, **new[m]}, indent=2),
+                                                                  encoding='utf-8')
         debate = new
         transcript.append(new)
 
     print('Chair ...', flush=True)
     anon = lambda d: json.dumps({f'Reviewer {letters[m]}': v for m, v in d.items()}, indent=1)
     full_debate = json.dumps([{f'Reviewer {letters[m]}': v for m, v in rnd.items()} for rnd in transcript], indent=1)
-    meta_text, cost = call(clients[CHAIR], RUBRIC + '\n\n' + CHAIR_TASK.format(
-        reviews=anon(reviews), debate=full_debate, audit=json.dumps(audit, indent=1)))
-    spent += cost
+    meta_text, _ = call(clients[CHAIR], RUBRIC + '\n\n' + CHAIR_TASK.format(
+        reviews=anon(reviews), debate=full_debate, audit=json.dumps(audit, indent=1)), receipts)
     (out / 'meta_review.md').write_text(meta_text, encoding='utf-8')
-    verdicts = {letters[m]: (debate[m].get('updated_verdict') or reviews[m].get('verdict')) for m in REVIEWERS}
-    scores = {letters[m]: {'initial': reviews[m].get('scores'), 'final': debate[m].get('updated_scores')} for m in REVIEWERS}
-    (out / 'manifest.json').write_text(json.dumps({'reviewers': {letters[m]: m for m in REVIEWERS}, 'auditor': AUDITOR,
-                                                   'chair': CHAIR, 'debate_rounds': args.debate_rounds,
-                                                   'verdicts_after_debate': verdicts, 'rubric_scores': scores,
-                                                   'cost_usd': round(spent, 4)}, indent=2), encoding='utf-8')
-    print(f'Done. Verdicts: {verdicts}. Scores: {scores}. Cost ${spent:.3f}. See {out / "meta_review.md"}')
+    verdicts = {letters[m]: (debate.get(m, {}).get('updated_verdict') or reviews[m].get('verdict')) for m in REVIEWERS}
+    scores = {letters[m]: {'initial': reviews[m].get('scores'), 'final': debate.get(m, {}).get('updated_scores')}
+              for m in REVIEWERS}
+    return {'reviewers': {letters[m]: m for m in REVIEWERS}, 'auditor': AUDITOR, 'chair': CHAIR,
+            'verdicts_after_debate': verdicts, 'rubric_scores': scores}
 
 
 if __name__ == '__main__':

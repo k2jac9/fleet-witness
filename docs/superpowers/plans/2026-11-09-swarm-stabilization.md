@@ -50,6 +50,13 @@
 
 Execution ownership split: parent owns runner/CLI/review-script wiring, new provenance tests and current operational handoff. Independent publication worker owns `scripts/make_figures.py`, new `tests/test_report_figures.py`, `docs/report/REPORT.md`, current HTML/PDF/figures and new correction/provenance documents. It preserves historical `docs/report/reviews/`, `review-data.md` and the data ZIP. Parent alone installs newly reproduced `independence.json` after Task 2 integration. Publication does not depend on new provider behavior.
 
+Integration ruling: parent also owns new `swarm/operator.py`, `swarm/run_records.py`,
+`swarm/judge.py` and narrow integration updates to `tests/test_reproduction.py`.
+These implement Task 3's authorization/private-receipt boundary for every existing
+paid entrypoint and adapt raw-input hashing to the new private receipt directory.
+No accepted ADR, old review or original dataset is changed. Paid source must be
+clean and committed; review acceptance remains an independently recorded gate.
+
 - [ ] Write failing tests for failed-attempt accounting, public prompt separation, private receipt provenance, source/config identity and a real gated-majority regime.
 - [ ] Wire durable provider outcomes into runner/CLI and review scripts; label logical decisions, attempted requests and held liability separately.
 - [ ] Fix conventional medians with a behavioral fixture; correct prose/encoding/figure labels and regenerate artifacts from retained data.
