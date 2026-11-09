@@ -58,9 +58,14 @@ class Institution:
     def __init__(self, conn: sqlite3.Connection, *, evidence_key: bytes, auditor_keys: dict[str, bytes],
                  quorum: int, committee_size: int, require_majority: bool = True,
                  mutations: frozenset = frozenset()):
-        """require_majority=False: a single proposer suffices; the committee alone authorizes."""
-        if not 1 <= quorum <= committee_size:
-            raise ValueError('need 1 <= quorum <= committee_size')
+        """Zero seats is a mechanical-gates-only control and always requires a majority.
+
+        With a nonempty committee, require_majority=False permits a single proposer.
+        """
+        if (type(quorum) is not int or type(committee_size) is not int or type(require_majority) is not bool
+                or not (1 <= quorum <= committee_size
+                        or (committee_size == quorum == 0 and require_majority))):
+            raise ValueError('need 1 <= quorum <= committee_size, or zero seats/quorum with required majority')
         self.conn, self.evidence_key, self.auditor_keys = conn, evidence_key, dict(auditor_keys)
         self.quorum, self.committee_size, self.mutations = quorum, committee_size, frozenset(mutations)
         self.require_majority = require_majority

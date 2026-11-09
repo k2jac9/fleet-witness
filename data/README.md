@@ -1,33 +1,82 @@
 # Run logs for the Fleet Witness swarm report (2026-11-08)
 
-`fleet-witness-runs-2026-11-08.zip` holds every run used in `docs/report/REPORT.md`. Extract it
-at the repository root to recreate `runs/`.
+`fleet-witness-runs-2026-11-08.zip` is the immutable historical run archive.
+SHA-256: `c55e8acf07ed8dd3c11bc3dc8f70269adebaac6bfa14727642cca7314d1f821a`.
+Its 153 entries use Windows backslashes. Use the portable extractor below;
+ordinary ZIP extraction on Linux does not recreate the intended hierarchy.
 
 ## Contents
 
 | Path | What it is |
 | --- | --- |
-| `runs/sweep-deepseek2k/f00..f50` | Main sweep, DeepSeek v4 Flash, 2,000-token cap with truncation audit. `f30` is the pre-declared re-run. |
-| `runs/deepseek2k-f30-truncated` | The superseded original `f30` run (one colluder response hit the cap). Kept for transparency. |
-| `runs/sweep-gptoss/f00..f50` | Main sweep, gpt-oss-20b, same seeds. |
-| `runs/sweep-or/f00..f50` | 600-token DeepSeek pilot (not used for main results; source of the truncation-by-role observation). |
-| `runs/ambig-{deepseek,gptoss}-s{3000,4000,5000}` | Near-miss (ambiguous-mode) runs, 0% and 30% cells. |
-| `runs/verify-depth6.txt` | Bounded checker output (depth 6, with mutants). |
+| `runs/sweep-deepseek2k/f00..f50` | Main DeepSeek v4 Flash sweep, 2,000-token cap; `f30` is the replacement run. Only replacement `f30` retains retry/truncation fields. |
+| `runs/deepseek2k-f30-truncated` | Superseded original `f30` run; retained unchanged. |
+| `runs/sweep-gptoss/f00..f50` | Main gpt-oss-20b sweep, matching synthetic seeds. |
+| `runs/sweep-or/f00..f50` | 600-token DeepSeek pilot; excluded from the main results. |
+| `runs/ambig-{deepseek,gptoss}-s{3000,4000,5000}` | Near-miss runs at 0% and 30% cell shares. |
+| `runs/verify-depth6.txt` | Historical bounded checker output. |
 
-Each run directory contains:
-- `events.jsonl`: the public log, one line per vote or attestation, with token usage and cost;
-- `truth.json`: sealed ground truth (colluders, targets, committees, case kinds);
-- `decisions.json`: the outcome under every governance regime;
-- `manifest.json`: model, seed, share, calls, errors, cost and completeness;
-- `analysis.json`: detector and metrics output.
+Each of the 31 run directories contains `events.jsonl`, `truth.json`,
+`decisions.json` and `manifest.json`. These retain logical vote/attestation
+outcomes, sealed synthetic truth, governance decisions and recorded run/cost
+metadata. Only 19 runs contain `analysis.json`; the 12 near-miss runs omit it.
+The events are not complete provider-attempt, prompt or response records.
+Missing retry fields do not establish zero retries. Recorded costs are not a
+reconciled provider bill.
 
-Prompts are in `fleet_witness/swarm/runner.py`. Signing keys are never written to disk. The
-logs contain only synthetic tasks and model outputs, with no personal data.
+Historical signing keys and receipt bodies were not retained. The scripts
+regenerate synthetic cases from manifest count, seed and case mode with fresh
+local keys. They check case IDs, kinds, validity, targets, colluders, committee
+seats, logical response completeness, recorded tallies and effects against the
+retained records. The historical run/artifact receipt identities and signatures
+cannot be authenticated from these files. Current prompt source does not prove
+which exact prompts or source revision the historical models received.
 
-## Reproduce every table
+## Offline reproduction
+
+Choose fresh artifact destinations outside the source and extracted input trees.
+For example, from the checkout root (create the parent artifact directory first):
 
 ```sh
-python scripts/reproduce_tables.py
+python scripts/extract_run_archive.py \
+  --archive data/fleet-witness-runs-2026-11-08.zip \
+  --destination /home/neo/Projects/fleet-witness-artifacts/reproduction-import
+python scripts/reproduce_tables.py \
+  --input-root /home/neo/Projects/fleet-witness-artifacts/reproduction-import/runs \
+  --output-root /home/neo/Projects/fleet-witness-artifacts/reproduction-derived
 ```
 
-This makes no model calls. The bounded checker takes about 5 minutes.
+Apply workstation storage admission before substantial workloads. Extraction
+rejects traversal, Windows drive/device paths, links, path aliases, collisions,
+existing destinations and excessive expansion before creating output. Defaults:
+1,000 entries, 32 MiB per file, 128 MiB total expanded bytes, ratio at most 200.
+A damaged compressed stream can leave a new partial output directory; preserve
+it as failed evidence and use another fresh destination for a later attempt.
+
+Reproduction requires all main and near-miss sweep fractions. Individual baseline
+commands can analyze a smaller set of complete runs, with denominators derived
+from that set. Incomplete runs, missing response slots, mismatched case recipes,
+duplicate decisions and inconsistent votes/effects are rejected. No script makes
+model calls, uses credentials, or writes into the extracted source data. The
+archive, historical analyses and AI reviews remain unchanged.
+
+Outputs include `baselines.json`, `report-stats.json`, `independence.json`,
+per-model summary JSON, derived analyses, `tables.txt` and
+`reproduction-provenance.json` with input/source/output hashes and runtime identity.
+All eight regimes are reported, including 3-of-5. Gated majority runs through the
+actual institution with zero seats/quorum, required majority, integrity, current
+policy, uniqueness and transactional audit. This is explicitly a **synthetic
+reconstruction using recorded votes**, not historical signature verification,
+historical policy-state recovery or new model data. Historical policy is assumed
+allowed, matching the current synthetic recipe; policy denial/revocation and
+atomicity are exercised separately in behavioral tests.
+
+The pooled observations are paired across cases, conditions and regimes. No
+ordinary pooled independent-binomial confidence interval is printed. Zero-seat
+regimes have no committee-capture prediction. Undefined ratios are JSON `null`.
+Mixed-model committees remain offline splices of recorded seats, not new runs.
+
+The default command also executes the depth-six checker with mutants and retains
+fresh output separately from the historical checker receipt. `--skip-checker`
+explicitly omits that step and records the omission in provenance; it cannot be
+reported as a new checker pass. The checker may take several minutes.

@@ -7,6 +7,8 @@ combine into one table with observed and predicted capture rates.
 from collections import defaultdict
 import json
 from pathlib import Path
+import shutil
+import tempfile
 
 from ..verify_institution import capture_probability
 from .detect import analyze
@@ -34,7 +36,12 @@ def run_sweep(root: Path, client, *, fractions=DEFAULT_FRACTIONS, agents=50, cas
             break
 
 
-def summarize(roots: list[Path]) -> dict:
+def summarize(roots: list[Path], *, analysis_root=None, decision_overrides=None) -> dict:
+    """Read raw runs without rewriting them; optional analyses use a separate root.
+
+    Offline reproduction may supply validated synthetic decision views, indexed
+    by resolved run directory. They are never written over historical decisions.
+    """
     pooled = defaultdict(lambda: defaultdict(lambda: {'unsafe': 0, 'targets': 0, 'valid_released': 0,
                                                       'valid': 0, 'predicted_sum': 0.0, 'seated_capture': 0}))
     auditors = defaultdict(lambda: {'honest_sign_targets': [], 'honest_sign_valid': [], 'runs': 0,
@@ -44,7 +51,19 @@ def summarize(roots: list[Path]) -> dict:
         for directory in sorted(Path(root).glob('f*')):
             if not (directory / 'manifest.json').exists():
                 continue
-            report = analyze(directory)
+            with tempfile.TemporaryDirectory(prefix='fleet-summary-') as temporary:
+                scratch = Path(temporary)
+                for filename in ('manifest.json', 'truth.json', 'events.jsonl', 'decisions.json'):
+                    shutil.copyfile(directory / filename, scratch / filename)
+                if decision_overrides is not None:
+                    (scratch / 'decisions.json').write_text(json.dumps(
+                        decision_overrides[str(directory.resolve())], allow_nan=False), encoding='utf-8')
+                report = analyze(scratch)
+            if analysis_root is not None:
+                output = Path(analysis_root) / Path(root).name / directory.name
+                output.mkdir(parents=True, exist_ok=True)
+                with (output / 'analysis.json').open('x', encoding='utf-8') as handle:
+                    json.dump(report, handle, indent=2, allow_nan=False)
             m = report['manifest']
             if m['incomplete']:
                 continue
@@ -72,7 +91,7 @@ def summarize(roots: list[Path]) -> dict:
                     p['targets'] += g['target_cases']
                     p['valid_released'] += g['valid_released']
                     p['valid'] += g['valid_cases']
-                    if regime in REGIMES:
+                    if regime in REGIMES and REGIMES[regime][0] > 0:
                         size, quorum, _ = REGIMES[regime]
                         p['predicted_sum'] += g['target_cases'] * capture_probability(
                             m['agents'], m['cell_size'], size, quorum, eps)
@@ -91,8 +110,10 @@ def summarize(roots: list[Path]) -> dict:
         for regime, p in pooled[fraction, condition].items():
             row['regimes'][regime] = {
                 'observed_capture': round(p['unsafe'] / p['targets'], 3) if p['targets'] else None,
-                'predicted_capture': round(p['predicted_sum'] / p['targets'], 3) if regime in REGIMES and p['targets'] else None,
-                'seated_capture': round(p['seated_capture'] / p['targets'], 3) if regime in REGIMES and p['targets'] else None,
+                'predicted_capture': round(p['predicted_sum'] / p['targets'], 3)
+                if regime in REGIMES and REGIMES[regime][0] > 0 and p['targets'] else None,
+                'seated_capture': round(p['seated_capture'] / p['targets'], 3)
+                if regime in REGIMES and REGIMES[regime][0] > 0 and p['targets'] else None,
                 'n_targets': p['targets'],
                 'valid_throughput': round(p['valid_released'] / p['valid'], 3) if p['valid'] else None}
         table.append(row)
@@ -120,6 +141,6 @@ def format_summary(summary: dict) -> str:
         board = 'visible' if row['condition'].startswith('visible') else 'hidden'
         lines.append(f"{row['fraction']:>5.0%} {board:<8} " + ' '.join(f'{c:>16}' for c in cells)
                      + f"   {row['honest_auditor_sign_rate_targets']!s:>20}  {row['detector_f1']!s:>11}")
-    n = summary['table'][0]['regimes'][regimes[0]]['n_targets']
-    lines.append(f'(n = {n} target releases per cell; valid-release throughput is in sweep-summary.json)')
+    denominators = sorted({g['n_targets'] for row in summary['table'] for g in row['regimes'].values()})
+    lines.append(f'(target denominators per cell: {denominators}; exact per-cell n and valid throughput are in JSON)')
     return '\n'.join(lines)

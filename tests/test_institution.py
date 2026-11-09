@@ -21,6 +21,57 @@ def kernel(quorum=2, require_majority=True, intact=True):
 
 
 class InstitutionTest(unittest.TestCase):
+    def gated(self, *, intact=True, policy=True, approvals=4, denials=3):
+        k = Institution(sqlite3.connect(':memory:', isolation_level=None), evidence_key=EKEY,
+                        auditor_keys={}, quorum=0, committee_size=0, require_majority=True)
+        self.addCleanup(k.conn.close)
+        receipt = issue_receipt(EKEY, issuer='i', claim='c', scope='s', artifact_digest='d', run_id='r')
+        if not intact:
+            receipt['signature'] = '0' * 64
+        k.open_case('C', 'r', 'd', [receipt], [])
+        if policy is not None:
+            k.set_policy('C', policy)
+        if approvals is not None:
+            k.record_proposal('C', approvals, denials)
+        return k
+
+    def test_zero_committee_requires_majority_configuration(self):
+        for size, quorum, majority in [(0, 0, False), (1, 0, True), (0, 1, True), (-1, 0, True),
+                                        (0, 0, 1), (0.0, 0, True), (False, 0, True)]:
+            with self.subTest(size=size, quorum=quorum, majority=majority):
+                connection = sqlite3.connect(':memory:', isolation_level=None)
+                self.addCleanup(connection.close)
+                with self.assertRaises(ValueError):
+                    Institution(connection, evidence_key=EKEY,
+                                auditor_keys={}, committee_size=size, quorum=quorum, require_majority=majority)
+
+    def test_gated_majority_checks_integrity_policy_and_votes(self):
+        for config in ({'intact': False}, {'policy': None}, {'policy': False},
+                       {'approvals': 3, 'denials': 3}, {'approvals': 0, 'denials': 0}, {'approvals': None}):
+            with self.subTest(config=config):
+                k = self.gated(**config)
+                self.assertFalse(k.execute('C', 'denied')['effect'])
+                self.assertEqual(k.conn.execute('SELECT COUNT(*) FROM releases').fetchone()[0], 0)
+                self.assertEqual(k.conn.execute("SELECT COUNT(*) FROM audit WHERE kind='denied'").fetchone()[0], 1)
+        k = self.gated()
+        k.set_policy('C', False)
+        self.assertFalse(k.execute('C', 'revoked')['effect'])
+
+    def test_gated_majority_uniqueness_and_atomic_audit(self):
+        k = self.gated()
+        k.conn.execute("CREATE TRIGGER audit_failure BEFORE INSERT ON audit WHEN NEW.kind='release' "
+                       "BEGIN SELECT RAISE(ABORT, 'audit failed'); END")
+        with self.assertRaises(sqlite3.IntegrityError):
+            k.execute('C', 'first')
+        self.assertEqual(k.conn.execute('SELECT COUNT(*) FROM releases').fetchone()[0], 0)
+        self.assertEqual(k.conn.execute('SELECT COUNT(*) FROM attempts').fetchone()[0], 0)
+        k.conn.execute('DROP TRIGGER audit_failure')
+        self.assertTrue(k.execute('C', 'first')['effect'])
+        self.assertFalse(k.execute('C', 'second')['effect'])
+        self.assertTrue(k.execute('C', 'first')['replay'])
+        self.assertEqual(k.conn.execute('SELECT COUNT(*) FROM releases').fetchone()[0], 1)
+        self.assertEqual(k.conn.execute("SELECT COUNT(*) FROM audit WHERE kind='release'").fetchone()[0], 1)
+
     def test_quorum_of_seated_auditors_authorizes_exactly_once(self):
         k = kernel()
         k.record_proposal('C', 5, 1)
