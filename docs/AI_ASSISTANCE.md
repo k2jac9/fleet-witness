@@ -4,8 +4,8 @@
 
 | Member | Project role | Publication details |
 | --- | --- | --- |
-| Alejandro Castellanos (`k2jac9`) | Repository owner and teammate | Affiliation to be confirmed |
-| [`IPBin`](https://github.com/IPBin) | Teammate, confirmed by the owner on 2026-11-08 | Preferred author name and affiliation to be confirmed |
+| Alejandro Castellanos (`k2jac9`) | Repository owner and teammate | Independent researcher |
+| [`IPBin`](https://github.com/IPBin) | Teammate, confirmed by the owner on 2026-11-08 | Ignatius Pio Binawan; University of Toronto |
 
 The project began as Alejandro's solo effort. The owner confirmed IPBin's team
 membership on 2026-11-08; [ADR-0012](adr/0012-human-team-membership.md) records that
@@ -31,3 +31,26 @@ cloud boot, worker containment, live models, and submission remain separate
 unexecuted steps as recorded in [BUILD_STATUS.md](BUILD_STATUS.md). The
 `dreamsofcode-io/nixos-vps` repository informed platform comparisons; no source
 from it was copied into this handoff.
+
+## Latest publication, 2026-11-09
+
+The new `latest` report retains the original manuscript's author order and title.
+Alejandro confirmed his affiliation as Independent researcher; Ignatius's name
+and University of Toronto affiliation follow the existing manuscript. Alejandro
+led the baseline, deployment work and new controlled supervisor pilot. Ignatius
+contributed the institutional formulation, kernel/verification study, live swarm
+experiments and original manuscript, as recorded in that manuscript.
+
+AI tools assisted the new report, original SVG artwork, literature metadata
+checks, public trial export, package assembly and independent code review.
+The new 160-request pilot is empirical model evidence with synthetic workers
+and reviewers, distinct from the deterministic demo and the historical study.
+Its explicit presentation denied all valid cases; publication preserves this
+unfavorable result and the earlier stopped cohort. No new paid calls or cloud
+changes were needed for this publication task.
+
+The publication package uses an explicit file allowlist and excludes provider
+credentials, account records, private transport profiles and raw responses.
+The public derived trial table permits aggregate recomputation; it does not
+independently authenticate private provider receipts. Historical disclosure
+paragraphs above describe their own dates, not current experiment availability.

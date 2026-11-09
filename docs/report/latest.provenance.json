@@ -1,0 +1,45 @@
+{
+  "historical_import_commit": "6061cb20f39ac19fcc95b09303e02ebcd43a9887",
+  "historical_preserved": {
+    "REPORT.html": "00a855706ac848a22cc1831263727ccc172c8617b44efddb73178b1b01c171e5",
+    "REPORT.md": "c46c2d3c98a44e736c0816d4182590b37bd93bc67fe7dec8e29daa0bcccf8f6b",
+    "REPORT.pdf": "c21efe122047253d389a4d68254ee581b52582b6162467e28549fc232019a639"
+  },
+  "historical_reanalysis_commit": "519c3aacfc4cd32b10dafb598915ac11930da5f8",
+  "limits": [
+    "Original historical provider requests and signature keys are incomplete.",
+    "Public pilot rows are derived from a validated private report; hashes identify bytes and do not independently authenticate provider execution.",
+    "No new paid calls, deployments, public observation or event submission during this publication task."
+  ],
+  "pdf_validation": {
+    "abstract_words_whitespace": 218,
+    "main_pages": 6,
+    "note": "Layout inspected separately; total pages checked from the generated PDF.",
+    "references_begin_page": 7,
+    "total_pages": 8,
+    "upload_limit_bytes": 25000000
+  },
+  "pilot_run_id": "pilot-2031c6411cf348df8e6abea61d7a12aa",
+  "pilot_source_commit": "8f589dcfb62ddde090d59dcbc9b03688a6e41e44",
+  "plan_rulings": [
+    "Export only trial scalars and summaries. Omit all free-text prompts and responses, including model reasons, to reduce publication exposure; full traces remain private.",
+    "Use the existing standard-library Markdown renderer and installed Chromium rather than adding a new PDF dependency.",
+    "Preserve the previous manuscript title and author order; Alejandro affiliation confirmed as Independent researcher.",
+    "Link the historical reproduction receipt rather than package its workstation-local artifact path; preserve the original receipt unchanged."
+  ],
+  "private_accepted_reconciliation_sha256": "909aca443d17c3d02062ff72fc25731a3702543ee58c55e71331c5991757791d",
+  "private_generation_records_sha256": "1d1915f087fd34aa7b686a75afc7277259e26d8f0a962d542985d029cb776d8f",
+  "private_pilot_report_sha256": "57442e4842377db4d5fb1711914a6580a1973fffc74535b1bc73fd93c4c962ea",
+  "public_file_sha256": {
+    "data/paired-pilot-2026-11-09.json": "6d3d681eb39c5af5bb7d08a9b82c50498729c336507c7eb26db7f1881a728c15",
+    "docs/report/latest-figures/paired-pilot.svg": "4b4dea6d5f8c9d11cfcc8611ab1e9a7beb147c07ea24a18e6adb12359c7aac54",
+    "docs/report/latest.html": "44b10d3441e2b4dffcd5cf50c1d1bf2801bc12be2f297e8b18263dca811c05ea",
+    "docs/report/latest.md": "001a9f99dad24de5f17a2028115650d58698917234138f221fbac1eb1cd08b7e",
+    "docs/report/latest.pdf": "c14d2471dc389e96bdf9284c6eee0ba7de2446505a698db916dc74cd20c4807a",
+    "docs/report/latest.references.json": "22895e1186dd06758dde9ee7cbac2ca101e87519ff1400c6606c5166a03f57bf"
+  },
+  "publication_base_commit": "ee7c17e6f8b50684084caf6f6900c577801351c5",
+  "publication_identity": "The containing Git commit identifies this publication revision; base and experiment source commits are distinct.",
+  "schema": "fleet-witness-publication-provenance-v1",
+  "task": "latest-submission-20261109"
+}

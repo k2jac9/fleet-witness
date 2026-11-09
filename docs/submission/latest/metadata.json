@@ -1,0 +1,24 @@
+{
+  "abstract_words_whitespace": 218,
+  "authors": [
+    {
+      "affiliation": "Independent researcher",
+      "name": "Alejandro Castellanos"
+    },
+    {
+      "affiliation": "University of Toronto",
+      "name": "Ignatius Pio Binawan"
+    }
+  ],
+  "checked_date": "2026-11-09",
+  "deadline_utc": "2026-11-09T11:59:00Z",
+  "guidelines": "https://apartresearch.com/sprints/swarm-alignment-2026#guidelines",
+  "project": "Fleet Witness",
+  "report": "latest.pdf",
+  "repository": "https://github.com/k2jac9/fleet-witness",
+  "submission_status": "prepared; external upload and confirmation not performed",
+  "template": "https://docs.google.com/document/d/1_1_27EyZriMlc8n8EBE2YScaeyMjm-8xjR097nmHXAE/edit",
+  "title": "Verify the Institution, Not the Agents: A Bounded-Verified Separation-of-Powers Kernel Stress-Tested Against Colluding LLM Swarms",
+  "track_proposed": "Multi-Agent Oversight and Control",
+  "video_status": "script supplied; no video recorded"
+}
