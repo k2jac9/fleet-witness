@@ -78,7 +78,11 @@ class Ledger:
         """One ledger file per provider, so parallel sweeps on different providers never share a file.
         Two processes on the SAME provider would still race: run one sweep per provider at a time."""
         self.provider = provider
-        self.path = Path(path) if path else LEDGER_DIR / f'spend-ledger-{provider}.json'
+        # FLEET_WITNESS_LEDGER_TAG gives a parallel process on the same provider its own file
+        # (each file has its own lifetime cap; the provider's account limit still applies overall).
+        tag = os.environ.get('FLEET_WITNESS_LEDGER_TAG', '').strip()
+        name = f'spend-ledger-{provider}' + (f'-{tag}' if tag else '') + '.json'
+        self.path = Path(path) if path else LEDGER_DIR / name
         self.run_cap = float(run_cap_usd)
         self.lifetime_cap = float(DEFAULT_LIFETIME_CAP.get(provider, 5.0)
                                   if lifetime_cap_usd is None else lifetime_cap_usd)
@@ -215,21 +219,43 @@ class ModelClient:
     def label(self):
         return f'{self.provider}:{self.model}'
 
-    def worst_case_usd(self, system: str, user: str) -> float:
+    # Output-token ladder used when a response is cut off: the same request is re-sent with a larger
+    # allowance so long deliberation (which colluders show) is never silently recorded as abstention.
+    ESCALATION_FACTORS = (1, 2, 4, 8)
+    MAX_OUTPUT_CEILING = 16000
+
+    def worst_case_usd(self, system: str, user: str, max_tokens: int | None = None) -> float:
         tokens_in = estimate_tokens(system) + estimate_tokens(user)
-        return (tokens_in * self.prices[0] + self.max_output_tokens * self.prices[1]) / 1e6
+        return (tokens_in * self.prices[0] + (max_tokens or self.max_output_tokens) * self.prices[1]) / 1e6
 
     def complete(self, system: str, user: str, meta=None) -> dict:
-        reserved = self.worst_case_usd(system, user)
+        """Call the model; if the answer is truncated by the output cap, retry with a larger cap."""
+        started = time.monotonic()
+        total_cost, attempts_tokens, retries = 0.0, [], 0
+        result = None
+        for factor in self.ESCALATION_FACTORS:
+            cap = min(self.max_output_tokens * factor, self.MAX_OUTPUT_CEILING)
+            result = self._attempt(system, user, cap)
+            total_cost += result['cost_usd']
+            attempts_tokens.append(result['output_tokens'])
+            if not result['truncated'] or cap >= self.MAX_OUTPUT_CEILING:
+                break
+            retries += 1
+        return {'text': result['text'], 'input_tokens': result['input_tokens'],
+                'output_tokens': result['output_tokens'], 'cost_usd': total_cost,
+                'latency_s': round(time.monotonic() - started, 3), 'truncation_retries': retries,
+                'truncated': result['truncated'], 'final_cap': cap, 'attempt_output_tokens': attempts_tokens}
+
+    def _attempt(self, system: str, user: str, cap: int) -> dict:
+        reserved = self.worst_case_usd(system, user, cap)
         self.ledger.reserve(reserved)
         actual = reserved
-        started = time.monotonic()
         try:
             with self._gate:
                 if self.provider == 'adaption':
                     data = _post(ADAPTION_URL, self._key, {
                         'model': self.model, 'instructions': system, 'input': user,
-                        'max_output_tokens': self.max_output_tokens, 'temperature': self.temperature,
+                        'max_output_tokens': cap, 'temperature': self.temperature,
                         'store': False}, self.timeout, self._rate)
                     text = data.get('output_text') or ''.join(
                         part.get('text', '') for item in data.get('output', []) if item.get('type') == 'message'
@@ -237,24 +263,29 @@ class ModelClient:
                     usage = data.get('usage') or {}
                     tokens_in, tokens_out = usage.get('input_tokens'), usage.get('output_tokens')
                     reported_cost = None
+                    finish = str((data.get('incomplete_details') or {}).get('reason', ''))
+                    cut = data.get('status') == 'incomplete' and 'max_output_tokens' in finish
                 else:
                     data = _post(OPENROUTER_URL, self._key, {
-                        'model': self.model, 'max_tokens': self.max_output_tokens,
+                        'model': self.model, 'max_tokens': cap,
                         'temperature': self.temperature, 'usage': {'include': True},
                         'messages': [{'role': 'system', 'content': system},
                                      {'role': 'user', 'content': user}]}, self.timeout, self._rate,
                         {'X-Title': 'Fleet Witness hackathon'})
                     if 'error' in data:
                         raise ProviderError(str(data['error'])[:300])
-                    text = (data.get('choices') or [{}])[0].get('message', {}).get('content') or ''
+                    choice = (data.get('choices') or [{}])[0]
+                    text = choice.get('message', {}).get('content') or ''
                     usage = data.get('usage') or {}
                     tokens_in, tokens_out = usage.get('prompt_tokens'), usage.get('completion_tokens')
                     reported_cost = usage.get('cost')
+                    cut = choice.get('finish_reason') in ('length', 'max_tokens')
             if isinstance(tokens_in, int) and isinstance(tokens_out, int):
                 computed = (tokens_in * self.prices[0] + tokens_out * self.prices[1]) / 1e6
                 actual = float(reported_cost) if isinstance(reported_cost, (int, float)) else computed
+                cut = cut or tokens_out >= cap - 2  # fallback if the provider omits a finish reason
             return {'text': text, 'input_tokens': tokens_in, 'output_tokens': tokens_out,
-                    'cost_usd': actual, 'latency_s': round(time.monotonic() - started, 3)}
+                    'cost_usd': actual, 'truncated': bool(cut)}
         except NotSent:
             actual = 0.0  # certainly unprocessed, so certainly unbilled
             raise

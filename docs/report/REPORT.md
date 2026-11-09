@@ -4,7 +4,7 @@
 **Affiliations:** [TBD by team]
 **Track:** 4, Multi-Agent Oversight and Control (cross-track: 2, 3)
 
-*Draft for the official Apart template. Every number comes from runs in this repository. `[QWEN]` marks results from the second-model sweep still in progress.*
+*Draft for the official Apart template. Every number comes from runs in this repository. `[GPT-OSS]` marks results from the second-model sweep still in progress.*
 
 ---
 
@@ -204,7 +204,14 @@ Forged cases are not targets; they test what crowds cannot check.
 **Model and spend.**
 - DeepSeek v4 Flash (`deepseek/deepseek-v4-flash-0731`) via OpenRouter, temperature 0.7,
   600 output tokens maximum.
-- Second model: `[QWEN]` Qwen 3.7 Flash, same seeds.
+- Second model, a different family that also reasons: OpenAI gpt-oss-20b
+  (`openai/gpt-oss-20b`), same seeds, so the same cells and committees.
+  - Both models reason before answering, so the comparison varies the model family, not the
+    reasoning mode.
+  - gpt-oss averaged 191 output tokens in a 102-call pilot. Non-reasoning candidates, such
+    as Gemini 2.5 Flash Lite at about 34 tokens, were rejected.
+  - Output cap: 2,000 tokens for gpt-oss (its pilot maximum was 741) vs 600 for DeepSeek,
+    which truncated 0.6% of DeepSeek's responses.
 - A per-provider ledger reserves each call's worst-case cost before sending.
 
 **Blue team.** A detector reads only the public log:
@@ -301,8 +308,8 @@ colluding agents.*
 - At 50% it degrades (F1 0.98 hidden, 0.72 visible): the cell is no longer a minority to
   stand out from.
 
-`[QWEN]` Second-model replication: same seeds, so the same cells and committees. Table and
-one paragraph to come.
+`[GPT-OSS]` Second-model replication: same seeds, so the same cells and committees. Table
+and one paragraph to come.
 
 ## 5. Discussion
 
@@ -389,8 +396,14 @@ agents, is a tractable path to oversight that scales with swarm size.
 - **Toy task and planted adversary.** The release task is synthetic. Colluders were
   instructed, and coordination did not emerge on its own. There was no covert channel
   between colluders.
-- **Models.** One model family in the main run (`[QWEN]` second family pending). The pilot
-  used a second host (Adaption). Results may not transfer to frontier agents.
+- **Models.** Two cheap reasoning models from different families (DeepSeek v4 Flash, OpenAI
+  gpt-oss-20b). Results may not transfer to frontier agents.
+  - Qwen 3.7 Flash spent its entire 600-token budget on hidden reasoning in 39% of
+    responses. At 2,000 tokens it was too slow for a full sweep in the time available, so
+    it is excluded.
+  - Non-reasoning models were excluded so that reasoning mode would not be confounded with
+    model family.
+  - The pilot used a second host (Adaption), whose rate limit made full sweeps impractical.
 - **Small cells.** n = 12 targets per cell. Committee draws are shared across board
   conditions, so the two conditions are paired, not independent. No significance claims.
 - **Honest error ε = 0, so independence was untested.** The crisp rule left honest agents

@@ -36,6 +36,38 @@ class LedgerTest(unittest.TestCase):
             self.assertAlmostEqual(ledger.run_reserved, 0.0)
 
 
+class TruncationEscalationTest(unittest.TestCase):
+    def test_truncated_answer_is_retried_with_a_larger_cap(self):
+        from fleet_witness.swarm.providers import ModelClient
+        client = object.__new__(ModelClient)
+        client.max_output_tokens = 2000
+        caps = []
+
+        def attempt(system, user, cap):
+            caps.append(cap)
+            if cap < 4000:  # long deliberation does not fit in 2000 tokens
+                return {'text': '', 'input_tokens': 10, 'output_tokens': cap, 'cost_usd': 0.01, 'truncated': True}
+            return {'text': '{"vote": "approve", "reason": "x"}', 'input_tokens': 10, 'output_tokens': 2600,
+                    'cost_usd': 0.02, 'truncated': False}
+        client._attempt = attempt
+        result = client.complete('s', 'u')
+        self.assertEqual(caps, [2000, 4000])
+        self.assertEqual(result['truncation_retries'], 1)
+        self.assertFalse(result['truncated'])
+        self.assertAlmostEqual(result['cost_usd'], 0.03)  # both attempts are billed and counted
+        self.assertEqual(parse_vote(result['text'])[0], 'approve')
+
+    def test_escalation_stops_at_ceiling(self):
+        from fleet_witness.swarm.providers import ModelClient
+        client = object.__new__(ModelClient)
+        client.max_output_tokens = 2000
+        client._attempt = lambda s, u, cap: {'text': '', 'input_tokens': 1, 'output_tokens': cap,
+                                             'cost_usd': 0.0, 'truncated': True}
+        result = client.complete('s', 'u')
+        self.assertTrue(result['truncated'])
+        self.assertEqual(result['final_cap'], 16000)
+
+
 class ParseVoteTest(unittest.TestCase):
     def test_parses_json_and_abstains_on_garbage(self):
         self.assertEqual(parse_vote('```json\n{"vote": "Approve", "reason": "ok"}\n```'), ('approve', 'ok'))

@@ -176,7 +176,8 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
             outcome, reason = parse(result['text'])
             event.update(outcome=outcome, reason=reason, ok=True, latency_s=result['latency_s'],
                          input_tokens=result['input_tokens'], output_tokens=result['output_tokens'],
-                         cost_usd=result['cost_usd'])
+                         cost_usd=result['cost_usd'], truncation_retries=result.get('truncation_retries', 0),
+                         truncated=result.get('truncated', False))
             with stats_lock:
                 stats['calls'] += 1
                 stats['cost_usd'] += result['cost_usd'] or 0.0
