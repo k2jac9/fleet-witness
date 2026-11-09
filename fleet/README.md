@@ -1,14 +1,16 @@
 # Development task fleet
 
-This is the development coordination tool for the Fleet Witness team: Alejandro Castellanos (`k2jac9`, repository owner) and `IPBin` (teammate). [ADR-0012](../docs/adr/0012-human-team-membership.md) records the membership update. It is separate from the simulated worker/reviewer fleet evaluated by the demo. [ADR-0006](../docs/adr/0006-development-fleet.md), with its solo-entrant assumption superseded by ADR-0012, governs task ownership and [ADR-0008](../docs/adr/0008-ephemeral-nixos-workers.md) records the optional ephemeral NixOS worker target.
+This is the development coordination tool for the Fleet Witness team: Alejandro Castellanos (`k2jac9`, repository owner) and Ignatius Pio Binawan (`IPBin`). [ADR-0012](../docs/adr/0012-human-team-membership.md) records the membership update. It is separate from the simulated worker/reviewer fleet evaluated by the demo. [ADR-0006](../docs/adr/0006-development-fleet.md), with its solo-entrant assumption superseded by ADR-0012, governs task ownership and [ADR-0008](../docs/adr/0008-ephemeral-nixos-workers.md) records the optional ephemeral NixOS worker target.
 
 From the repository root with Python 3.11+ and Git installed:
 
 ```sh
-python scripts/fleet.py validate
-python scripts/fleet.py plan
-python scripts/fleet.py prepare adapter-proposal
+python3 scripts/fleet.py validate
+python3 scripts/fleet.py plan
 ```
+
+Select a ready task from the plan, then use `python3 scripts/fleet.py prepare TASK_ID`,
+replacing `TASK_ID` with that exact ID. Do not re-prepare a completed task.
 
 `validate` and `plan` read the manifest and local Git state. The plan is deterministic and topologically ordered; a `todo` task is ready when every direct dependency is `done`. Marking a task `done` is a manual scheduling decision, never evidence that its acceptance commands passed. The owner must review its actual commit and verification report before updating status. Branches and prepared worktrees do not automatically change task status.
 
@@ -18,6 +20,6 @@ For a disposable clone or an explicitly selected existing worktree, put `--root 
 
 The version-1 manifest has exact top-level fields `version: 1`, `owner: "k2jac9"`, `default_budget_usd: 0`, and `tasks`. Each task declares an `id`, `title`, `role`, `status` (`todo` or `done`), `depends_on`, `owned_paths`, `adrs`, `acceptance`, and `brief`. Acceptance commands are nonempty arrays of string argv arrays. Unknown fields and duplicate JSON keys fail closed. Ownership paths are literal repository-relative paths, with directory ownership extending to descendants; globs, reserved tool directories, absolute paths, traversal, and ambiguous separators are refused. Accepted ADR files must exist locally. All simultaneously ready tasks must have disjoint ownership. A blocked task may reuse a predecessor's paths after that predecessor completes.
 
-The starter DAG has two ready tasks, `adapter-proposal` and `expanded-scenarios`. `research-report` waits for both; `independent-review` waits for the report. Each task references accepted ADRs and includes a report contract. Prepared briefs contain repository data and suggested commands; they do not confer authority to execute those commands.
+The original starter DAG placed `adapter-proposal` and `expanded-scenarios` first, then `research-report` and `independent-review`. These are historical task identities; inspect the current plan for readiness. Each task references accepted ADRs and includes a report contract. Prepared briefs contain repository data and suggested commands; they do not confer authority to execute those commands.
 
-Preparation runs no acceptance command or model, reads no credential, and grants no spending, publishing, merging, access, or ADR-changing authority. It does not contact a provider or create a container. An operator can carry a reviewed source snapshot into the optional [NixOS environment](../docs/NIXOS_FLEET.md); evaluation, boot, and containment checks are pending on a Nix-capable host. The initial configured worker runs offline tests and a demo. Automatic coding-worker dispatch and a mediated provider/tool gateway require future decisions. Worktrees alone are change isolation, with all the process-confinement powers of a very tidy folder.
+Preparation runs no acceptance command or model, reads no credential, and grants no spending, publishing, merging, access, or ADR-changing authority. It does not contact a provider or create a container. An operator can carry a reviewed source snapshot into the optional [NixOS environment](../docs/NIXOS_FLEET.md); dated build and boot checks are recorded in [BUILD_STATUS.md](../docs/BUILD_STATUS.md), while remaining host acceptance stays explicit. The configured worker runs offline tests and a demo. Automatic coding-worker dispatch is future work. The separate [trusted-host model gateway](../docs/CONTROLLED_PILOT.md) does not give these workers provider access. Worktrees alone are change isolation, with all the process-confinement powers of a very tidy folder.

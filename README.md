@@ -7,7 +7,8 @@
   <a href="docs/report/latest.pdf">Read the latest paper</a> ·
   <a href="docs/submission/latest-submission.zip">Get the submission package</a> ·
   <a href="#-launch-the-local-lab">Launch the lab</a> ·
-  <a href="docs/experiments/2026-11-09-openrouter-paired-pilot.md">Inspect the live pilot</a>
+  <a href="docs/experiments/2026-11-09-openrouter-paired-pilot.md">Inspect the live pilot</a> ·
+  <a href="docs/README.md">Browse the docs</a>
 </p>
 
 # Fleet Witness
@@ -61,7 +62,11 @@ Open **http://127.0.0.1:8765**. Pick a decision, follow its receipt scope, compa
 
 With Nix and flakes enabled, `nix develop` provides the pinned development shell. The [development guide](docs/DEVELOPMENT.md) covers setup; [testing](docs/TESTING.md) explains what each check establishes.
 
+<a id="handbook"></a>
+
 ## 🎬 Choose your next scene
+
+The [documentation map](docs/README.md) connects the guides and defines the shared vocabulary.
 
 | Destination | Open this |
 | --- | --- |
@@ -78,7 +83,7 @@ With Nix and flakes enabled, `nix develop` provides the pinned development shell
 
 The scripted demo, historical swarm study and new live-supervisor pilot are distinct evidence sources. Evaluator labels are for human inspection and stay outside supervisor inputs. The institutional study relies on auditors for semantic judgments; the new pilot uses a stricter synthetic evidence contract. Their results are not pooled.
 
-The prototype uses in-process HMAC signing and SQLite. Saved databases are inspection artifacts; ephemeral issuer keys are not persisted. Worktrees and containers do not establish isolation from hostile operating-system processes. Finite checks do not establish an unbounded proof. No live sensor, public honeypot or global fleet map is implemented.
+The prototype uses in-process HMAC authentication and SQLite. Saved databases are inspection artifacts; ephemeral issuer keys are not persisted. Worktrees and containers do not establish isolation from hostile operating-system processes. Finite checks do not establish an unbounded proof. No live sensor, public honeypot or global fleet map is implemented.
 
 Native GCP boot, four offline verification workers and an authenticated read-only Cloud Run dashboard have historical execution receipts. Current availability and expiry require fresh checks; this README is not a live status monitor. Deployment, paid calls and new observation scopes use the [documented gates](docs/GATES.md), separate authorization and explicit budgets. Provider keys never belong in source, a Nix image or the public submission package.
 

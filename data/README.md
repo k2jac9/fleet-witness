@@ -1,4 +1,10 @@
-# Run logs for the Fleet Witness swarm report (2026-11-08)
+# Research data and reproduction
+
+The [latest report](../docs/report/latest.md) uses two separate data sources:
+this preserved historical swarm archive and the [public paired-pilot table](paired-pilot-2026-11-09.json).
+Their methods, costs and denominators must not be pooled.
+
+## Historical swarm archive, 8 November 2026
 
 `fleet-witness-runs-2026-11-08.zip` is the immutable historical run archive.
 SHA-256: `c55e8acf07ed8dd3c11bc3dc8f70269adebaac6bfa14727642cca7314d1f821a`.
@@ -35,15 +41,19 @@ which exact prompts or source revision the historical models received.
 ## Offline reproduction
 
 Choose fresh artifact destinations outside the source and extracted input trees.
-For example, from the checkout root (create the parent artifact directory first):
+For example, from a primary checkout, retain outputs in a sibling artifact
+directory. In a worktree, set `artifact_root` to the project's existing artifact
+directory. Both destinations below must be new:
 
 ```sh
-python scripts/extract_run_archive.py \
+artifact_root="../fleet-witness-artifacts"
+mkdir -p "$artifact_root"
+python3 scripts/extract_run_archive.py \
   --archive data/fleet-witness-runs-2026-11-08.zip \
-  --destination /home/neo/Projects/fleet-witness-artifacts/reproduction-import
-python scripts/reproduce_tables.py \
-  --input-root /home/neo/Projects/fleet-witness-artifacts/reproduction-import/runs \
-  --output-root /home/neo/Projects/fleet-witness-artifacts/reproduction-derived
+  --destination "$artifact_root/reproduction-import"
+python3 scripts/reproduce_tables.py \
+  --input-root "$artifact_root/reproduction-import/runs" \
+  --output-root "$artifact_root/reproduction-derived"
 ```
 
 Apply workstation storage admission before substantial workloads. Extraction

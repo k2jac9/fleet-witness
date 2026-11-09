@@ -1,8 +1,9 @@
 # Runtime adoption and retained baseline
 
-Owner: Alejandro Castellanos. Repository: k2jac9/fleet-witness. Candidate branch:
-`fleet/gate-closure-20261108`. Selections verified 2026-11-08; review due 2026-11-15
-and before any activation. Machine-readable source is
+Owner: Alejandro Castellanos. Repository: k2jac9/fleet-witness. The matrix is
+integrated on `main`. Selections verified 2026-11-08; review due 2026-11-15 and
+before a new runtime activation. These are the recorded selections, not a fresh
+upstream release query. Machine-readable source is
 [`ci/runtime-matrix.json`](../ci/runtime-matrix.json).
 
 | Runtime | Latest stable | Upcoming, isolated | Previous supported stable | Additional retained checks |
@@ -35,20 +36,25 @@ Each Python lane runs the full standard-library suite, task validation/planning
 and a real scripted demo. Each Node lane runs all viewer tests. This checks
 runtime families independently; it is not every Python/Node Cartesian pairing.
 Recorded results belong in BUILD_STATUS.md after actual workflow execution.
-Configured lanes are not passing evidence.
+Configured lanes are not passing evidence. PR #13 subsequently passed all 11
+lanes on tree `690d42c2f5ef77778b6a1ad3d599c2ea6aeb0ce8`: seven Python lanes
+with 309 tests each and four Node lanes with five each, in
+[run 42591134143](https://github.com/k2jac9/fleet-witness/actions/runs/42591134143).
+That result qualifies that tree, not subsequent edits.
 
 ## Accepted deployment and rollback boundary
 
-The existing Cloud Run Caddy 2.11.9 image remains
+The last recorded Cloud Run Caddy 2.11.9 image is
 `sha256:87b42722fd6f73995756f650690b11fcf97cb5528eb2043fe8b4bc654fa3957b`.
-The stopped NixOS VM retains its earlier image, source `857e716`, committed
+The NixOS VM was last recorded stopped, with its earlier image, source `857e716`, committed
 nixpkgs lock `c56a87d8e41ce69bd2af57eb35dcc117a9dfca33` and observed Python
-3.13.17. The exact images, GC roots, old lock, data and receipts remain intact.
+3.13.17. Preserve the exact images, GC roots, old lock, data and receipts. This
+editorial pass does not refresh cloud inventory or prove retained-resource state.
 Testing the same Python version in an Ubuntu artifact is compatibility evidence,
 not a reproduction of the NixOS interpreter or acceptance of the stopped host.
 
 No local workstation default, running service or Nix lock is promoted by this
-CI change. Stable is the normal development candidate, but a durable local Nix
+documentation change. Stable is the normal development target, but a durable local Nix
 migration, current Caddy/NixOS previous/preview matrices, security backport
 review, cloud rollback exercise, cost reconciliation and applicable host
 acceptance remain tracked gaps. Neither a newer Python interpreter nor its

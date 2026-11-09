@@ -16,7 +16,7 @@ Inspect revocation and duplicate execution. “A recommendation can be valid at 
 
 ## 1:50–2:30 — Show the real-model result
 
-Open Figure 1 in the latest report and the public trial table. “In 80 pairs, the raw condition made 18 invalid approvals. The explicit condition denied everything, including 40 valid cases. That is an availability failure. The controller blocked all invalid and revoked attempts.” Do not show private provider records or account balances.
+Open Figure 1 in the latest report and the public trial table. “In 80 pairs, the raw condition made 18 invalid approvals. The explicit condition denied everything, including 40 valid cases. That prevents useful release selection. The controller blocked all invalid and revoked attempts.” Do not show private provider records or account balances.
 
 ## 2:30–3:00 — Show what can be checked
 

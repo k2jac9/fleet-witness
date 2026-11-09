@@ -20,7 +20,7 @@ Report upload: `latest.pdf`. The ZIP is a companion evidence package, not a subs
 
 - Open the PDF and confirm the title, author details and contribution statement.
 - Enter personal registration/contact details in the official form only. They are deliberately absent from this package.
-- Use the [official event page and form](https://apartresearch.com/sprints/swarm-alignment-2026#guidelines). The checked deadline is 9 November 2026, 11:59 UTC (06:59 Toronto EST).
+- Use the [official event page and form](https://apartresearch.com/sprints/swarm-alignment-2026#guidelines). The deadline checked on 9 November 2026 is 9 November 2026, 11:59 UTC (06:59 Toronto EST).
 - If replacing an earlier entry, use the exact same title before the deadline; the latest files replace the earlier files according to the event instructions.
 - Save the confirmation email or receipt privately. A Git push or a prepared ZIP is not submission confirmation.
 

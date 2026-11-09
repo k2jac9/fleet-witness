@@ -1,7 +1,7 @@
 # Contributing to Fleet Witness
 
-The human team is Alejandro Castellanos (`k2jac9`, repository owner) and `IPBin`
-(teammate), as recorded in [ADR-0012](docs/adr/0012-human-team-membership.md). AI agents
+The human team is Alejandro Castellanos (`k2jac9`, repository owner) and
+Ignatius Pio Binawan (`IPBin`), as recorded in [ADR-0012](docs/adr/0012-human-team-membership.md). AI agents
 are development tools; disclose assistance and provenance as described in
 [AI_ASSISTANCE](docs/AI_ASSISTANCE.md). Begin with [AGENTS.md](AGENTS.md),
 [architecture](docs/architecture.md), and the relevant [accepted ADRs](docs/adr/README.md).
@@ -11,7 +11,7 @@ commands; [security policy](docs/SECURITY_POLICY.md) defines the operating and r
 ## Work on a bounded task
 
 Prefer one owner, explicit owned paths, a dedicated branch/worktree, and a
-reviewable commit. Use `fleet/tasks.json` and `python scripts/fleet.py plan` to
+reviewable commit. Use `fleet/tasks.json` and `python3 scripts/fleet.py plan` to
 identify ready work, then prepare it as documented in the
 [fleet guide](fleet/README.md). Edit only assigned paths. Propose changes to task
 scope or a superseding ADR when necessary; do not silently revise accepted
@@ -28,9 +28,10 @@ or use a reviewed environment compatible with the tool's refusal contract.
 Preparation does not execute acceptance commands or dispatch agents. Run each
 required command explicitly and record what actually happened. Keep default
 external spend at zero. Model/provider access, cloud provisioning, publishing,
-credential grants, and external messages require separate authorization. Future
-provider boundaries are described in [ADAPTION](docs/ADAPTION.md); they are not
-an implemented dispatch system.
+credential grants, and external messages require applicable authorization. The
+[controlled pilot](docs/CONTROLLED_PILOT.md) documents the implemented trusted-host
+provider path; [Adaption](docs/ADAPTION.md) has separate qualification gates.
+Neither path automatically dispatches development workers.
 
 ## Review and integration
 

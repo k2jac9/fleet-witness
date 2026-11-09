@@ -1,6 +1,9 @@
 # Resource map for continuing Fleet Witness
 
-Curated primary references, checked **2026-11-08**. Start with the repository
+Platform/provider references were checked **2026-11-08**; the
+[latest bibliography](report/latest.references.json) records the separate
+November 9 research checks. This editorial pass does not refresh external
+prices or documentation. Start with the repository
 contracts and use upstream material to verify platform behavior. A tutorial,
 catalogue listing, or grant advertisement is not evidence that an account has
 credit, a feature was integrated, or a deployment passed acceptance.
@@ -9,13 +12,17 @@ credit, a feature was integrated, or a deployment passed acceptance.
 
 | Read | Purpose |
 | --- | --- |
-| [README](../README.md), [architecture](architecture.md), [accepted ADRs](adr/README.md) | Run the scripted baseline and preserve evidence, applicability, and authorization as distinct checks |
+| [Documentation map](README.md), [architecture](architecture.md), [accepted ADRs](adr/README.md) | Navigate the project and preserve evidence, applicability, and authorization as distinct checks |
 | [Development](DEVELOPMENT.md), [testing](TESTING.md), [fleet guide](../fleet/README.md) | Continue from a fresh clone with scoped ownership and reproducible checks |
 | [NixOS fleet](NIXOS_FLEET.md), [GCP deployment](DEPLOY_GCP.md), [operations](OPERATIONS.md) | Build, validate, operate, collect output, and clean up; configuration is distinct from observed boot/cloud acceptance |
-| [Adaption](ADAPTION.md), [costs](COSTS.md), [security/policy](SECURITY_POLICY.md) | Distinguish available planning resources, future budget controls, and authorized research scope |
+| [Adaption](ADAPTION.md), [costs](COSTS.md), [security/policy](SECURITY_POLICY.md) | Distinguish recorded credits, implemented budget controls, provider qualification and authorized research scope |
 | [Build status](BUILD_STATUS.md), [roadmap](ROADMAP.md), [AI assistance](AI_ASSISTANCE.md) | Recover observed evidence, implementation gaps, and provenance without a chat transcript |
 
 ## Research and submission
+
+Start with the [latest report](report/latest.md), [public trial data](../data/paired-pilot-2026-11-09.json)
+and [evidence guide](submission/latest/EVIDENCE.md). The [controlled-pilot runbook](CONTROLLED_PILOT.md)
+records the qualified OpenRouter path separately from Adaption research.
 
 - [Apart Swarm Alignment Sprint](https://apartresearch.com/sprints/swarm-alignment-2026):
   official tracks, resources, dates, and links to background research. Use the
@@ -35,7 +42,7 @@ budget or automatic cloud-credit assumption.
 | Official source | Use and boundary |
 | --- | --- |
 | [Inference quickstart](https://docs.adaptionlabs.ai/inference-stacks/quickstart/) | API-key setup and Python Responses API; a live request is outside the default workflow |
-| [Python SDK](https://docs.adaptionlabs.ai/api/python), [PyPI release](https://pypi.org/project/adaption/0.19.0/) | Package identity, pinning, retries/timeouts, and client interface; isolate future dependencies from the baseline |
+| [Python SDK](https://docs.adaptionlabs.ai/api/python), [PyPI release](https://pypi.org/project/adaption/0.19.0/) | Historical SDK 0.19.0 reference, not a current install recommendation; the baseline has no SDK dependency |
 | [Hosted models](https://docs.adaptionlabs.ai/inference-stacks/models/), [Responses reference](https://docs.adaptionlabs.ai/api/python/resources/responses/methods/create) | Hosted capabilities, credit units, request controls; account availability and USD conversion need separate verification |
 | [FAQ](https://docs.adaptionlabs.ai/resources/faq/), [Adaptive Data configuration](https://docs.adaptionlabs.ai/adaptive-data/configure-adaptive-data/) | Dataset estimates and settings; distinct from inference and not an unbounded training budget |
 

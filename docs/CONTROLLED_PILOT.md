@@ -1,4 +1,10 @@
-# Observed paired-pilot evidence — November 9, 2026
+# Controlled live-supervisor pilot
+
+[Observed results](experiments/2026-11-09-openrouter-paired-pilot.md) ·
+[Latest paper](report/latest.md) · [Public trial data](../data/paired-pilot-2026-11-09.json) ·
+[Qualification](#qualification-and-invocation) · [Recovery](#stopping-recovery-and-evidence)
+
+## Completed cohort, 9 November 2026
 
 The [completed experiment record](experiments/2026-11-09-openrouter-paired-pilot.md)
 reports 160 calls / 80 pairs, controller effects, failures retained separately,
@@ -9,7 +15,7 @@ claimed. The runbook and historical qualification record follow.
 
 ---
 
-# Azure opaque metadata compatibility — November 9, 2026
+## Azure opaque metadata compatibility — November 9, 2026
 
 The first exploratory cohort at `92754a9` stopped after one response carried
 `reasoning.encrypted` metadata despite `reasoning.exclude=true`. It recorded no
@@ -36,11 +42,11 @@ automatic hold release or retry. Prior run and source evidence remain unchanged.
 
 ---
 
-# Controlled exploratory paired pilot
+## Controlled exploratory paired pilot
 
 The opt-in pilot collects **160 supervisor calls / 80 paired trajectories** from
 one qualified OpenRouter model (`openai/gpt-6.1-sol`, Azure `azure/us`). Eight
-families have ten pairs each; each pair receives identical facts and signed
+families have ten pairs each; each pair receives identical facts and authenticated
 receipts under `raw` and `scope_explicit` instructions, in separate conversations
 and controller trial namespaces. Five pairs per family use each order first.
 Workers and reviewers are synthetic fixtures. This is an explicitly preliminary
@@ -141,8 +147,12 @@ Adaption calls, GCP changes or hosted dashboard are added by this entrypoint.
 
 ---
 
-The following foundation record is retained. Its historical activation gaps are
-superseded only by the observed evidence and additive scope above.
+The following foundation record is retained verbatim. Its “pending” and “on hold”
+statements describe earlier checkpoints. The completed OpenRouter cohort above
+supersedes those gaps only for its recorded source, host and provider.
+
+<details>
+<summary>Historical gateway and calibration foundation</summary>
 
 # Controlled pilot foundation
 
@@ -406,3 +416,5 @@ separate. Neither is a balance verified by this fake ledger. The GCP project and
 recovery, runtime-migration and cost acceptance stay open. Public attack
 observation follows the controlled pilot under a separately approved scope; the
 current [security policy](SECURITY_POLICY.md) remains applicable.
+
+</details>

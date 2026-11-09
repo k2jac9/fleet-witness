@@ -1,3 +1,55 @@
+# Repository editorial pass — November 9, 2026
+
+Task `editorial-polish-20261109`, based on
+`3d25f44482280766fdff305d470773dc30023f93` (merged PR #13). The containing
+commit identifies this editorial revision. Maintained guides now distinguish
+completed OpenRouter work, Adaption qualification, dated cloud acceptance and
+future research. A documentation map defines shared terms; quick starts use
+portable retained-artifact paths and the current task planner. The README keeps
+its visual design and restores the historical `#handbook` navigation target.
+
+The latest report received a prose and HMAC-terminology pass. Its exact title,
+authors, abstract, table cells, numerical results, datasets and experiment source
+identities are unchanged. The regenerated PDF has six main pages, one references
+page and one appendix page; all eight were visually inspected. Its abstract is
+218 words. The 14-member submission ZIP was rebuilt from its explicit allowlist;
+member equality, checksums and the extracted public-data recomputation passed.
+Provenance preserves the previous publication commit and artifact digests.
+
+Observed local acceptance:
+
+- Full `python -m unittest discover -s tests -v`: **309 passed**, using the
+  retained qualified Python 3.15.2 launch vector. Existing SQLite ResourceWarnings
+  remain in the log; this prose pass does not claim to repair them.
+- `node --test tests/viewer.test.mjs`: **five passed**, retained Node 26.11.1.
+- `python scripts/fleet.py validate` and `plan`: passed. The four starter tasks
+  are done; maintained setup no longer tells readers to re-prepare one of them.
+- Seed-42 demo: 20 episodes, 13 approvals, seven invalid recommendations,
+  15 attempts, four effects, nine denials and two duplicate no-ops.
+- Local Markdown file/anchor audit: 77 files, 328 links, no unresolved target.
+  The audit checks repository links, not fresh external-site availability.
+- Preserved 22 protected ADR/experiment/report/data files byte-for-byte; five
+  historical guide bodies remain intact behind context banners or disclosure
+  sections. The prior build record remains verbatim below this entry.
+- `git diff --check`: passed. No runtime source, tests, infrastructure, accepted
+  ADR or runtime pin changed. Documentation-only edits added no prose-matching tests.
+
+Commands, complete logs, preservation checks, publication checks, page renders and
+source identities are retained in the sibling artifact packet
+`editorial-polish-20261109`. Review and final-source hosted CI are separate gates;
+their final identities are recorded in that packet and the pull request when run.
+The prior publication tree `690d42c2f5ef77778b6a1ad3d599c2ea6aeb0ce8` passed
+all 11 lanes in [run 42591134143](https://github.com/k2jac9/fleet-witness/actions/runs/42591134143);
+that result is not substituted for this revision's checks.
+
+No new inference, cloud mutation, account refresh, live browser/dashboard check,
+Nix image build, depth-six search, video or event submission was performed.
+External rates and rules retain their stated review dates. Storage admission
+covered the retained output; historical failures, WIP and rollback assets were
+preserved.
+
+---
+
 # Latest report and submission package — November 9, 2026
 
 Task `latest-submission-20261109`, based on `ee7c17e6f8b50684084caf6f6900c577801351c5`.

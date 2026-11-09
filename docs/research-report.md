@@ -1,5 +1,9 @@
 # Fleet Witness: separating authentic evidence from action authority
 
+> **Historical scripted-study draft, 8 November 2026.** The body below is preserved
+> as written. Use the [latest report](report/latest.md) and [PDF](report/latest.pdf)
+> for current authorship, live-model findings and submission material.
+
 Human team: Alejandro Castellanos (`k2jac9`) and `IPBin`. IPBin's preferred
 publication name, both affiliations, contributions and the final author list/order
 are to be confirmed by the team before submission. Draft dated 2026-11-08; no

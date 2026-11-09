@@ -10,9 +10,8 @@
 The project began as Alejandro's solo effort. The owner confirmed IPBin's team
 membership on 2026-11-08; [ADR-0012](adr/0012-human-team-membership.md) records that
 change. Earlier plans, reviews and accepted decisions retain their historical
-wording. Record each member's actual contributions before finalizing the report's
-author list, order and affiliations; membership does not retroactively attribute
-the earlier implementation or experiments to IPBin.
+wording. The latest publication section below records the author details and
+actual contributions; membership does not retroactively attribute earlier work.
 
 AI assistants were used to research architectural options, draft ADRs, implement code, generate tests, review changes, and inspect the demo. They are development tools, not additional human entrants. The human team reviews submission accuracy and contribution attribution; Alejandro remains the repository owner and integration authority.
 
@@ -26,9 +25,10 @@ The 2026-11-08 deployment handoff also used AI assistance to implement the nativ
 NixOS/GCP configuration and packaged demo, write development and operating guides,
 check primary platform documentation and cost arithmetic, and independently
 review the integrated change. Verification included a fresh clone, local tests,
-Nix evaluation/package builds, and real HTTP checks. Full image construction,
-cloud boot, worker containment, live models, and submission remain separate
-unexecuted steps as recorded in [BUILD_STATUS.md](BUILD_STATUS.md). The
+Nix evaluation/package builds, and real HTTP checks. At that handoff, full image
+construction, cloud boot, worker containment, live models and submission were
+unexecuted. Later [BUILD_STATUS.md](BUILD_STATUS.md) entries record subsequent
+acceptance; those later outcomes do not rewrite the earlier receipt. The
 `dreamsofcode-io/nixos-vps` repository informed platform comparisons; no source
 from it was copied into this handoff.
 
@@ -54,3 +54,7 @@ credentials, account records, private transport profiles and raw responses.
 The public derived trial table permits aggregate recomputation; it does not
 independently authenticate private provider receipts. Historical disclosure
 paragraphs above describe their own dates, not current experiment availability.
+
+The subsequent repository editorial pass used AI assistance to reconcile dated
+status, clarify terminology, repair navigation and rebuild the latest publication
+artifacts. It changed no experimental data, numerical findings or accepted ADRs.

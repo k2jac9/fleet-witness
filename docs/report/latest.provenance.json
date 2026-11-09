@@ -25,21 +25,35 @@
     "Export only trial scalars and summaries. Omit all free-text prompts and responses, including model reasons, to reduce publication exposure; full traces remain private.",
     "Use the existing standard-library Markdown renderer and installed Chromium rather than adding a new PDF dependency.",
     "Preserve the previous manuscript title and author order; Alejandro affiliation confirmed as Independent researcher.",
-    "Link the historical reproduction receipt rather than package its workstation-local artifact path; preserve the original receipt unchanged."
+    "Link the historical reproduction receipt rather than package its workstation-local artifact path; preserve the original receipt unchanged.",
+    "Editorial revision clarifies terminology and navigation without changing title, author order, abstract, datasets, results or experiment sources; previous publication identities are retained."
   ],
+  "previous_publication": {
+    "commit": "3d25f44482280766fdff305d470773dc30023f93",
+    "package_sha256": "80ecc64234ae8d5193c1564f1c2c0508a6a373314080eb1aa876c5b2a57ac33e",
+    "provenance_sha256": "b8a233aafb5200a092a2074c7cc782583c0a6c01137e68babdd61737c0ced928",
+    "public_file_sha256": {
+      "data/paired-pilot-2026-11-09.json": "6d3d681eb39c5af5bb7d08a9b82c50498729c336507c7eb26db7f1881a728c15",
+      "docs/report/latest-figures/paired-pilot.svg": "4b4dea6d5f8c9d11cfcc8611ab1e9a7beb147c07ea24a18e6adb12359c7aac54",
+      "docs/report/latest.html": "44b10d3441e2b4dffcd5cf50c1d1bf2801bc12be2f297e8b18263dca811c05ea",
+      "docs/report/latest.md": "001a9f99dad24de5f17a2028115650d58698917234138f221fbac1eb1cd08b7e",
+      "docs/report/latest.pdf": "c14d2471dc389e96bdf9284c6eee0ba7de2446505a698db916dc74cd20c4807a",
+      "docs/report/latest.references.json": "22895e1186dd06758dde9ee7cbac2ca101e87519ff1400c6606c5166a03f57bf"
+    }
+  },
   "private_accepted_reconciliation_sha256": "909aca443d17c3d02062ff72fc25731a3702543ee58c55e71331c5991757791d",
   "private_generation_records_sha256": "1d1915f087fd34aa7b686a75afc7277259e26d8f0a962d542985d029cb776d8f",
   "private_pilot_report_sha256": "57442e4842377db4d5fb1711914a6580a1973fffc74535b1bc73fd93c4c962ea",
   "public_file_sha256": {
     "data/paired-pilot-2026-11-09.json": "6d3d681eb39c5af5bb7d08a9b82c50498729c336507c7eb26db7f1881a728c15",
     "docs/report/latest-figures/paired-pilot.svg": "4b4dea6d5f8c9d11cfcc8611ab1e9a7beb147c07ea24a18e6adb12359c7aac54",
-    "docs/report/latest.html": "44b10d3441e2b4dffcd5cf50c1d1bf2801bc12be2f297e8b18263dca811c05ea",
-    "docs/report/latest.md": "001a9f99dad24de5f17a2028115650d58698917234138f221fbac1eb1cd08b7e",
-    "docs/report/latest.pdf": "c14d2471dc389e96bdf9284c6eee0ba7de2446505a698db916dc74cd20c4807a",
+    "docs/report/latest.html": "35b868ec1412c22baa9a601473c5d92a30f4adc4c71b6a02783e82ed20044c82",
+    "docs/report/latest.md": "1c88e2179d2605d7c9e1f574f420632b868651ae6f22a5e1d5649963cc25f304",
+    "docs/report/latest.pdf": "7c254ecaa345e472760ed227712386271b9ba8a12eefede7c226f22574b55d4a",
     "docs/report/latest.references.json": "22895e1186dd06758dde9ee7cbac2ca101e87519ff1400c6606c5166a03f57bf"
   },
-  "publication_base_commit": "ee7c17e6f8b50684084caf6f6900c577801351c5",
+  "publication_base_commit": "3d25f44482280766fdff305d470773dc30023f93",
   "publication_identity": "The containing Git commit identifies this publication revision; base and experiment source commits are distinct.",
   "schema": "fleet-witness-publication-provenance-v1",
-  "task": "latest-submission-20261109"
+  "task": "editorial-polish-20261109"
 }

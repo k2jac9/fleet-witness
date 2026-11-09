@@ -8,7 +8,7 @@ external spend. Begin with a reviewed commit and an isolated task worktree;
 
 ## Fresh clone and prerequisites
 
-Use Linux/POSIX, Git, and the current stable Python/Node candidates in
+Use Linux/POSIX, Git, and the current stable Python/Node selections in
 [the runtime matrix](../ci/runtime-matrix.json). Python 3.11+ and Node 24 remain
 supported consumers. The optional Nix environment below retains its older lock
 pending a separately verified migration. The viewer server uses POSIX
@@ -19,28 +19,31 @@ Git is required for the full Python suite, even if only testing the application.
 ```sh
 git clone https://github.com/k2jac9/fleet-witness.git
 cd fleet-witness
-python --version
+python3 --version
 node --version
 git --version
 git rev-parse HEAD
 git status --short
-python -m unittest discover -s tests -v
+python3 -m unittest discover -s tests -v
 node --test tests/viewer.test.mjs
 ```
 
-If your system names Python `python3`, use that executable consistently after
-checking its version. No virtual environment or dependency installation is
+Examples use `python3`. If your environment provides it as `python`, use that
+executable consistently after checking its version. No virtual environment or dependency installation is
 required. Keep credentials, private configuration, and generated runs out of Git.
 
 ## Generate and inspect a fixture
 
-Choose a fresh output directory for each run. This example keeps artifacts outside
-the checkout and preserves them for inspection:
+Choose a fresh output directory for each run. From a primary checkout, this
+example retains artifacts in a sibling directory. In a task worktree, set
+`artifact_root` to the project's existing artifact directory instead:
 
 ```sh
-run_root=$(mktemp -d "${TMPDIR:-/tmp}/fleet-demo.XXXXXXXX")
-python -m fleet_witness demo --output "$run_root/demo" --seed 42
-python -m fleet_witness serve --directory "$run_root/demo" --port 8765
+artifact_root="../fleet-witness-artifacts"
+mkdir -p "$artifact_root"
+run_root=$(mktemp -d "$artifact_root/demo.XXXXXXXX")
+python3 -m fleet_witness demo --output "$run_root/demo" --seed 42
+python3 -m fleet_witness serve --directory "$run_root/demo" --port 8765
 ```
 
 Open `http://127.0.0.1:8765`, then stop with Ctrl-C. The demo produces
@@ -74,7 +77,7 @@ hash; no lock-generation step is needed. Fetching dependencies may require
 network access. See [NixOS fleet setup](NIXOS_FLEET.md) for host acceptance.
 
 ```sh
-nix develop --command python -m unittest discover -s tests -v
+nix develop --command python3 -m unittest discover -s tests -v
 nix develop --command node --test tests/viewer.test.mjs
 nix build .#checks.x86_64-linux.offline-tests
 nix build .#packages.x86_64-linux.demo
@@ -87,21 +90,20 @@ untracked files are excluded. The worker snapshot also filters paths; inspect
 
 ## Prepare a development task
 
-From a clean tracked checkout, validate the DAG and prepare a ready task:
+From a clean tracked checkout, validate the DAG and inspect ready tasks:
 
 ```sh
-python scripts/fleet.py validate
-python scripts/fleet.py plan
-python scripts/fleet.py prepare adapter-proposal
-cd .worktrees/adapter-proposal
-cat .fleet/brief.md
+python3 scripts/fleet.py validate
+python3 scripts/fleet.py plan
 ```
 
-The initial plan has `adapter-proposal` and `expanded-scenarios` ready; report and
-review tasks remain blocked until their dependencies are marked done. Preparation
-creates branch `fleet/adapter-proposal` from the current HEAD and an ignored brief.
-It runs no acceptance command, model, or container. Follow the brief's owned paths;
-the owner updates scheduling status only after reviewing actual evidence.
+Choose a ready task from the current plan, then run
+`python3 scripts/fleet.py prepare TASK_ID`, replacing `TASK_ID` with its exact ID.
+Preparation creates `fleet/TASK_ID`, `.worktrees/TASK_ID` and an ignored
+`.fleet/brief.md` inside that worktree. It runs no acceptance command, model or
+container. If no task is ready, define and review the next scoped task before
+preparing it. Follow its owned paths; the owner updates scheduling status only
+after reviewing actual evidence. Do not replay a completed starter task.
 
 All fleet commands refuse effective executable Git clean/smudge/process filters,
 including Git LFS configuration, and conditional includes. This is intentional,
@@ -115,5 +117,6 @@ full refusal contract and exact-root `--root` option.
 Worktrees separate edits, not hostile processes. The optional NixOS workers run
 offline tests and a fixture demo; their names do not dispatch coding agents.
 [Operations](OPERATIONS.md) covers those workers; [GCP deployment](DEPLOY_GCP.md)
-covers host provisioning. Future live providers and their spending boundary are
-separate work in [Adaption](ADAPTION.md) and [costs](COSTS.md).
+covers host provisioning. The opt-in [controlled pilot](CONTROLLED_PILOT.md) has
+its own provider and spending boundary; [Adaption](ADAPTION.md) remains a separate
+qualification path. [Costs](COSTS.md) records budget distinctions.
