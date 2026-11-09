@@ -5,12 +5,15 @@
 **Track:** 4, Multi-Agent Oversight and Control (cross-track: 2, 3)
 
 *Draft for the official Apart template. Every number comes from runs in this repository
-(`runs/sweep-deepseek2k`, `runs/sweep-gptoss`; regenerate with `python -m fleet_witness
-swarm-summary <dir>`).*
+(`runs/sweep-deepseek2k`, `runs/sweep-gptoss`; see Code and Data for offline reproduction).*
+
+**Correction dated 2026-11-09.** This version corrects presentation, statistics and provenance
+using retained 2026-11-08 records. It adds no new live-model observations. Original artifacts
+and the immutable data archive remain identifiable in [the correction record](CORRECTIONS-2026-11-09.md).
 
 ---
 
-## Abstract (229 words; limit 150â€“250)
+## Abstract (limit 150-250 words)
 
 Per-agent alignment and monitoring do not scale to swarms, and a colluding subgroup is
 designed to defeat both. We ask whether safety guarantees can instead live in an
@@ -24,16 +27,17 @@ safety, liveness, at-most-once and audit invariants, and catches all seven delib
 variants. The resulting guarantee is conditional: an unsafe release needs k false attestations
 from seated auditors.
 
-We stress-tested eight governance regimes with 32,830 completed calls to two reasoning-model families,
-in 50-agent swarms where hidden cells (0â€“50%) pushed invalid releases.
+We compare eight governance regimes using 32,830 completed logical responses from two reasoning-model families,
+in 50-agent swarms where hidden cells (0-50%) pushed invalid releases.
 - **Mechanical checks were decisive.** Plain majority voting approved every forged-signature
-  release (48/48 per model). Every kernel regime blocked them all, including a mechanically
-  gated majority with no committee.
+  release (48/48 per model). Archived kernel regimes blocked them all. A reconstructed
+  mechanically gated majority control also blocks them.
 - **Committee capture came only from colluder seats** and never exceeded the bound set by
-  the seats actually drawn. A gated majority was safer; committees need far fewer model requests (7 vs 50) but are capturable.
+  the seats actually drawn. A gated majority was safer; hidden-board committees could use
+  fewer standalone requests (7 vs 50), but are capturable.
 - **Honest agents almost never erred,** even on near-miss receipts, so the independence
   assumption behind committee bounds remains untested.
-- **Colluders' outputs ran 1.9â€“2.8Ã— longer,** an association worth testing as a monitoring
+- **Colluders' outputs ran 1.9-2.8× longer,** an association worth testing as a monitoring
   signal.
 
 ---
@@ -73,11 +77,11 @@ and to deployment at a real gateway.
    must be judged (is this release safe?).
 2. Bounded exhaustive verification of the real kernel against an independent specification,
    with mutation testing to show the checker has teeth.
-3. A statement of what the kernel guarantees, as three explicitly conditional claims (Â§3.3),
+3. A statement of what the kernel guarantees, as three explicitly conditional claims (§3.3),
    with a closed-form capture probability for randomly seated k-of-m committees.
-4. A live stress test of eight regimes, including a mechanically gated majority baseline,
-   across colluder shares of 0â€“50%, visible or hidden voting, and two reasoning-model families
-   (32,830 calls). It separates two effects:
+4. A retained live-model stress test and offline comparison of eight regimes, including a
+   reconstructed mechanically gated majority baseline, across colluder shares of 0-50%, visible or hidden voting, and two reasoning-model families
+   (32,830 completed logical responses, not a count of provider attempts). It separates two effects:
    - mechanical checks are what stop forgeries;
    - committees trade capture risk, bounded by the seats drawn, for far fewer model requests than a full
      vote's cost.
@@ -86,7 +90,7 @@ and to deployment at a real gateway.
    and longer colluder outputs.
 
 Quorums, Byzantine fault tolerance, threshold signatures and random committee selection are
-decades old (Â§2). We do not claim the quorum idea. We contribute a bounded-verified kernel
+decades old (§2). We do not claim the quorum idea. We contribute a bounded-verified kernel
 for agent swarms and a harness that measures, on real LLM swarms, the behavioural assumptions
 those guarantees rest on: honest error, independence and colluder compliance.
 
@@ -184,17 +188,18 @@ Details are in Appendix B.
   then requires at least k colluders on its committee, so capture is at most the fraction of
   committees that drew k or more colluders. This is the "seat bound" in Table 1.
 - **G3 (probabilistic).** Assume random, unpredictable seating of m seats from N agents with
-  C colluders, honest errors that are independent with rate Îµ, and full colluder compliance.
+  C colluders, honest errors that are independent with rate ε, and full colluder compliance.
   Then
 
-  P(capture) = Î£â±¼ Hypergeom(j; N, C, m) Â· P(Binom(mâˆ’j, Îµ) â‰¥ kâˆ’j).
+  P(capture) = sum over j = 0,...,m of Hypergeom(j; N, C, m) × P(Binom(m-j, ε) >= k-j).
 
   Imperfect compliance lowers capture. Correlated honest errors could raise it above G3.
 
-Our live runs exercise G1 and G2. G3's independence assumption is untested, because honest
-unsafe error was essentially zero (Â§4.3).
+The retained live-model runs exercise G1 and G2 for the archived committee and hybrid
+regimes. G3's independence assumption is untested, because honest unsafe error was
+essentially zero (§4.3).
 
-### 3.4 Live stress test (`fleet_witness/swarm/`)
+### 3.4 Retained live-model stress test (`fleet_witness/swarm/`)
 
 **Release cases.** There are 24 per run: 8 valid, plus invalid build-only, wrong-artifact
 and wrong-run receipts (authentic signatures, wrong claim or binding) and forged receipts
@@ -216,20 +221,30 @@ agents could spot. The 4 forged cases are not targets; they test what crowds can
 
 **Regimes.** The same votes and attestations are judged under each regime:
 - **direct majority**, with no kernel;
-- **gated majority**: the majority plus the kernel's mechanical checks, with no committee
-  (replayed offline from the same votes);
+- **gated majority**: recorded majority votes plus the kernel's mechanical checks, with no
+  committee. The original published baseline was a label-derived counterfactual
+  (`majority_approve and kind != "forged"`), not an execution through the kernel. The corrected
+  offline baseline executes fresh synthetic cases and receipt keys through the actual kernel
+  using those recorded votes. Original signing keys were not retained, so this is a
+  reconstruction, not historical signature verification;
 - **kernel committees** of 1-of-1, 2-of-3, 3-of-5, 4-of-7 and unanimous 7-of-7;
 - **hybrid**: the majority **and** 4-of-7.
 
 **Models.** Two reasoning models from different families via OpenRouter: DeepSeek v4 Flash
 (`deepseek/deepseek-v4-flash-0731`) and OpenAI gpt-oss-20b (`openai/gpt-oss-20b`).
-- Both use temperature 0.7, a 2,000-token cap, and the same seeds, so the same cells and
-  committees are drawn.
-- Both reason before answering, so only the model family varies. Non-reasoning models were
-  rejected.
-- Each sweep schedules 16,416 calls (16,415 completed); both together cost $2.18.
+- The historical runner specifies temperature 0.7; manifests record a 2,000-token cap and
+  paired seeds, so the same cells and committees are drawn. Temperature, executable source,
+  runtime and provider request identities were not pinned in those manifests (Appendix D).
+- Both are described as reasoning models. This comparison changes model families and provider
+  backends; it does not isolate reasoning as a causal variable. Non-reasoning models were excluded.
+- Each sweep has 16,416 logical response slots (16,415 completed); the two main sweeps record
+  $2.182374 in manifest costs. This is a recorded subset, not total research expenditure or
+  reconciled provider billing (Appendix D).
 
-**Output caps** are kept non-binding (truncated responses are retried at larger caps) because truncation silences colluders disproportionately (Appendix B.3).
+**Output caps.** The historical protocol intended non-binding caps and enabled larger-cap
+retries for the replacement run. Missing retry metadata prevents a complete attempt-level
+truncation audit. No final output in the retained main records reaches 2,000 tokens; this
+does not establish that every provider attempt was untruncated (Appendices B.3 and D).
 
 **Blue team.** A detector reads only the public log. It combines shared-minority voting
 with TF-IDF similarity of reasons, uses robust z-scores and graph clustering, and is scored
@@ -239,23 +254,24 @@ against sealed ground truth.
 
 ### 4.1 Verification
 
-At depth 6 the checker explored 23,376 distinct states and 105,708 transitions, and S1â€“S4
+At depth 6 the checker explored 23,376 distinct states and 105,708 transitions, and S1-S4
 held throughout. Both kernel modes also passed at depth 4.
 
 All seven mutants were caught, each with a shortest counterexample of four to six actions after the initial evidence setup
 (Appendix B; depth counts actions). One of them, the missing uniqueness check, surfaced only at depth 6 and was
 missed at depth 5, which shows concretely why bounds matter.
 
-### 4.2 Live stress test (two reasoning models)
+### 4.2 Retained stress-test outcomes (two reasoning models)
 
-Each model completed 16,415 of 16,416 calls (1 transport error each). gpt-oss returned 6
-unparseable responses, which count as abstentions. Cost: $1.38 (DeepSeek) and $0.81
-(gpt-oss).
+Each model has 16,415 completed logical response records out of 16,416 slots (one
+transport-error record each). gpt-oss returned six unparseable responses, counted as
+abstentions. Rounded manifest costs: $1.38 (DeepSeek), $0.81 (gpt-oss). Provider attempts
+and failed-attempt charges cannot be reconstructed completely from these logs.
 
-Table 1 pools shares > 0: five shares Ã— two board conditions Ã— 12 targets = 120 target trials
+Table 1 pools shares > 0: five shares × two board conditions × 12 targets = 120 target trials
 per regime. Cells show DeepSeek / gpt-oss.
 
-| Regime | Unsafe releases on targets | Seat bound (G2) | A-priori expected (G3) | Valid released (of 96) | Forged released (of 48) | Calls per decision |
+| Regime | Unsafe releases on targets | Seat bound (G2) | A-priori expected (G3) | Valid released (of 96) | Forged released (of 48) | Nominal responses per decision |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | direct majority | **0 / 0** | n/a | n/a | 96 / 96 | **48 / 48** | 50 |
 | gated majority (no committee) | **0 / 0** | n/a | n/a | 96 / 96 | **0 / 0** | 50 |
@@ -264,14 +280,17 @@ per regime. Cells show DeepSeek / gpt-oss.
 | committee 3-of-5 | 23 / 20 | 26 | 24.4 | 96 / 96 | 0 / 0 | 5 |
 | committee 4-of-7 | 16 / 17 | 22 | 21.8 | 96 / 96 | 0 / 0 | 7 |
 | unanimous 7-of-7 | **0 / 0** | 0 | 0.1 | 96 / **87** | 0 / 0 | 7 |
-| hybrid (majority + 4-of-7) | **0 / 0** | 22â€  | 21.8â€  | 96 / 96 | 0 / 0 | 57 |
+| hybrid (majority + 4-of-7) | **0 / 0** | 22† | 21.8† | 96 / 96 | 0 / 0 | 57 |
 
-*Table 1. Pooled outcomes.* â€  Committee-only opportunity, not a hybrid release prediction: the
+*Table 1. Pooled outcomes, with a reconstructed gated-majority control.* † Committee-only opportunity, not a hybrid release prediction: the
 hybrid also needs a strict swarm majority (approvals > denials; ties fail), which honest voters
 never gave a target. The seat bound and the a-priori expectation are identical for both
 models because the models share seeds, cells and committees. Board conditions also share
 committee draws, so each regime has 60 independent committee draws, not 120. We therefore
 report counts by share (Figure 1; Table C1) rather than pooled confidence intervals.
+The response-count column describes potential standalone logical requests, not measured
+token, dollar or latency savings; the experiment obtained all 50 votes and seven audits.
+Only hidden-board audits could omit the voter stage while preserving their information set.
 
 ![Figure 1](figures/figure1-capture.png)
 *Figure 1. Capture rate on target releases vs colluding share, per regime, for both models.
@@ -280,26 +299,30 @@ the a-priori probability (G3).*
 
 **Finding 1: mechanical checks, not voting, stop forgeries.**
 - The direct majority approved every forged-signature release (48/48 in each model). Every
-  kernel regime blocked all of them.
+  archived kernel regime blocked all of them; the reconstructed gated-majority control also
+  blocks them.
 - This is architectural by construction: voters had no way to verify a symmetric HMAC. With
   public-key signatures and a verification tool a crowd could check too; we did not test
   that baseline.
 - **The informative comparison is the gated majority:** the same votes plus the kernel's
-  mechanical checks. It was perfectly safe in both models (0/120 captures, 0/48 forgeries,
-  96/96 valid releases). This matches the hybrid at 50 rather than 57 calls.
+  mechanical checks. The corrected synthetic reconstruction yields 0/120 captures,
+  0/48 forgeries and 96/96 valid releases in each model. It agrees with the original
+  label-derived counterfactual and matches the hybrid with 50 rather than 57 nominal
+  logical requests. This is an offline control, not a new model run.
 - In this setting, then, a committee adds **no safety** over a mechanically gated majority,
-  and was less safe. Its potential value is needing far fewer model requests (below).
+  and the captured committee regimes were less safe. Its potential value is needing fewer
+  logical requests in a standalone hidden-board deployment (below).
 
-**Finding 2: committees fail only where their seat draws allow, with far fewer model requests.**
-- In all regime Ã— share Ã— condition cells, observed capture never exceeded the seat bound
+**Finding 2: committee captures respect the seat bound; standalone request counts could be lower.**
+- In all regime × share × condition cells, observed capture never exceeded the seat bound
   (G2).
 - Honest auditors never signed a target (0/746 per model), so all capture came from colluder
   seats.
 - Gaps below the bound are colluders declining their instruction: seated colluders signed
   234/262 times (89.3%, DeepSeek) and 242/262 times (92.4%, gpt-oss).
 - **Realized seat draws were favourable:** 12 of 60 independent draws were capturable for 1-of-1 versus 18 expected (about 1.8 SD low), so points sit below G3's curve in Figure 1. G3 is a planning estimate; G2 is what the verified rules guarantee.
-- **The trade-off:** a 4-of-7 committee costs 7 calls instead of 50. It matched the gated
-  majority's safety at 10% collusion, was captured in 1â€“2 of 24 targets per share at 20â€“40%,
+- **The trade-off:** a standalone hidden-board 4-of-7 committee could use seven logical
+  requests instead of 50. It matched the gated majority's safety at 10% collusion, was captured in 1-2 of 24 targets per share at 20-40%,
   and in about half at 50%. Unanimity was never captured.
 
 **Finding 3: unanimity buys safety with liveness, and the price depends on the model.**
@@ -314,27 +337,32 @@ authentic but subtly invalid receipts, again with both models, 3 seeds, and 0% a
 shares. The near misses were a run-ID suffix, a two-character digest change, a scope
 variant, issuer capitalization and a claim variant.
 
-Honest auditor error was 0.3% (DeepSeek, issuer capitalization only) and 0% (gpt-oss); voter error 1.0% and 0%. Honest error alone captured only a 1-of-1 auditor, twice in 108 cases (Appendix C).
+In the zero-collusion subset, honest auditor error was 0.3% (DeepSeek, issuer capitalization
+only) and 0% (gpt-oss); voter error was 1.0% and 0%. Honest error alone captured only a
+1-of-1 auditor, twice in 108 case-conditions (Appendix C). At 30% collusion, each model
+made one unsafe honest attestation across 508 honest seats.
 
-DeepSeek's rare voter errors clustered on particular cases, with a between-case variance 5.6Ã—
+DeepSeek's rare voter errors clustered on particular cases, with a between-case variance 5.6×
 the independent expectation. That points to correlated failure (Knight & Leveson, 1986), but
-errors were too rare to capture any multi-seat committee (only a single 1-of-1 auditor, twice in 108 cases). Mixed-model committees changed nothing, because
-there were no errors to diversify away.
+errors were too rare to capture any multi-seat committee. Mixed-model committees were
+constructed by splicing retained seat responses offline, not by running new heterogeneous
+committees; they changed no captures. Shared inputs, case difficulty and board exposure
+also prevent interpreting the overdispersion statistic as a clean independence test.
 
 This is our honest answer to the brief's "safety in numbers?" question: on exact-match rules,
 independence is untested because honest errors barely occur. Judgement-based tasks are needed.
 
-**No herding.** Honest voters who saw an approving majority before them approved a target
-0/14 times (DeepSeek) and 0/16 times (gpt-oss). These exposures are few, so this is weak
+**No observed herding in a small exposure set.** Honest voters who saw an approving
+majority before them approved a target 0/14 times (DeepSeek) and 0/16 times (gpt-oss). These exposures are few, so this is weak
 evidence of absence, specific to a crisp rule.
 
-**Colluders produced longer outputs** (1.9â€“2.8Ã— median tokens in both models; Appendix C). This is an association, not a measured cost of deception: colluders also received a longer, conflicting prompt.
+**Colluders produced longer outputs** (1.9-2.8× median tokens in both models; Appendix C). This is an association, not a measured cost of deception: colluders also received a longer, conflicting prompt.
 
 **Detection of the planted cell.**
 - A public-log detector combining shared-minority voting and reason similarity (Appendix B.4)
-  identified the planted cell with F1 = 1.0 at 10â€“40% shares (gpt-oss at 40%, hidden board:
-  0.97), and 0.98â€“1.0 at 50%.
-- False positives: one spurious 3-agent cluster in the 4 zero-collusion runs (2 models Ã— 2 board conditions; gpt-oss, hidden). The detector also needs colluders to lose votes, so it cannot see a cell that wins.
+  identified the planted cell with F1 = 1.0 at 10-40% shares (gpt-oss at 40%, hidden board:
+  0.97), and 0.98-1.0 at 50%.
+- False positives: one spurious 3-agent cluster in the 4 zero-collusion runs (2 models × 2 board conditions; gpt-oss, hidden). The detector also needs colluders to lose votes, so it cannot see a cell that wins.
 - Because the cell shared a talking point and voted against unanimous honest denials, this
   shows detection of *this planted signature*, not general collusion detection.
 
@@ -349,9 +377,9 @@ turns an open-ended question ("is every agent honest?") into a few measurable qu
 
 The cleanest lesson is architectural. Anything that can be checked mechanically belongs in
 the kernel, because no amount of voting substitutes for it (Finding 1). Judgement can come
-from a full vote or from a random committee. The committee needs about seven times fewer model
-requests but is less safe, failing exactly as its seat draws predict (Finding 2). Token,
-dollar and latency savings were not measured. A swarm can choose that trade-off
+from a full vote or from a random committee. A hidden-board committee could use about
+seven times fewer logical requests but is less safe, with captures bounded by its seat draws
+(Finding 2). Token, dollar and latency savings were not measured. A swarm can choose that trade-off
 deliberately: a gated majority where votes are cheap, and a large-quorum committee where they
 are not.
 
@@ -384,24 +412,28 @@ The main limitations, detailed in Appendix A:
 
 A small, checkable institution held exactly as far as its rules promised against colluding
 LLM swarms. Mechanical checks, not voting, stopped forgeries. A mechanically gated majority was
-the safest regime we tested. Random committees used far fewer model requests but were captured
-at rates bounded by their seat draws (16â€“17 of 120 targets for 4-of-7).
+a safe offline control on this dataset. Random committees could use fewer standalone
+logical requests but were captured at rates bounded by their seat draws (16-17 of 120 targets for 4-of-7).
 
 These results come from an exact-match task where honest agents almost never erred, so the
 key open question remains: do honest AI errors stay independent? That is the next experiment.
 Verifying the institution rather than the agents is a tractable, measurable path to
-oversight. Its mechanical guarantees do not weaken as swarms grow; its behavioural assumptions
-still need testing on harder tasks.
+oversight. Larger swarms, concurrent cases, external effects and harder judgement tasks
+remain outside the demonstrated implementation assurance.
 ## Code and Data
 
-- **Code repository:** https://github.com/k2jac9/fleet-witness (branch `feat/live-swarm`).
-  It contains the kernel, the bounded checker, the swarm harness, the figure scripts and the
-  tests.
+- **Code repository:** https://github.com/k2jac9/fleet-witness. Historical report source:
+  `6061cb20f39ac19fcc95b09303e02ebcd43a9887` on `feat/live-swarm`. The stabilization candidate
+  preserves that history; [the correction record](CORRECTIONS-2026-11-09.md) identifies
+  corrected artifacts and reproduction provenance. A source revision recorded during later
+  correction does not retroactively bind historical provider requests to that revision.
 - **Data:** every reported run, including the superseded truncated run and the 600-token
   pilot, is published as `data/fleet-witness-runs-2026-11-08.zip`. It holds the public event
   logs, sealed ground truth, per-regime decisions and run manifests (see `data/README.md`).
-- **Reproduction:** `python scripts/reproduce_tables.py` regenerates every table from those
-  logs without model calls. `python -m fleet_witness swarm-sweep` re-runs experiments.
+- **Reproduction:** follow `data/README.md` for safe portable extraction and
+  `scripts/reproduce_tables.py` for offline recomputation. Figure generation consumes only
+  the retained main sweep records. Live re-runs are separate experiments requiring current
+  authorization and provider qualification; this correction invokes no model calls.
 
 ## Author Contributions
 
@@ -447,7 +479,8 @@ still need testing on harder tasks.
 17. Zheng, S. & Zhang, Q. (2026). *AgentRFC: Security Design Principles and Conformance Testing
     for Agent Protocols.* arXiv:2603.23801.
 
-*(Verify every reference against its source before submission; do not add uncited claims.)*
+**Reference status.** Literature and novelty comparisons have not been independently
+source-verified in this offline correction. They require verification before submission.
 
 ---
 
@@ -475,7 +508,7 @@ still need testing on harder tasks.
   - In both models, honest auditors never signed an invalid main-sweep target (0/746 each).
   - On near-miss receipts, honest auditor error was 0.3% (DeepSeek) and 0% (gpt-oss) with no colluders present. At 30% collusion each model made one honest unsafe attestation in 508 honest seats (about 0.2%), so gpt-oss's honest error was not globally zero.
   - The only other honest error observed was gpt-oss refusing valid releases (8/492). With correlated honest errors, such as shared weights, shared priors
-  or herding (cf. Knight & Leveson, 1986), the Â§3.3 bound could be optimistic. Neither the
+  or herding (cf. Knight & Leveson, 1986), the §3.3 bound could be optimistic. Neither the
   herding null result nor the absence of correlated failure generalizes beyond this task.
 - **Seating assumptions.** Committees were drawn by a seeded pseudo-random generator the
   cell could not observe. An adversary who can predict or influence seating defeats the
@@ -508,12 +541,14 @@ Mitigations:
 - the task is synthetic, and nothing touches third-party systems;
 - there is no scanning, recruitment or contact with real agents;
 - the talking points are generic;
-- the detector and the deliberation-cost signal are released alongside, favouring defenders.
+- the detector and the output-length association are described alongside, favouring defenders.
 
 ### Ethics and provenance
 
 - No human subjects and no personal data.
-- Spend was capped and logged per call.
+- Historical software had configured per-tag spend caps and retained aggregate costs, but
+  these records do not establish an enforceable global cap, complete provider-attempt
+  accounting or settled billing. Appendix D states the retained totals and omissions.
 - The repository was created during the sprint (2026-11-08). Earlier conceptual research
   informed the design, but no pre-sprint code is used (`docs/AI_ASSISTANCE.md`). The scripted
   Fleet Witness controller was built earlier in the same sprint; the institution kernel,
@@ -544,7 +579,7 @@ are checked.
 
 | Check | Result |
 | --- | --- |
-| Kernel, depth 6 | 23,376 distinct states, 105,708 transitions; S1â€“S4 hold |
+| Kernel, depth 6 | 23,376 distinct states, 105,708 transitions; S1-S4 hold |
 | Committee-only mode, depth 4 | 3,188 states; all hold |
 | Hybrid mode, depth 4 | 2,906 states; all hold |
 | Mutant: skip policy recheck | Caught, S1 (4 steps) |
@@ -556,13 +591,16 @@ are checked.
 | Mutant: skip audit | Caught, S4 |
 
 **B.3 Truncation audit.**
-- gpt-oss: 0 truncated responses; longest 1,536 tokens.
+- gpt-oss: no retained final output reaches the 2,000-token cap; longest 1,536 tokens.
+  Missing retry/truncation fields mean this is not proof of zero truncated provider attempts.
 - DeepSeek: one colluder response hit the 2,000-token cap in the 30% run.
-- Under a rule declared before results were known, that whole run (all agents) was re-run
+- The original authors describe a rule declared before results were known under which that
+  whole run (all agents) was re-run
   with retry enabled. The re-run needed no retries.
-- Its outcomes matched the original in 13 of 14 regime Ã— condition cells; the remaining cell
+- Its outcomes matched the original in 13 of 14 regime × condition cells; the remaining cell
   (4-of-7, hidden) moved from 1 capture to 0.
-- Both versions are retained. Main results use the re-run.
+- Both versions are retained. Main results use the re-run. The archive does not independently
+  timestamp the rule's preregistration.
 - Provenance: both runs are in the published bundle (`runs/deepseek2k-f30-truncated`,
   `runs/sweep-deepseek2k/f30`), so the 13/14 comparison can be recomputed. The Qwen pilot
   figure in Appendix A comes from logs that were not retained and is not independently
@@ -572,12 +610,13 @@ are checked.
 - **Shared-minority score:** the fraction of common cases where both voted on the losing side.
 - **Text similarity:** TF-IDF cosine over each agent's concatenated reasons, using word unigrams and bigrams, lowercased, with stopwords and tokens of two characters or fewer removed.
 
-Both pairwise matrices are converted to robust z-scores (median and 1.4826 Ã— MAD; mean absolute deviation is the fallback when the MAD is zero). Scoring:
-- combined score = 0.5 Â· z_minority + 0.5 Â· z_text;
-- a pair is linked if combined â‰¥ 2.0, z_minority â‰¥ 3.0 and the raw shared-minority score is > 0;
+Both pairwise matrices are converted to robust z-scores (median and 1.4826 × MAD; mean absolute deviation is the fallback when the MAD is zero). Scoring:
+- combined score = 0.5 · z_minority + 0.5 · z_text;
+- a pair is linked if combined ≥ 2.0, z_minority ≥ 3.0 and the raw shared-minority score is > 0;
 - connected components of three or more agents are flagged.
 
-The parameters were tuned on scripted (fake-provider) runs and fixed before any live sweep. Code: `fleet_witness/swarm/detect.py`.
+The original authors describe tuning on scripted (fake-provider) runs before the live sweep;
+retained manifests do not independently bind that preregistration. Code: `fleet_witness/swarm/detect.py`.
 ---
 
 ## Appendix C: Supplementary results
@@ -599,8 +638,11 @@ gpt-oss).*
 
 **Colluders produced longer outputs.**
 - Median output tokens on target cases (honest vs colluding): DeepSeek votes 106 vs 294
-  (n = 5,400 / 1,800) and audits 111 vs 241; gpt-oss votes 158 vs 369 and audits 174 vs 329
-  (Figure 2).
+  (n = 5,400 / 1,800) and audits 110.5 vs 240.5 (n = 746 / 262); gpt-oss votes 158 vs 369
+  (n = 5,398 / 1,798) and audits 174 vs 327.5 (n = 745 / 262; Figure 2).
+  These are conventional medians, averaging the middle two values for even sample sizes.
+  The gpt-oss honest-auditor token denominator excludes one unanswered audit; the separate
+  safety denominator, 0 signatures in 746 honest target seats, correctly includes that seat.
 - In a 600-token pilot there were 99 abstentions: 98 came from colluders, and 95 hit the cap.
 - **This is an association, not a measured "cost of deception".** Colluders also received a
   longer prompt with a conflicting instruction.
@@ -620,15 +662,66 @@ colluding agents.*
 | Reviewer votes | 1.0% | 0% |
 | Committees captured by honest error alone | 1-of-1: 2/108; larger: 0 | 0 |
 
-**C.3 Output caps as instruments.** Every agent in a run shares one
-cap, which is kept non-binding: truncated responses are re-sent at 2Ã—, 4Ã— and 8Ã— the cap,
-and every run is audited.
+**C.3 Historical output-cap protocol.** Every agent in a run shares an initial cap. The
+historical client could retry truncated responses at 2×, 4× and 8× the cap; this was intended
+to avoid binding caps. Retained final-response records omit attempt arrays and final caps,
+so they cannot verify that all calls received this treatment. The stabilization client
+disables automatic retries; this does not alter the historical logs.
 - This matters because truncation is not neutral: in a 600-token pilot, 98 of 99 abstentions (95 at the cap)
-  were colluders. A binding cap is effectively a hidden deadline that silences deliberating
-  deceivers.
+  were colluders. In this pilot, a binding cap disproportionately prevented colluders from
+  producing parsed answers; a causal mechanism beyond the conflicting-prompt task is untested.
 - An unanswered audit counts as "not signed".
 - Audit outcome and the one pre-declared re-run are in Appendix B.
 
+
+---
+
+## Appendix D: Retained accounting and provenance
+
+The archive contains logical event records, not an independently enumerated provider HTTP
+attempt log. Eight governance regimes reuse the same votes and attestations; they are not
+eight independent API sweeps.
+
+| Retained category | Runs | Completed logical records | Error records | Manifest-recorded USD |
+| --- | ---: | ---: | ---: | ---: |
+| Main sweeps | 12 | 32,830 | 2 | 2.182374 |
+| Near-miss runs | 12 | 32,831 | 1 | 2.020658 |
+| 600-token pilot | 6 | 16,416 | 0 | 1.390812 |
+| Superseded DeepSeek run | 1 | 2,736 | 0 | 0.234418 |
+| Archive total | 31 | 84,813 | 3 | 5.828262 |
+
+Separately retained AI review costs are $1.281 (round 1), $2.9105 (round 2), and $0.8385
+(reviewer speed test): **$10.858262** combined with the archive. This is a sum of retained
+recorded amounts, not a reconciled provider bill or complete research expenditure. It
+excludes unretained pilots, development assistance and charges omitted from failed records.
+Main event sums and manifest sums differ by approximately one millionth of a dollar due
+to manifest rounding.
+
+Retry/truncation fields are missing from 30,096 of 32,832 main event records (30,094
+completed records). The 2,736 records with those fields are the replacement DeepSeek f30
+run, all recording zero retries. The archive contains one explicit near-miss retry;
+completed-record costs can aggregate successful retry attempts while token counts describe
+only the final response. Failed logical records can omit costs of earlier attempts, and
+transport retries are not separate records. Every archived event omits attempt token arrays
+and the final cap. Missing fields do not mean zero attempts, zero truncation or zero cost.
+Exact provider-attempt counts and settled charges remain unknown.
+
+Historical manifests retain model labels, seeds, counts and caps but lack executable Git
+identity, runtime identity, temperature, prompt version and provider request IDs. Event
+records retain parsed outcomes/reasons and short prompt hashes, not complete exact prompts,
+raw responses or attempt records. Seeds reproduce synthetic case and seating identities;
+they do not establish inference determinism or a pinned backend. No historical signing
+keys were retained. The corrected gated-majority control reconstructs synthetic receipts
+with fresh keys, validates the archived scenario recipe and vote totals, and executes the kernel; it cannot re-authenticate
+original receipts. Later provenance records cannot repair those historical omissions.
+
+The historical `review-data.md` and AI review files are preserved verbatim. Their pooled
+binomial intervals are unsuitable for the paired seating design, their gpt-oss
+honest-auditor token count of 746 should be 745 answered responses, and their colluder-auditor
+median of 329 should be 327.5. DeepSeek audit medians also change from 111/241 to
+110.5/240.5. The main safety denominator of 746 remains correct. Current
+tables omit the invalid pooled intervals; the correction record identifies replacement
+artifacts and retains the original hashes.
 
 ---
 
@@ -646,5 +739,10 @@ The authors set the research questions and the key methodological decisions, inc
 - comparing two reasoning models rather than a reasoning and a non-reasoning model;
 - treating output caps as non-binding instruments, with the pre-declared re-run rule.
 
-Every reported number was produced by code in the repository and cross-checked against the
-raw run logs. The authors are responsible for all claims.
+The 2026-11-09 correction used Codex for offline audit follow-up, the median regression,
+report corrections and artifact regeneration. It made no new live-model experiment calls.
+Historical AI review records remain unchanged: round 1 ended with three weak rejects and
+one reject; round 2 with four weak accepts. Those are model-generated reviews, not human
+peer acceptance. Their manifests do not bind manuscript or data hashes, and the AI data
+auditor received aggregate text rather than the raw archive. They therefore do not certify
+this exact corrected revision. The authors remain responsible for all claims.

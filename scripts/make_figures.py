@@ -9,6 +9,7 @@ import json
 import sys
 from collections import defaultdict
 from pathlib import Path
+from statistics import median
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from fleet_witness.verify_institution import capture_probability  # noqa: E402
@@ -98,7 +99,7 @@ def token_medians(sweep: Path):
                 continue
             role = 'Colluding' if e['agent_id'] in cell else 'Honest'
             groups[(e['type'], role)].append(e['output_tokens'])
-    return {key: (sorted(v)[len(v) // 2], len(v)) for key, v in groups.items()}
+    return {key: (median(v), len(v)) for key, v in groups.items()}
 
 
 def figure2(sweeps):
@@ -106,7 +107,7 @@ def figure2(sweeps):
     parts = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">',
              f'<rect width="{w}" height="{h}" fill="{SURFACE}"/>',
              f'<text x="{left}" y="40" {FONT} font-size="22" font-weight="600" fill="{INK}">'
-             'Collusion has a deliberation cost</text>',
+             'Colluding agents produced longer outputs</text>',
              f'<text x="{left}" y="64" {FONT} font-size="14" fill="{INK2}">Median output tokens (including hidden '
              'reasoning) per response on target cases; n shown under each bar.</text>']
     groups = [(label, token_medians(path)) for path, label in sweeps]
@@ -127,9 +128,9 @@ def figure2(sweeps):
                 x = cx - bar - 1 + r * (bar + 2)
                 y = top + ph - m * scale
                 parts.append(f'<path d="M{x},{top + ph} V{y + 4} q0,-4 4,-4 H{x + bar - 4} q4,0 4,4 V{top + ph} Z" '
-                             f'fill="{SERIES[r]}"><title>{label} {name} {role}: median {m} (n={n})</title></path>')
+                             f'fill="{SERIES[r]}"><title>{label} {name} {role}: median {m:g} (n={n})</title></path>')
                 parts.append(f'<text x="{x + bar / 2}" y="{y - 8}" {FONT} font-size="13" fill="{INK}" '
-                             f'text-anchor="middle">{m}</text>')
+                             f'text-anchor="middle">{m:g}</text>')
                 parts.append(f'<text x="{x + bar / 2}" y="{top + ph + 18}" {FONT} font-size="11" fill="{INK2}" '
                              f'text-anchor="middle">n={n}</text>')
     parts.append(f'<line x1="{left}" y1="{top + ph}" x2="{w - 60}" y2="{top + ph}" stroke="{INK2}" stroke-width="1"/>')

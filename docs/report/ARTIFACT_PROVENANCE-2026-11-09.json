@@ -1,0 +1,163 @@
+{
+  "schema_version": 1,
+  "task": "swarm-stabilization-task3-publication",
+  "corrected_at_utc": "2026-11-09T05:17:25.942817+00:00",
+  "historical_source_commit": "6061cb20f39ac19fcc95b09303e02ebcd43a9887",
+  "publication_base_commit": "8f0f627619ce819524f6644a197ccb43cd291b9f",
+  "publication_revision": "commit containing this file; exact generation inputs bound by SHA-256 below",
+  "original_sha256": {
+    "data/fleet-witness-runs-2026-11-08.zip": "c55e8acf07ed8dd3c11bc3dc8f70269adebaac6bfa14727642cca7314d1f821a",
+    "scripts/make_figures.py": "6202de3424994c66c215feb9940f008006c0ac1ad07d51a5291551527d30f86d",
+    "scripts/report_to_pdf.py": "33011d7d49d4e51bee55acb721a0388f31b4db3ce23d2d9eee36f1d807048ec7",
+    "docs/report/REPORT.md": "b547253fbb56114dc13151327af300b67cbf3a57623e094271c0429d7133bf70",
+    "docs/report/REPORT.html": "7f77baff2c2679e4c36ed937398c4db6547f60da1fedd42bf9bb7a4282383051",
+    "docs/report/REPORT.pdf": "6f8a0ea64a147610dd3dba8a1b47063ed636d6f09ad01ba9dd499d15058040b3",
+    "docs/report/figures/figure1-capture.png": "b0de64c8584df4ce104840a38ec9bcce3e629db168f4d0be545ed31271d8b731",
+    "docs/report/figures/figure1-capture.svg": "0a2ca8fa0677b5daaa20857c67960f2a503dbe118e7951d8b933164899f6b55e",
+    "docs/report/figures/figure2-deliberation.png": "6909d662c46a3cb8472d2ab849ce8f1a06b19d29ea61899ce55442c56abe71e4",
+    "docs/report/figures/figure2-deliberation.svg": "722827d3364b9091d7004c06dba0cd4f0e778b89f4f2f509f5a1fa11e69d41b7"
+  },
+  "current_sha256": {
+    "scripts/make_figures.py": "41d2e9f822da4b0987cd24fbd02f18ef018852faf7662c7cbb8ebda811dadc85",
+    "scripts/report_to_pdf.py": "33011d7d49d4e51bee55acb721a0388f31b4db3ce23d2d9eee36f1d807048ec7",
+    "tests/test_report_figures.py": "463110bc94d38ace24ea492ff68878db01c90d4dcf0c7f81362571d6554f2fed",
+    "docs/report/REPORT.md": "c46c2d3c98a44e736c0816d4182590b37bd93bc67fe7dec8e29daa0bcccf8f6b",
+    "docs/report/REPORT.html": "00a855706ac848a22cc1831263727ccc172c8617b44efddb73178b1b01c171e5",
+    "docs/report/REPORT.pdf": "c21efe122047253d389a4d68254ee581b52582b6162467e28549fc232019a639",
+    "docs/report/CORRECTIONS-2026-11-09.md": "34f9214774f0e45ba64bfd4170532362fa12f4dcfaf39340231f07816a5b82c3",
+    "docs/report/figures/figure1-capture.png": "0f9ff77458aa7709d98ee8a8141571b90c6846dd45d7514c77cf186d810c9bbf",
+    "docs/report/figures/figure1-capture.svg": "6369ff09c91f3eb2544428aa30bcaa2c0b5819511693d4f091ae13ae7fd9c14c",
+    "docs/report/figures/figure2-deliberation.png": "47f81c23df2d66b87779249d94ed30e475dfcdb16c8681578f4e8a3c89fc28f8",
+    "docs/report/figures/figure2-deliberation.svg": "bf687e0be69705b9c0e29d1ae6ec7b61da4e93dcef47a977a75ba79149fee74c"
+  },
+  "preserved_review_sha256": {
+    "docs/report/review-data.md": "e811762dbc9c154c99ac65b42c9da60d439f443cd9e68c929060fe57eb1e553c",
+    "docs/report/reviews/round-1/data_audit.json": "0e2a35913fd6f275e2f8477be295b7d127a3f6e975073968fa1c6ee148af0bd3",
+    "docs/report/reviews/round-1/debate_A.json": "732dd70f24e152f9785cdb34b71638d0661faa5e00d766d85f133dc54b683a46",
+    "docs/report/reviews/round-1/debate_B.json": "32afeac91d0d919c4dfe95bc89c87f1be316cf4322226c7e43e94e3cf9709331",
+    "docs/report/reviews/round-1/debate_C.json": "405de5a32750c237ea89a6ce169c4b4960570843a288b57265b8dd4092871f3e",
+    "docs/report/reviews/round-1/debate_D.json": "35fdcfdcd4956d0d217501e35af9f8a0ae5d62c0379ee20306e5440e83ca9039",
+    "docs/report/reviews/round-1/manifest.json": "1f1af7667f499f2422abde8bc4e3a4baff49af9b5ec40e749d5164e133769e4f",
+    "docs/report/reviews/round-1/meta_review.md": "7115d70d8c189763b61bf06a918a834d7ff8a9332be8264039b6c1f0dddc95b4",
+    "docs/report/reviews/round-1/review_A.json": "687467d6c9e7d42041d4db2be9027f8deeac812e5fa9b614d42543f6bb703e89",
+    "docs/report/reviews/round-1/review_B.json": "7b8f6e850c927d4d90a345a4c2f332ccfb51b89110991de0f07539d4430ed382",
+    "docs/report/reviews/round-1/review_C.json": "6bdcf1d0c137cd4032ebeaea05bdd3710ace3ca9df8f665f72c7cdd8f85f2b50",
+    "docs/report/reviews/round-1/review_D.json": "6cbd9f5c87aba89c3613154eafbb99f79dfd138b4bae1e38c28ce8d0f4ad22c3",
+    "docs/report/reviews/round-2/data_audit.json": "c200e1a096170b2b4be49d4d5b6c4a99ed3ed1fee6dd41a421610f05c5a2bd1b",
+    "docs/report/reviews/round-2/debate1_A.json": "f2ecda925b630f36cbca7c3f84769cc859cf1fe8a6d6d07ba2e44dfa28cafc15",
+    "docs/report/reviews/round-2/debate1_B.json": "05d3f30783d673df9347bff0586c759d6070c621f96c085ed44d492df44eaf34",
+    "docs/report/reviews/round-2/debate1_C.json": "723513b74be7ba4cea713bb913d1ea2a12fcafd772927e23f022c40e2eba6520",
+    "docs/report/reviews/round-2/debate1_D.json": "a0b8538daea3e0cbedea2992c9eafae73246bfd90bc2c0aaed104a21ecb90554",
+    "docs/report/reviews/round-2/debate2_A.json": "0f7904131081d9b12b51c7b353b4dc698648e8deead083eb6340edbcf1b8efda",
+    "docs/report/reviews/round-2/debate2_B.json": "8828039f2b761ba66580d68780d35e26d6abfaf79983f5486a14cd3b3d693698",
+    "docs/report/reviews/round-2/debate2_C.json": "1e80f2387589b56e04d5ed9b649c4921bec2b9f8db135f6c33d2bd89ae6b9f06",
+    "docs/report/reviews/round-2/debate2_D.json": "3fdeb704f2558476646bca573dcdeabbd96c8796041642da2aae3fa18f4d3e70",
+    "docs/report/reviews/round-2/manifest.json": "cbf56c5a1759bd74d760d355106ebf31890e44aa9fa2cd856f24928487d6f810",
+    "docs/report/reviews/round-2/meta_review.md": "668d4fcbbbfab5842ae678637a6f8ef7e41ed7f272687c5bfa11170668b3f0a7",
+    "docs/report/reviews/round-2/review_A.json": "c7b81b443ba4c5bb61a319eecbd90049bc0a3754a4ef70a17663682b7dcf1af8",
+    "docs/report/reviews/round-2/review_B.json": "b5fc8d65267a900d56265d373fb72fb466f2d2472c0e9687eebc1afb09c8bbe9",
+    "docs/report/reviews/round-2/review_C.json": "9801f6499ab1c11094be55537828c216ffba912626aa8adf06e036bd32dc9e6d",
+    "docs/report/reviews/round-2/review_D.json": "5a75c459fe40033b1db9ed742404379be746bd31ee26b9d9d24f3db99a1395d3",
+    "docs/report/reviews/speedtest.json": "88baea87348061bfd525c115115a8961352d4c1676e0ae66e60a49ff9594c927"
+  },
+  "evidence_sources_sha256": {
+    "/home/neo/Projects/fleet-witness-artifacts/unmerged-analysis-6061cb2/evidence-review/REVIEW.md": "c343cd981beece01ac7da1a1dad206cd60c40da3ed128068937de0a93f5bdbec",
+    "/home/neo/Projects/fleet-witness-artifacts/unmerged-analysis-6061cb2/evidence-review/audit-results.json": "df2a0cdf24a59c2c4c102fff01c7542f78f911a15e233bcce9105f851f8d7897",
+    "/home/neo/Projects/fleet-witness-artifacts/stabilization-20261109/reproduction/derived/baselines.json": "74d27ea6b46c9fee794192057ca96187f2dae07e54639d0abc0c3f020635d2de",
+    "/home/neo/Projects/fleet-witness-artifacts/stabilization-20261109/reproduction/derived/reproduction-provenance.json": "6fa1dd25650733efc906712560cf72e6da421265e9faf641efcedbaec7fbc073"
+  },
+  "runtime": {
+    "python": "Python 3.15.0",
+    "node": "v26.11.1",
+    "chrome": "Google Chrome 155.0.8059.39",
+    "poppler": "26.06.0"
+  },
+  "token_medians": {
+    "sweep-deepseek2k": {
+      "vote/Honest": [
+        106.0,
+        5400
+      ],
+      "attestation/Honest": [
+        110.5,
+        746
+      ],
+      "vote/Colluding": [
+        294.0,
+        1800
+      ],
+      "attestation/Colluding": [
+        240.5,
+        262
+      ]
+    },
+    "sweep-gptoss": {
+      "vote/Honest": [
+        158.0,
+        5398
+      ],
+      "attestation/Honest": [
+        174,
+        745
+      ],
+      "vote/Colluding": [
+        369.0,
+        1798
+      ],
+      "attestation/Colluding": [
+        327.5,
+        262
+      ]
+    }
+  },
+  "verification": {
+    "html_matches_renderer": true,
+    "svg_matches_generator": true,
+    "png_dimensions_correct": true,
+    "pdf_text_checks": true,
+    "pdf_pages_visually_inspected": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17
+    ],
+    "pdf_detail_pages": [
+      4,
+      6,
+      14,
+      15
+    ],
+    "original_archive_unchanged": true,
+    "reconstruction_counts_match_report": true,
+    "canonical_python_tests": 169,
+    "node_tests": 5
+  },
+  "new_live_model_experiments": false,
+  "historical_signatures_verified": false,
+  "provider_billing_reconciled": false,
+  "retained_recorded_cost_usd": {
+    "main": 2.182374,
+    "archive": 5.828262,
+    "archive_plus_reviews_and_speedtest": 10.858262
+  },
+  "limits": [
+    "No new full depth-six checker run in this publication task.",
+    "No hosted CI, runtime migration acceptance or paid-canary qualification in this publication task.",
+    "Reproduction-worker output was read and checked; parent owns final integrated reproduction.",
+    "Literature and novelty comparisons remain unverified against external sources.",
+    "Original prompts, raw responses, attempt identities, signing keys and complete source/runtime provenance cannot be retroactively recovered."
+  ]
+}
