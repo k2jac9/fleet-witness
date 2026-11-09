@@ -1,0 +1,135 @@
+{
+  "schema_version": "visual-review-1",
+  "gated_workflow": false,
+  "note": "Standalone run outside the authorized paid workflow; see script docstring.",
+  "reviewers": {
+    "A": "openai/gpt-6.1-sol",
+    "B": "google/gemini-4-argon",
+    "C": "meta/muse-wonder",
+    "D": "xiaomi/mimo-v2.6-pro"
+  },
+  "auditor": "google/gemini-4-argon",
+  "chair": "openai/gpt-6.1-sol-pro",
+  "reasoning": "high",
+  "debate_rounds": 0,
+  "page_images": 18,
+  "image_dpi": 110,
+  "tex_sha256": "924ea038888dbb765f4ba37c2855280fff78ca5e2e18e982b7f2466f2fae9783",
+  "pdf_sha256": "b042b7e94574a23ce01cc000a55e784ab22d67cbc21adc638b365445f40163d7",
+  "guidelines_sha256": "051afc7f88352e991030685a7b436e05e3d554d8e98baf8dde8aa538e1e8c71e",
+  "data_sha256": "50a16fd106c8eb57ee2a718f5a352728994a676e634c1e977b108be54477fb1c",
+  "script_sha256": "b74f70b72c4912c11fc3485eace97db4bd1868d7bad6c7e725fdf9e4d991bd3b",
+  "status": "completed",
+  "verdicts_after_debate": {
+    "A": "weak accept",
+    "B": "accept",
+    "C": "accept",
+    "D": "accept"
+  },
+  "rubric_scores": {
+    "A": {
+      "initial": {
+        "impact_innovation": 3,
+        "execution": 3,
+        "presentation": 4,
+        "formality_aesthetics": 4,
+        "readability": 4
+      },
+      "final": null
+    },
+    "B": {
+      "initial": {
+        "impact_innovation": 4,
+        "execution": 4,
+        "presentation": 4,
+        "formality_aesthetics": 4,
+        "readability": 5
+      },
+      "final": null
+    },
+    "C": {
+      "initial": {
+        "impact_innovation": 4,
+        "execution": 4,
+        "presentation": 4,
+        "formality_aesthetics": 4,
+        "readability": 4
+      },
+      "final": null
+    },
+    "D": {
+      "initial": {
+        "impact_innovation": 4,
+        "execution": 4,
+        "presentation": 4,
+        "formality_aesthetics": 4,
+        "readability": 4
+      },
+      "final": null
+    }
+  },
+  "cost_usd": 1.518441,
+  "wall_seconds": 501.9,
+  "calls": [
+    {
+      "label": "review_C",
+      "model": "meta/muse-wonder",
+      "attempt": 1,
+      "status": "stop",
+      "cost_usd": 0.323388,
+      "seconds": 46.8,
+      "prompt_tokens": 60802,
+      "completion_tokens": 4009
+    },
+    {
+      "label": "review_D",
+      "model": "xiaomi/mimo-v2.6-pro",
+      "attempt": 1,
+      "status": "stop",
+      "cost_usd": 0.03213258,
+      "seconds": 145.0,
+      "prompt_tokens": 56696,
+      "completion_tokens": 8586
+    },
+    {
+      "label": "review_A",
+      "model": "openai/gpt-6.1-sol",
+      "attempt": 1,
+      "status": "stop",
+      "cost_usd": 0.227106,
+      "seconds": 153.0,
+      "prompt_tokens": 59675,
+      "completion_tokens": 7792
+    },
+    {
+      "label": "review_B",
+      "model": "google/gemini-4-argon",
+      "attempt": 1,
+      "status": "stop",
+      "cost_usd": 0.227648,
+      "seconds": 203.7,
+      "prompt_tokens": 56659,
+      "completion_tokens": 11433
+    },
+    {
+      "label": "audit",
+      "model": "google/gemini-4-argon",
+      "attempt": 1,
+      "status": "length",
+      "cost_usd": 0.30597,
+      "seconds": 222.9,
+      "prompt_tokens": 72985,
+      "completion_tokens": 16000
+    },
+    {
+      "label": "chair",
+      "model": "openai/gpt-6.1-sol-pro",
+      "attempt": 1,
+      "status": "stop",
+      "cost_usd": 0.4021967,
+      "seconds": 278.9,
+      "prompt_tokens": 120503,
+      "completion_tokens": 23804
+    }
+  ]
+}

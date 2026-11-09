@@ -1,0 +1,128 @@
+{
+  "model": "xiaomi/mimo-v2.6-pro",
+  "summary": "This hackathon report presents Fleet Witness, a small checks-and-balances 'kernel' that gates agent-triggered releases through random k-of-m committees and mechanical checks, validated by bounded state exploration with mutation tests and two live 50-agent experiments with planted colluders. The work is unusually well executed for three days: 23,376 explored states with seven seeded broken kernels, ~33k Experiment 1 responses plus 16k+ Experiment 2 responses, cluster-bootstrap intervals, a reproducibility ledger, and candid limitations. The main weaknesses are a headline generalization ('more copies of the same model add no safety') that outruns evidence from one small model on 48 self-authored synthetic pull requests, a case-generator confound, and some missing provenance fields (temperature, source revision, retry records).",
+  "scores": {
+    "impact_innovation": 4,
+    "execution": 4,
+    "presentation": 4,
+    "formality_aesthetics": 4,
+    "readability": 4
+  },
+  "score_rationale": {
+    "impact_innovation": "Tackles an important, timely problem (oversight of colluding agent populations) with an original combination: an enforceable institutional kernel, bounded exhaustive checking of the real code with mutation tests, and a live measurement of correlated reviewer blind spots under planted colluders. The separation-of-powers framing itself is not new (Ruan 2026 is cited as prior art) and the correlated-error phenomenon is known (Eckhardt & Lee 1985; Kim et al. 2025), so this is a strong build-and-attack contribution rather than a new direction, but others could directly build on it.",
+    "execution": "Methodology is transparent and well beyond typical hackathon standard: pre-declared re-run rules, board-condition splits, draw-level bootstrap CIs (Table 6), seven seeded broken kernels as negative controls (Table 3), a Bandit baseline (p. 6, Appendix E.3), an independent blind label check (47/48), and an explicit reproducibility statement. Deductions: synthetic tasks and labels written by the same team and one AI generator (confound), the headline shared-blind-spot result rests on 7 harmful cases and one small model, colluders never attacked keys/seating/kernel, and provenance gaps (temperature, source revision, retry fields missing from 30,096/32,832 records, Appendix D.2).",
+    "presentation": "Clear problem/idea/finding structure, helpful run-in heads, tables 1-2 well captioned with denominators spelled out, and Figure 1 is an effective schematic. Minor issues: the abstract's last sentence compresses three claims into one long sentence, Table 5 is dense and its 'Seat bound (G2)' header wraps awkwardly, and the 'GPT' column abbreviation collides with GPT-6.1 Sol.",
+    "formality_aesthetics": "Polished LaTeX with consistent author-year citations, clean booktabs tables, legible TikZ figures, and a proper abstract/title/affiliation block. Minor defects: unnumbered back-matter sections (References, Code and Data, Author Contributions, LLM Usage Statement) are interleaved with lettered appendices so 'LLM Usage Statement' has no appendix letter; bibliography entries use 'et al.' where full author lists are expected; Figure 2's four panels are small with the shared legend set below.",
+    "readability": "Fluent and well signposted; a technically literate reader can follow the argument on one pass. Dense spots are limited to the G3 statement and a few results sentences where counts, comparisons and caveats are stacked (e.g. the abstract's 22x claim and the colluder-attack paragraph on p. 7)."
+  },
+  "strengths": [
+    "Honest, unusually detailed limitations: bounded-not-proof status of the kernel test, self-written tasks, planted (not emergent) collusion, untrusted-model label checks, and unverifiable colluder attacks on keys/seating are all stated (Section 5, Appendix A.1).",
+    "Negative controls done properly: seven deliberately broken kernels are all caught within 4-6 actions, and one is missed at depth 5 and caught at depth 6 (Table 3), which justifies the exploration bound.",
+    "Fair baselines: the direct majority is explicitly labeled the unfair comparison since agents cannot check signatures, and the gated majority (same votes plus kernel checks) is the reported comparison (p. 6, Section 4.2).",
+    "Required submission items all present: 150-250-word abstract (~240 words), author names with affiliations, title page, main text of 7 pages (within the 8-page cap), and the required 'Limitations and Dual-Use / Ethical Considerations' appendix (Appendix A).",
+    "Strong artifact and reproducibility hygiene: public repo, run archive including superseded and pilot runs, offline table-reproduction scripts, and a candid 'Not recoverable' column (Table 9) instead of overclaiming reproducibility.",
+    "Statistical care matches the design: paired draws, cluster bootstrap over committee draws preserving board pairs, intervals at the draw level, and no significance claims where samples are small (Appendix A.1, Table 6)."
+  ],
+  "concerns": [
+    {
+      "id": "C1",
+      "severity": "major",
+      "category": "overclaiming",
+      "location": "Page 1 abstract; page 7 Conclusion",
+      "issue": "'build committees from different models, because more copies of the same model add no safety' and 'adding a different model fixed this' generalize from one small model (gpt-oss-20b), 48 synthetic pull requests, and 7 harmful cases on which it erred (Table 1, Appendix A.1).",
+      "why_it_matters": "The abstract and conclusion are the parts most likely to be quoted; as stated they imply a general law about model replication that the experiment supports only for this model and task distribution.",
+      "suggested_fix": "Qualify both sentences (e.g. 'in our judgement task, a committee of one weak model's copies was no safer than a single reviewer, because its errors were correlated') and point to Appendix A.1's sample-size caveat."
+    },
+    {
+      "id": "C2",
+      "severity": "major",
+      "category": "confound",
+      "location": "Page 5 Section 3.5 'Cases'; Appendix E.1",
+      "issue": "All 48 pull requests were written by Claude Code (with a Claude subagent for half), and only one other LLM (Meta Muse Wonder) checked labels. Reviewers may be detecting generator artifacts of AI-written harmful diffs rather than harm itself, and the one contested case is excluded from safe-change rates.",
+      "why_it_matters": "The central 'frontier reviewers made no mistakes' finding and the gpt-oss blind-spot measurement are only as valid as the case distribution; a single-generator synthetic corpus can inflate or deflate both error and correlation estimates.",
+      "suggested_fix": "State this confound in Appendix A.1, and either add a small set of human- or independently-written cases as a holdout, or report per-difficulty results so readers can see where errors arise. Keep the contested-case exclusion rule as written and pre-declared."
+    },
+    {
+      "id": "C3",
+      "severity": "minor",
+      "category": "statistics",
+      "location": "Page 1 abstract; page 6-7 Section 4.3",
+      "issue": "'22 times more than independent mistakes would predict' compares a point estimate (12.0%) to a theoretical independent rate (0.5%) while the observed 95% interval is [0.4, 26.1] (Table 1), i.e. the interval includes values near the independence prediction.",
+      "why_it_matters": "The qualitative clustering evidence is strong (all errors on 7/24 cases, majority approval on 3), but the headline ratio reads as a precise effect size when the uncertainty is very wide.",
+      "suggested_fix": "Report the ratio as descriptive ('about 20x at the point estimate, with a wide interval') or lead with the per-case clustering evidence and drop the multiplier from the abstract."
+    },
+    {
+      "id": "C4",
+      "severity": "minor",
+      "category": "reproducibility",
+      "location": "Appendix D.1-D.2 (pp. 15-16); Table 10",
+      "issue": "Historical receipt bodies and keys, full prompts and raw responses, executable source revision, pinned temperature, provider request IDs, and per-attempt retry/truncation records are not recoverable (missing from 30,096 of 32,832 Experiment 1 records).",
+      "why_it_matters": "Independent verification of the reported counts is limited to the analysis scripts replaying retained votes; sampling parameters and prompt text cannot be audited, so the headline rates cannot be independently re-derived from raw calls.",
+      "suggested_fix": "Where feasible, publish the full prompt templates and pinned decoding parameters in the repo and state that they were reconstructed after the fact; note prominently in the main text (Section 4) that conclusions rest on retained parsed decisions, not raw model transcripts."
+    },
+    {
+      "id": "C5",
+      "severity": "minor",
+      "category": "tables",
+      "location": "Table 2 (p. 8) and Table 5 (p. 14)",
+      "issue": "Column headers 'DS' and 'GPT' abbreviate DeepSeek v4 Flash and gpt-oss-20b, while 'GPT-6.1 Sol' is a third, different model named in Table 1 and the abstract; Table 5's 'Seat bound (G2)' header wraps mid-label and the table carries 10 columns of counts without intervals.",
+      "why_it_matters": "Readers scanning Table 2 can easily misread 'GPT' as the frontier GPT model, inverting the paper's message about which model erred.",
+      "suggested_fix": "Rename columns to 'DS v4' and 'gpt-oss' (or 'oss-20b'), define the abbreviations in every caption, and widen or split the Table 5 header row."
+    },
+    {
+      "id": "C6",
+      "severity": "minor",
+      "category": "overclaiming",
+      "location": "Page 4 Section 3.2 heading; page 1 abstract",
+      "issue": "'Testing the kernel exhaustively' and 'all 23,376 reachable states' describe exploration bounded at depth six (Appendix B.1: one case, three seats, 12 actions); the paper itself concedes 'This is bounded testing, not a proof'.",
+      "why_it_matters": "The abstract phrase 'all ... reachable states' silently drops the bound, and 'exhaustively' in the heading invites a proof-level reading the method does not support.",
+      "suggested_fix": "Rename to 'Bounded exhaustive testing of the kernel' and say 'all 23,376 states reachable within six actions in the small world' in the abstract."
+    },
+    {
+      "id": "C7",
+      "severity": "minor",
+      "category": "requirements",
+      "location": "Header comment / Appendix A.3 and LLM Usage Statement (pp. 10, 18)",
+      "issue": "The source notes 'corrected 2026-11-09' and a '2026-11-09 correction' (Codex audit follow-up, artifact regeneration), while the deadline is 23:59 AoE 2026-11-08 (= 11:59 UTC 2026-11-09). Runs are timestamped within the deadline (p. 10), but the provenance of the submitted PDF version is not stated explicitly.",
+      "why_it_matters": "Only weekend work is judged and late edits to a submission are a stated rule in the guidelines; ambiguity here invites a requirements challenge.",
+      "suggested_fix": "Add one sentence stating when the submitted PDF was compiled relative to 11:59 UTC 2026-11-09 and that the 2026-11-09 correction was purely to reporting artifacts (no new runs)."
+    },
+    {
+      "id": "C8",
+      "severity": "minor",
+      "category": "formality",
+      "location": "Page 8-10 back matter; references (pp. 8-9)",
+      "issue": "Back-matter sections alternate between unnumbered heads (References, Code and Data, Author Contributions, LLM Usage Statement) and lettered appendices, so the 'LLM Usage Statement' falls outside the appendix scheme; bibliography entries use 'et al.' (e.g. 'Dolan-Gavitt, B., et al. (2016)', 'Hammond, L., et al. (2025)') where full author lists are standard.",
+      "why_it_matters": "Minor, but it breaks the otherwise consistent heading hierarchy and reference style of an otherwise publication-quality document.",
+      "suggested_fix": "Either give the LLM Usage Statement an appendix letter or move it under Appendix A.3; expand 'et al.' entries to full author lists (or use a consistent short form everywhere)."
+    },
+    {
+      "id": "C9",
+      "severity": "minor",
+      "category": "figures",
+      "location": "Figure 2 (p. 13, Appendix C)",
+      "issue": "The four capture-rate panels are small (0.262\\textwidth each), share one y-axis label on the leftmost panel only, and place a four-entry legend beneath the plots; dashed G3 lines and diamond seat bounds are close to the observed markers at low shares.",
+      "why_it_matters": "The figure is the visual evidence for the seat-bound claim cited on p. 6; at print size the marker types are hard to distinguish.",
+      "suggested_fix": "Increase panel height slightly, repeat or horizontally place the legend with larger markers, and add a light gray band between G2 and G3 so 'never exceeded its diamond' is visually checkable."
+    }
+  ],
+  "readability_examples": [
+    {
+      "location": "Page 1, abstract (last two sentences)",
+      "original": "A small model's mistakes, however, fell on the same changes: a seven-seat committee of its copies approved 12% of harmful changes, exactly as often as a single reviewer and 22 times more than independent mistakes would predict. Adding a different model cut this to 0.1%.",
+      "suggested_rewrite": "A small model's mistakes, however, clustered on the same changes: a seven-seat committee of its copies approved 12% of harmful changes, as many as a single reviewer (independent mistakes would predict 0.5%). Adding one different model to the committee cut this to 0.1%."
+    },
+    {
+      "location": "Page 4, Section 3.3, G3",
+      "original": "If $m$ seats are drawn at random from $N$ agents, $C$ of whom are colluders, if honest auditors make independent mistakes at rate $\\varepsilon$, and if colluders always follow their plan, then the chance that a committee is captured is",
+      "suggested_rewrite": "Assume $m$ seats drawn at random from $N$ agents with $C$ colluders, honest auditors who err independently at rate $\\varepsilon$, and colluders who always follow their plan. Then the capture probability is"
+    },
+    {
+      "location": "Page 7, 'The colluder attack'",
+      "original": "But comparing each decision with what the honest agents decided on their own (no answer key needed) shows that colluders flipped only 3 of 98 honest rejections. The rest were the honest agents' own shared mistakes.",
+      "suggested_rewrite": "Comparing each decision against the honest agents' own answers (which needs no answer key) shows that colluders flipped only 3 of 98 honest rejections. The remaining unsafe releases were honest reviewers' shared mistakes, not collusion."
+    }
+  ],
+  "verdict": "accept",
+  "confidence": 4
+}

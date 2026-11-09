@@ -1,0 +1,63 @@
+{
+  "schema_version": "plan-review-1",
+  "gated_workflow": false,
+  "reviewers": {
+    "A": "openai/gpt-6.1-sol",
+    "B": "google/gemini-4-argon",
+    "C": "meta/muse-wonder",
+    "D": "xiaomi/mimo-v2.6-pro"
+  },
+  "chair": "openai/gpt-6.1-sol-pro",
+  "debate_rounds": 0,
+  "plan_sha256": "5613023060bb8718f09b72622104efdf10de2c877017c9e331b39e3c17c7669c",
+  "verdicts": {
+    "A": "proceed with changes",
+    "B": "proceed with changes",
+    "C": "proceed with changes",
+    "D": "proceed with changes"
+  },
+  "cost_usd": 0.566979,
+  "wall_seconds": 391.3,
+  "calls": [
+    {
+      "label": "plan_C",
+      "model": "meta/muse-wonder",
+      "attempt": 1,
+      "status": "stop",
+      "cost_usd": 0.132744,
+      "seconds": 46.3
+    },
+    {
+      "label": "plan_A",
+      "model": "openai/gpt-6.1-sol",
+      "attempt": 1,
+      "status": "stop",
+      "cost_usd": 0.0888335,
+      "seconds": 117.4
+    },
+    {
+      "label": "plan_D",
+      "model": "xiaomi/mimo-v2.6-pro",
+      "attempt": 1,
+      "status": "stop",
+      "cost_usd": 0.014577183,
+      "seconds": 233.4
+    },
+    {
+      "label": "plan_B",
+      "model": "google/gemini-4-argon",
+      "attempt": 1,
+      "status": "stop",
+      "cost_usd": 0.166714,
+      "seconds": 260.8
+    },
+    {
+      "label": "chair",
+      "model": "openai/gpt-6.1-sol-pro",
+      "attempt": 1,
+      "status": "stop",
+      "cost_usd": 0.1641105,
+      "seconds": 130.4
+    }
+  ]
+}

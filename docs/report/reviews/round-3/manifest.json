@@ -1,0 +1,239 @@
+{
+  "schema_version": "visual-review-1",
+  "gated_workflow": false,
+  "note": "Standalone run outside the authorized paid workflow; see script docstring.",
+  "reviewers": {
+    "A": "openai/gpt-6.1-sol",
+    "B": "google/gemini-4-argon",
+    "C": "meta/muse-wonder",
+    "D": "xiaomi/mimo-v2.6-pro"
+  },
+  "auditor": "google/gemini-4-argon",
+  "chair": "openai/gpt-6.1-sol-pro",
+  "reasoning": "high",
+  "debate_rounds": 2,
+  "page_images": 15,
+  "image_dpi": 110,
+  "tex_sha256": "b927cd4feb0d5e9ed7fc51e16fc574bb634a1fc4d643450ccfb6437016dbdbf0",
+  "pdf_sha256": "4e08ab5858e66017822147c62e89b81cd61f188a0ac8564feb585eeb9bea1f49",
+  "guidelines_sha256": "051afc7f88352e991030685a7b436e05e3d554d8e98baf8dde8aa538e1e8c71e",
+  "data_sha256": "2f0a65d6b22cbc73df509746f8308c2c62576c13cc72bdda3bb67b86453b1728",
+  "script_sha256": "9db1c50c3a61231d1ab56a3c94a1bc5ef91c1da918dde1d01c0e856e127ea865",
+  "status": "completed",
+  "verdicts_after_debate": {
+    "A": "borderline",
+    "B": "accept",
+    "C": "weak accept",
+    "D": "weak accept"
+  },
+  "rubric_scores": {
+    "A": {
+      "initial": {
+        "impact_innovation": 3,
+        "execution": 3,
+        "presentation": 3,
+        "formality_aesthetics": 4,
+        "readability": 4
+      },
+      "final": {
+        "impact_innovation": 3,
+        "execution": 3,
+        "presentation": 3,
+        "formality_aesthetics": 4,
+        "readability": 4
+      }
+    },
+    "B": {
+      "initial": {
+        "impact_innovation": 4,
+        "execution": 4,
+        "presentation": 4,
+        "formality_aesthetics": 4,
+        "readability": 4
+      },
+      "final": {
+        "impact_innovation": 4,
+        "execution": 4,
+        "presentation": 4,
+        "formality_aesthetics": 4,
+        "readability": 4
+      }
+    },
+    "C": {
+      "initial": {
+        "impact_innovation": 4,
+        "execution": 4,
+        "presentation": 4,
+        "formality_aesthetics": 4,
+        "readability": 3
+      },
+      "final": {
+        "impact_innovation": 4,
+        "execution": 4,
+        "presentation": 4,
+        "formality_aesthetics": 4,
+        "readability": 3
+      }
+    },
+    "D": {
+      "initial": {
+        "impact_innovation": 4,
+        "execution": 4,
+        "presentation": 4,
+        "formality_aesthetics": 4,
+        "readability": 4
+      },
+      "final": {
+        "impact_innovation": 4,
+        "execution": 4,
+        "presentation": 3,
+        "formality_aesthetics": 4,
+        "readability": 3
+      }
+    }
+  },
+  "cost_usd": 3.5694,
+  "wall_seconds": 886.1,
+  "calls": [
+    {
+      "label": "review_C",
+      "model": "meta/muse-wonder",
+      "attempt": 1,
+      "status": "stop",
+      "cost_usd": 0.271512,
+      "seconds": 40.0,
+      "prompt_tokens": 51423,
+      "completion_tokens": 3291
+    },
+    {
+      "label": "review_A",
+      "model": "openai/gpt-6.1-sol",
+      "attempt": 1,
+      "status": "stop",
+      "cost_usd": 0.2188385,
+      "seconds": 165.1,
+      "prompt_tokens": 50440,
+      "completion_tokens": 9274
+    },
+    {
+      "label": "review_D",
+      "model": "xiaomi/mimo-v2.6-pro",
+      "attempt": 1,
+      "status": "stop",
+      "cost_usd": 0.02778345,
+      "seconds": 169.3,
+      "prompt_tokens": 47980,
+      "completion_tokens": 7945
+    },
+    {
+      "label": "review_B",
+      "model": "google/gemini-4-argon",
+      "attempt": 1,
+      "status": "stop",
+      "cost_usd": 0.19747,
+      "seconds": 183.8,
+      "prompt_tokens": 48010,
+      "completion_tokens": 10145
+    },
+    {
+      "label": "audit",
+      "model": "google/gemini-4-argon",
+      "attempt": 1,
+      "status": "length",
+      "cost_usd": 0.276024,
+      "seconds": 223.1,
+      "prompt_tokens": 58012,
+      "completion_tokens": 16000
+    },
+    {
+      "label": "debate1_C",
+      "model": "meta/muse-wonder",
+      "attempt": 1,
+      "status": "stop",
+      "cost_usd": 0.390292,
+      "seconds": 57.6,
+      "prompt_tokens": 65583,
+      "completion_tokens": 6398
+    },
+    {
+      "label": "debate1_B",
+      "model": "google/gemini-4-argon",
+      "attempt": 1,
+      "status": "stop",
+      "cost_usd": 0.236048,
+      "seconds": 164.8,
+      "prompt_tokens": 63499,
+      "completion_tokens": 10905
+    },
+    {
+      "label": "debate1_A",
+      "model": "openai/gpt-6.1-sol",
+      "attempt": 1,
+      "status": "stop",
+      "cost_usd": 0.264456,
+      "seconds": 177.0,
+      "prompt_tokens": 64655,
+      "completion_tokens": 10282
+    },
+    {
+      "label": "debate1_D",
+      "model": "xiaomi/mimo-v2.6-pro",
+      "attempt": 1,
+      "status": "stop",
+      "cost_usd": 0.040575495,
+      "seconds": 270.5,
+      "prompt_tokens": 62849,
+      "completion_tokens": 15214
+    },
+    {
+      "label": "debate2_C",
+      "model": "meta/muse-wonder",
+      "attempt": 1,
+      "status": "stop",
+      "cost_usd": 0.462692,
+      "seconds": 45.3,
+      "prompt_tokens": 85893,
+      "completion_tokens": 5956
+    },
+    {
+      "label": "debate2_A",
+      "model": "openai/gpt-6.1-sol",
+      "attempt": 1,
+      "status": "stop",
+      "cost_usd": 0.297056,
+      "seconds": 100.7,
+      "prompt_tokens": 85063,
+      "completion_tokens": 8440
+    },
+    {
+      "label": "debate2_B",
+      "model": "google/gemini-4-argon",
+      "attempt": 1,
+      "status": "stop",
+      "cost_usd": 0.260466,
+      "seconds": 114.9,
+      "prompt_tokens": 86063,
+      "completion_tokens": 8834
+    },
+    {
+      "label": "debate2_D",
+      "model": "xiaomi/mimo-v2.6-pro",
+      "attempt": 1,
+      "status": "stop",
+      "cost_usd": 0.04493463,
+      "seconds": 171.1,
+      "prompt_tokens": 84060,
+      "completion_tokens": 9619
+    },
+    {
+      "label": "chair",
+      "model": "openai/gpt-6.1-sol-pro",
+      "attempt": 1,
+      "status": "stop",
+      "cost_usd": 0.5812524,
+      "seconds": 221.0,
+      "prompt_tokens": 242182,
+      "completion_tokens": 21000
+    }
+  ]
+}

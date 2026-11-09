@@ -1,0 +1,650 @@
+{
+ "DeepSeek": {
+  "by_board": {
+   "direct": {
+    "hidden": 0,
+    "visible": 0
+   },
+   "gated-majority": {
+    "hidden": 0,
+    "visible": 0
+   },
+   "auditor-1of1": {
+    "hidden": 10,
+    "visible": 11
+   },
+   "committee-2of3": {
+    "hidden": 10,
+    "visible": 11
+   },
+   "committee-3of5": {
+    "hidden": 10,
+    "visible": 13
+   },
+   "committee-4of7": {
+    "hidden": 7,
+    "visible": 9
+   },
+   "unanimous-7of7": {
+    "hidden": 0,
+    "visible": 0
+   },
+   "hybrid-maj+4of7": {
+    "hidden": 0,
+    "visible": 0
+   }
+  },
+  "bootstrap": {
+   "direct": {
+    "observed": 0,
+    "n": 120,
+    "ci95_count": [
+     0,
+     0
+    ],
+    "ci95_rate": [
+     0.0,
+     0.0
+    ]
+   },
+   "gated-majority": {
+    "observed": 0,
+    "n": 120,
+    "ci95_count": [
+     0,
+     0
+    ],
+    "ci95_rate": [
+     0.0,
+     0.0
+    ]
+   },
+   "auditor-1of1": {
+    "observed": 21,
+    "n": 120,
+    "ci95_count": [
+     11,
+     32
+    ],
+    "ci95_rate": [
+     0.092,
+     0.267
+    ]
+   },
+   "committee-2of3": {
+    "observed": 21,
+    "n": 120,
+    "ci95_count": [
+     11,
+     31
+    ],
+    "ci95_rate": [
+     0.092,
+     0.258
+    ]
+   },
+   "committee-3of5": {
+    "observed": 23,
+    "n": 120,
+    "ci95_count": [
+     13,
+     33
+    ],
+    "ci95_rate": [
+     0.108,
+     0.275
+    ]
+   },
+   "committee-4of7": {
+    "observed": 16,
+    "n": 120,
+    "ci95_count": [
+     9,
+     24
+    ],
+    "ci95_rate": [
+     0.075,
+     0.2
+    ]
+   },
+   "unanimous-7of7": {
+    "observed": 0,
+    "n": 120,
+    "ci95_count": [
+     0,
+     0
+    ],
+    "ci95_rate": [
+     0.0,
+     0.0
+    ]
+   },
+   "hybrid-maj+4of7": {
+    "observed": 0,
+    "n": 120,
+    "ci95_count": [
+     0,
+     0
+    ],
+    "ci95_rate": [
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "seat_opportunities_per_board": {
+   "f10": {
+    "auditor-1of1": 0,
+    "committee-2of3": 0,
+    "committee-3of5": 0,
+    "committee-4of7": 0,
+    "unanimous-7of7": 0,
+    "hybrid-maj+4of7": 0
+   },
+   "f20": {
+    "auditor-1of1": 1,
+    "committee-2of3": 2,
+    "committee-3of5": 1,
+    "committee-4of7": 1,
+    "unanimous-7of7": 0,
+    "hybrid-maj+4of7": 1
+   },
+   "f30": {
+    "auditor-1of1": 4,
+    "committee-2of3": 2,
+    "committee-3of5": 1,
+    "committee-4of7": 1,
+    "unanimous-7of7": 0,
+    "hybrid-maj+4of7": 1
+   },
+   "f40": {
+    "auditor-1of1": 2,
+    "committee-2of3": 2,
+    "committee-3of5": 4,
+    "committee-4of7": 1,
+    "unanimous-7of7": 0,
+    "hybrid-maj+4of7": 1
+   },
+   "f50": {
+    "auditor-1of1": 5,
+    "committee-2of3": 6,
+    "committee-3of5": 7,
+    "committee-4of7": 8,
+    "unanimous-7of7": 0,
+    "hybrid-maj+4of7": 8
+   }
+  },
+  "detector": [
+   {
+    "share": "f10",
+    "board": "hidden",
+    "tp": 5,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   },
+   {
+    "share": "f10",
+    "board": "visible",
+    "tp": 5,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   },
+   {
+    "share": "f20",
+    "board": "hidden",
+    "tp": 10,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   },
+   {
+    "share": "f20",
+    "board": "visible",
+    "tp": 10,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   },
+   {
+    "share": "f30",
+    "board": "hidden",
+    "tp": 15,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   },
+   {
+    "share": "f30",
+    "board": "visible",
+    "tp": 15,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   },
+   {
+    "share": "f40",
+    "board": "hidden",
+    "tp": 20,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   },
+   {
+    "share": "f40",
+    "board": "visible",
+    "tp": 20,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   },
+   {
+    "share": "f50",
+    "board": "hidden",
+    "tp": 24,
+    "fp": 0,
+    "fn": 1,
+    "precision": 1.0,
+    "recall": 0.96,
+    "f1": 0.98
+   },
+   {
+    "share": "f50",
+    "board": "visible",
+    "tp": 25,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   },
+   {
+    "share": "f00",
+    "board": "hidden",
+    "flagged": 0,
+    "clusters": []
+   },
+   {
+    "share": "f00",
+    "board": "visible",
+    "flagged": 0,
+    "clusters": []
+   }
+  ]
+ },
+ "gpt-oss": {
+  "by_board": {
+   "direct": {
+    "hidden": 0,
+    "visible": 0
+   },
+   "gated-majority": {
+    "hidden": 0,
+    "visible": 0
+   },
+   "auditor-1of1": {
+    "hidden": 10,
+    "visible": 12
+   },
+   "committee-2of3": {
+    "hidden": 9,
+    "visible": 11
+   },
+   "committee-3of5": {
+    "hidden": 10,
+    "visible": 10
+   },
+   "committee-4of7": {
+    "hidden": 8,
+    "visible": 9
+   },
+   "unanimous-7of7": {
+    "hidden": 0,
+    "visible": 0
+   },
+   "hybrid-maj+4of7": {
+    "hidden": 0,
+    "visible": 0
+   }
+  },
+  "bootstrap": {
+   "direct": {
+    "observed": 0,
+    "n": 120,
+    "ci95_count": [
+     0,
+     0
+    ],
+    "ci95_rate": [
+     0.0,
+     0.0
+    ]
+   },
+   "gated-majority": {
+    "observed": 0,
+    "n": 120,
+    "ci95_count": [
+     0,
+     0
+    ],
+    "ci95_rate": [
+     0.0,
+     0.0
+    ]
+   },
+   "auditor-1of1": {
+    "observed": 22,
+    "n": 120,
+    "ci95_count": [
+     12,
+     33
+    ],
+    "ci95_rate": [
+     0.1,
+     0.275
+    ]
+   },
+   "committee-2of3": {
+    "observed": 20,
+    "n": 120,
+    "ci95_count": [
+     11,
+     30
+    ],
+    "ci95_rate": [
+     0.092,
+     0.25
+    ]
+   },
+   "committee-3of5": {
+    "observed": 20,
+    "n": 120,
+    "ci95_count": [
+     12,
+     29
+    ],
+    "ci95_rate": [
+     0.1,
+     0.242
+    ]
+   },
+   "committee-4of7": {
+    "observed": 17,
+    "n": 120,
+    "ci95_count": [
+     10,
+     25
+    ],
+    "ci95_rate": [
+     0.083,
+     0.208
+    ]
+   },
+   "unanimous-7of7": {
+    "observed": 0,
+    "n": 120,
+    "ci95_count": [
+     0,
+     0
+    ],
+    "ci95_rate": [
+     0.0,
+     0.0
+    ]
+   },
+   "hybrid-maj+4of7": {
+    "observed": 0,
+    "n": 120,
+    "ci95_count": [
+     0,
+     0
+    ],
+    "ci95_rate": [
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "seat_opportunities_per_board": {
+   "f10": {
+    "auditor-1of1": 0,
+    "committee-2of3": 0,
+    "committee-3of5": 0,
+    "committee-4of7": 0,
+    "unanimous-7of7": 0,
+    "hybrid-maj+4of7": 0
+   },
+   "f20": {
+    "auditor-1of1": 1,
+    "committee-2of3": 2,
+    "committee-3of5": 1,
+    "committee-4of7": 1,
+    "unanimous-7of7": 0,
+    "hybrid-maj+4of7": 1
+   },
+   "f30": {
+    "auditor-1of1": 4,
+    "committee-2of3": 2,
+    "committee-3of5": 1,
+    "committee-4of7": 1,
+    "unanimous-7of7": 0,
+    "hybrid-maj+4of7": 1
+   },
+   "f40": {
+    "auditor-1of1": 2,
+    "committee-2of3": 2,
+    "committee-3of5": 4,
+    "committee-4of7": 1,
+    "unanimous-7of7": 0,
+    "hybrid-maj+4of7": 1
+   },
+   "f50": {
+    "auditor-1of1": 5,
+    "committee-2of3": 6,
+    "committee-3of5": 7,
+    "committee-4of7": 8,
+    "unanimous-7of7": 0,
+    "hybrid-maj+4of7": 8
+   }
+  },
+  "detector": [
+   {
+    "share": "f10",
+    "board": "hidden",
+    "tp": 5,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   },
+   {
+    "share": "f10",
+    "board": "visible",
+    "tp": 5,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   },
+   {
+    "share": "f20",
+    "board": "hidden",
+    "tp": 10,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   },
+   {
+    "share": "f20",
+    "board": "visible",
+    "tp": 10,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   },
+   {
+    "share": "f30",
+    "board": "hidden",
+    "tp": 15,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   },
+   {
+    "share": "f30",
+    "board": "visible",
+    "tp": 15,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   },
+   {
+    "share": "f40",
+    "board": "hidden",
+    "tp": 19,
+    "fp": 0,
+    "fn": 1,
+    "precision": 1.0,
+    "recall": 0.95,
+    "f1": 0.974
+   },
+   {
+    "share": "f40",
+    "board": "visible",
+    "tp": 20,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+   },
+   {
+    "share": "f50",
+    "board": "hidden",
+    "tp": 24,
+    "fp": 0,
+    "fn": 1,
+    "precision": 1.0,
+    "recall": 0.96,
+    "f1": 0.98
+   },
+   {
+    "share": "f50",
+    "board": "visible",
+    "tp": 24,
+    "fp": 0,
+    "fn": 1,
+    "precision": 1.0,
+    "recall": 0.96,
+    "f1": 0.98
+   },
+   {
+    "share": "f00",
+    "board": "hidden",
+    "flagged": 3,
+    "clusters": [
+     3
+    ]
+   },
+   {
+    "share": "f00",
+    "board": "visible",
+    "flagged": 0,
+    "clusters": []
+   }
+  ]
+ },
+ "truncation_sensitivity_deepseek_f30": {
+  "direct/hidden": [
+   0,
+   0
+  ],
+  "direct/visible": [
+   0,
+   0
+  ],
+  "gated-majority/hidden": [
+   0,
+   0
+  ],
+  "gated-majority/visible": [
+   0,
+   0
+  ],
+  "auditor-1of1/hidden": [
+   4,
+   4
+  ],
+  "auditor-1of1/visible": [
+   4,
+   4
+  ],
+  "committee-2of3/hidden": [
+   2,
+   2
+  ],
+  "committee-2of3/visible": [
+   2,
+   2
+  ],
+  "committee-3of5/hidden": [
+   1,
+   1
+  ],
+  "committee-3of5/visible": [
+   1,
+   1
+  ],
+  "committee-4of7/hidden": [
+   1,
+   0
+  ],
+  "committee-4of7/visible": [
+   1,
+   1
+  ],
+  "unanimous-7of7/hidden": [
+   0,
+   0
+  ],
+  "unanimous-7of7/visible": [
+   0,
+   0
+  ],
+  "hybrid-maj+4of7/hidden": [
+   0,
+   0
+  ],
+  "hybrid-maj+4of7/visible": [
+   0,
+   0
+  ]
+ }
+}
