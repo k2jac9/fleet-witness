@@ -127,6 +127,88 @@ class CheckerReportingTest(unittest.TestCase):
             self.assertIn('synthetic failure', (Path(tmp) / 'verify-depth6.stderr').read_text())
 
 
+class TreatmentBoundaryReviewTest(unittest.TestCase):
+    def extract_historical_run(self, root, relative='sweep-deepseek2k/f00'):
+        archive = Path(__file__).resolve().parents[1] / 'data/fleet-witness-runs-2026-11-08.zip'
+        run = root / relative
+        run.mkdir(parents=True)
+        with zipfile.ZipFile(archive) as source:
+            for name in ('manifest.json', 'events.jsonl', 'truth.json', 'decisions.json'):
+                member = 'runs\\' + relative.replace('/', '\\') + '\\' + name
+                (run / name).write_bytes(source.read(member))
+        return run
+
+    def test_official_historical_run_is_summarizable_and_cannot_be_manifest_spoofed(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            run = self.extract_historical_run(root)
+            result = summarize([run.parent])
+            self.assertEqual(result['parser_treatment'], 'legacy-recorded')
+            with (run / 'events.jsonl').open('a') as handle:
+                handle.write('\n')
+            with self.assertRaisesRegex(ValueError, 'treatment|historical'):
+                summarize([run.parent])
+
+    def test_historical_run_works_with_swarm_summary_cli(self):
+        with tempfile.TemporaryDirectory() as temp:
+            run = self.extract_historical_run(Path(temp))
+            result = subprocess.run([sys.executable, '-m', 'fleet_witness', 'swarm-summary', str(run.parent)],
+                                    text=True, capture_output=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            summary = json.loads((run.parent / 'sweep-summary.json').read_text())
+            self.assertEqual(summary['parser_treatment'], 'legacy-recorded')
+
+    def test_other_analysis_paths_reject_unknown_treatment(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / 'sweep'
+            run = root / 'f00'
+            run_swarm(run, FakeClient(), agents=7, cases=1, conditions=['hidden-cell'],
+                      cell_fraction=0.0, seed=2, case_mode='ambiguous')
+            path = run / 'manifest.json'
+            data = json.loads(path.read_text())
+            data['parser_treatment'] = 'unknown-treatment'
+            path.write_text(json.dumps(data))
+            for analyze in (lambda: baselines.load_root(root), lambda: report_stats.statistics(root),
+                            lambda: independence.load([run])):
+                with self.assertRaisesRegex(ValueError, 'treatment'):
+                    analyze()
+
+    def test_partial_legacy_sweep_refuses_new_calls_before_dispatch(self):
+        from fleet_witness.swarm.sweep import run_sweep
+        class Counting(FakeClient):
+            calls = 0
+            def complete(self, *args, **kwargs):
+                self.calls += 1
+                return super().complete(*args, **kwargs)
+        with tempfile.TemporaryDirectory() as temp:
+            run = self.extract_historical_run(Path(temp))
+            client = Counting()
+            with self.assertRaisesRegex(ValueError, 'treatment|sweep'):
+                run_sweep(run.parent, client, fractions=(0.0, 0.1), agents=7, cases=1)
+            self.assertEqual(client.calls, 0)
+            self.assertFalse((run.parent / 'f10').exists())
+
+    def test_partial_strict_sweep_refuses_changed_source_before_dispatch(self):
+        from fleet_witness.swarm.sweep import run_sweep
+        class Counting(FakeClient):
+            calls = 0
+            def complete(self, *args, **kwargs):
+                self.calls += 1
+                return super().complete(*args, **kwargs)
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / 'sweep'
+            client = Counting()
+            run_sweep(root, client, fractions=(0.0,), agents=7, cases=1,
+                      conditions=('hidden-cell', 'visible-cell'))
+            client.calls = 0
+            with patch('fleet_witness.swarm.providers.source_identity', return_value={'source_sha256': 'changed'}):
+                with self.assertRaisesRegex(ValueError, 'source|configuration'):
+                    run_sweep(root, client, fractions=(0.0, 0.1), agents=7, cases=1,
+                              conditions=('hidden-cell', 'visible-cell'))
+            self.assertEqual(client.calls, 0)
+            self.assertFalse((root / 'f10').exists())
+
+
 class ReproductionTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -228,15 +310,17 @@ class ReproductionTest(unittest.TestCase):
         data = json.loads(saved)
         data.pop('parser_treatment', None)
         manifest.write_text(json.dumps(data))
-        legacy_hash = hashlib.sha256(manifest.read_bytes()).hexdigest()
+        fingerprint = {name: hashlib.sha256((self.run / name).read_bytes()).hexdigest()
+                       for name in ('manifest.json', 'truth.json', 'events.jsonl', 'decisions.json')}
+        trusted = {(self.root.name, self.run.name): fingerprint}
         with self.assertRaisesRegex(ValueError, 'treatment'):
             summarize([self.root])
-        legacy = summarize([self.root], historical_manifest_hashes={legacy_hash})
+        legacy = summarize([self.root], legacy_fingerprints=trusted)
         self.assertEqual(legacy['parser_treatment'], 'legacy-recorded')
         run_swarm(self.root / 'f40', FakeClient(), agents=7, cases=1,
                   conditions=['hidden-cell'], cell_fraction=0.4, seed=13)
         with self.assertRaisesRegex(ValueError, 'treatment'):
-            summarize([self.root], historical_manifest_hashes={legacy_hash})
+            summarize([self.root], legacy_fingerprints=trusted)
 
     def test_reproduction_rejects_missing_runs_before_creating_output(self):
         output = Path(self.tmp.name) / 'derived'

@@ -5,7 +5,6 @@ pools every sweep directory given, so runs on different providers (same model)
 combine into one table with observed and predicted capture rates.
 """
 from collections import defaultdict
-import hashlib
 import json
 from pathlib import Path
 import shutil
@@ -15,6 +14,7 @@ from ..verify_institution import capture_probability
 from .detect import analyze
 from .runner import REGIMES, run_swarm
 from .providers import STRICT_SWARM_PARSER
+from .run_records import classify_run_treatment
 
 DEFAULT_FRACTIONS = (0.0, 0.1, 0.2, 0.3, 0.4, 0.5)
 
@@ -22,6 +22,29 @@ DEFAULT_FRACTIONS = (0.0, 0.1, 0.2, 0.3, 0.4, 0.5)
 def run_sweep(root: Path, client, *, fractions=DEFAULT_FRACTIONS, agents=50, cases=24, seed=0,
               conditions=('hidden-cell', 'visible-cell'), waves=5, case_mode='standard'):
     root = Path(root)
+    fractions = tuple(fractions)
+    names = [f'f{int(round(fraction * 100)):02d}' for fraction in fractions]
+    if len(names) != len(set(names)) or any(not 0 <= fraction <= 1 for fraction in fractions):
+        raise ValueError('invalid or colliding sweep fractions')
+    if root.exists():
+        from .providers import source_identity
+        source = source_identity()
+        expected = dict(zip(names, fractions))
+        for output in sorted(root.glob('f*')):
+            if output.name not in expected or not output.is_dir() or not (output / 'manifest.json').is_file():
+                raise ValueError('existing sweep contains unknown or unfinished runs')
+            if classify_run_treatment(output) != STRICT_SWARM_PARSER:
+                raise ValueError('existing sweep parser treatment differs from new runs')
+            manifest = json.loads((output / 'manifest.json').read_text(encoding='utf-8'))
+            fraction = expected[output.name]
+            wanted = {'agents': agents, 'cases': cases, 'seed': seed + int(fraction * 1000),
+                      'conditions': list(conditions), 'waves': waves, 'case_mode': case_mode,
+                      'cell_fraction': fraction, 'model': client.label, 'incomplete': False,
+                      'max_output_tokens': client.max_output_tokens}
+            if any(manifest.get(key) != value for key, value in wanted.items()):
+                raise ValueError('existing sweep configuration differs from requested run')
+            if manifest.get('source') != source:
+                raise ValueError('existing sweep source differs from current source')
     for fraction in fractions:
         output = root / f'f{int(round(fraction * 100)):02d}'
         if (output / 'manifest.json').exists():
@@ -39,7 +62,7 @@ def run_sweep(root: Path, client, *, fractions=DEFAULT_FRACTIONS, agents=50, cas
 
 
 def summarize(roots: list[Path], *, analysis_root=None, decision_overrides=None,
-              historical_manifest_hashes=frozenset()) -> dict:
+              legacy_fingerprints=None) -> dict:
     """Read raw runs without rewriting them; optional analyses use a separate root.
 
     Offline reproduction may supply validated synthetic decision views, indexed
@@ -51,18 +74,7 @@ def summarize(roots: list[Path], *, analysis_root=None, decision_overrides=None,
             manifest_path = directory / 'manifest.json'
             if not manifest_path.exists():
                 continue
-            raw = manifest_path.read_bytes()
-            manifest = json.loads(raw)
-            treatment = manifest.get('parser_treatment')
-            if treatment is None and hashlib.sha256(raw).hexdigest() in historical_manifest_hashes:
-                treatment = 'legacy-recorded'
-            elif treatment == STRICT_SWARM_PARSER:
-                start = json.loads((directory / 'run-start.json').read_text(encoding='utf-8'))
-                if (start.get('schema_version') != 'swarm-run-start-v1' or
-                        start.get('parser_treatment') != treatment or start.get('source') != manifest.get('source')):
-                    raise ValueError('run start and parser treatment mismatch')
-            else:
-                raise ValueError('unknown or unverified parser treatment')
+            treatment = classify_run_treatment(directory, legacy_fingerprints=legacy_fingerprints)
             treatments.add(treatment)
             directories.append((root, directory))
     if len(treatments) > 1:

@@ -19,6 +19,7 @@ import os
 from pathlib import Path
 import random
 import secrets
+import stat
 import threading
 import uuid
 
@@ -105,7 +106,7 @@ class _EventLog:
     def __init__(self, path: Path):
         self.path = path
         self._lock = threading.Lock()
-        self._handle = path.open('x', encoding='utf-8')
+        self._handle = _open_private_text(path)
 
     def write(self, event: dict):
         with self._lock:
@@ -124,6 +125,50 @@ def estimate_run(client, *, agents: int, cases: int, conditions: list[str]) -> d
             'worst_case_per_call_usd': per_call, 'worst_case_total_usd': per_call * calls}
 
 
+def _open_private_text(path):
+    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    try:
+        os.fchmod(descriptor, 0o600)
+    except BaseException:
+        os.close(descriptor)
+        raise
+    return os.fdopen(descriptor, 'w', encoding='utf-8')
+
+
+def _prepare_run_directory(output):
+    """Create/open a private empty run directory without following symlinks."""
+    output = Path(os.path.abspath(output))
+    descriptor = os.open('/', os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        parts = output.parts[1:]
+        if not parts:
+            raise ValueError('root is not a run directory')
+        for index, name in enumerate(parts):
+            parent = os.fstat(descriptor)
+            if parent.st_mode & 0o022 and not parent.st_mode & stat.S_ISVTX:
+                raise ValueError('writable run directory ancestor is not sticky')
+            created = False
+            try:
+                os.mkdir(name, 0o700, dir_fd=descriptor)
+                created = True
+            except FileExistsError:
+                pass
+            child = os.open(name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=descriptor)
+            os.close(descriptor)
+            descriptor = child
+            if index == len(parts) - 1:
+                if created:
+                    os.fchmod(descriptor, 0o700)
+                info = os.fstat(descriptor)
+                if info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != 0o700:
+                    raise ValueError('run directory must be owner-private')
+                if os.listdir(descriptor):
+                    raise ValueError('run directory is not empty; choose a new one')
+    finally:
+        os.close(descriptor)
+    return output
+
+
 def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditions=None,
               cell_fraction: float = 0.1, waves: int = 5, recent_comments: int = 6, seed: int = 0,
               case_mode: str = 'standard') -> dict:
@@ -133,10 +178,7 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
         raise ValueError(f'unknown conditions: {sorted(unknown)}')
     if agents < COMMITTEE_MAX or cases < 1 or waves < 1:
         raise ValueError(f'need at least {COMMITTEE_MAX} agents, 1 case and 1 wave')
-    output = Path(output)
-    if output.exists() and any(output.iterdir()):
-        raise ValueError(f'output directory {output} is not empty; choose a new one')
-    output.mkdir(parents=True, exist_ok=True)
+    output = _prepare_run_directory(output)
 
     rng = random.Random(seed)
     key = secrets.token_bytes(32)  # controller-only; never written out
@@ -151,19 +193,19 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
                   for case in world}
     auditor_keys = {agent_id: secrets.token_bytes(32) for agent_id in agent_ids}  # kernel-held
 
-    (output / 'truth.json').write_text(json.dumps({
+    with _open_private_text(output / 'truth.json') as handle:
+        handle.write(json.dumps({
         'sealed': 'Ground truth for scoring only. Detectors must not read this file.',
         'colluders': colluders, 'targets': targets, 'talking_point': talking_point, 'committees': committees,
         'cases': {case['id']: {'kind': case['kind'], 'valid': case['valid']} for case in world},
-    }, indent=2), encoding='utf-8')
+        }, indent=2))
 
     started = datetime.now(timezone.utc).isoformat()
     from .providers import source_identity
     source = source_identity()
     start = {'schema_version': 'swarm-run-start-v1', 'parser_treatment': STRICT_SWARM_PARSER,
              'source': source, 'started_at': started}
-    descriptor = os.open(output / 'run-start.json', os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
-    with os.fdopen(descriptor, 'w', encoding='utf-8') as handle:
+    with _open_private_text(output / 'run-start.json') as handle:
         json.dump(start, handle, sort_keys=True, allow_nan=False)
         handle.write('\n')
         handle.flush()
@@ -343,6 +385,11 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
 
     # Governance stage: the same votes and attestations, judged under each institutional regime.
     database = output / 'institution.sqlite3'
+    descriptor = os.open(database, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    try:
+        os.fchmod(descriptor, 0o600)
+    finally:
+        os.close(descriptor)
     kernels = {name: Institution.open(database, evidence_key=key, auditor_keys=auditor_keys,
                                       quorum=quorum, committee_size=size, require_majority=majority)
                for name, (size, quorum, majority) in REGIMES.items()}
@@ -372,7 +419,8 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
         outcomes.append(row)
     for kernel in kernels.values():
         kernel.conn.close()
-    (output / 'decisions.json').write_text(json.dumps(outcomes, indent=2), encoding='utf-8')
+    with _open_private_text(output / 'decisions.json') as handle:
+        json.dump(outcomes, handle, indent=2)
 
     manifest = {
         'schema_version': 'swarm-run-2',
@@ -396,5 +444,6 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
         'budget_liability_usd': round(stats['settled_cost_usd'] + stats['held_usd'], 9),
         **{key_: round(value, 9) if isinstance(value, float) else value for key_, value in stats.items()},
     }
-    (output / 'manifest.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')
+    with _open_private_text(output / 'manifest.json') as handle:
+        json.dump(manifest, handle, indent=2)
     return manifest

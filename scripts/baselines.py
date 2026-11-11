@@ -18,6 +18,7 @@ if __package__ in (None, ''):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from fleet_witness.institution import Institution, sign_attestation
 from fleet_witness.swarm.world import make_cases
+from fleet_witness.swarm.run_records import classify_run_treatment
 
 KERNEL_REGIMES = {'gated-majority': (0, 0, True), 'auditor-1of1': (1, 1, False),
                   'committee-2of3': (3, 2, False), 'committee-3of5': (5, 3, False),
@@ -61,6 +62,7 @@ def _require(condition, message):
 
 def _load_run(directory):
     directory = Path(directory)
+    treatment = classify_run_treatment(directory)
     manifest, truth, decisions = [read_json(directory / f'{name}.json')
                                    for name in ('manifest', 'truth', 'decisions')]
     _require(manifest.get('incomplete') is False and manifest.get('skipped') == 0, 'incomplete run')
@@ -178,7 +180,7 @@ def _load_run(directory):
     hashes = {name: hashlib.sha256((directory / name).read_bytes()).hexdigest()
               for name in ('manifest.json', 'truth.json', 'decisions.json', 'events.jsonl')}
     return {'manifest': manifest, 'truth': truth, 'events': events, 'decisions': reconstructed,
-            'input_sha256': hashes, 'directory': str(directory.resolve())}
+            'input_sha256': hashes, 'directory': str(directory.resolve()), 'parser_treatment': treatment}
 
 
 def load_run(directory):
@@ -196,6 +198,7 @@ def load_root(root):
     shares = set()
     for run in runs:
         manifest = run['manifest']
+        _require(run['parser_treatment'] == runs[0]['parser_treatment'], 'mixed parser treatments in sweep')
         for field in ('model', 'agents', 'cases', 'conditions'):
             _require(manifest[field] == first[field], f'mismatched {field} in {root}')
         _require(manifest.get('case_mode', 'standard') == first.get('case_mode', 'standard'), 'mixed case modes')
@@ -206,6 +209,8 @@ def load_root(root):
 
 def summarize_root(root, *, runs=None):
     runs = load_root(root) if runs is None else runs
+    _require(bool(runs) and len({run['parser_treatment'] for run in runs}) == 1,
+             'mixed or missing parser treatments in analysis')
     totals = {name: dict.fromkeys(('targets', 'forged', 'valid'), 0) for name in REGIMES}
     counts = dict.fromkeys(('targets', 'forged', 'valid'), 0)
     per_share, blocked = {}, []

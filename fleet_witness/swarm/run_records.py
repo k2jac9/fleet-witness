@@ -1,5 +1,6 @@
 """Bounded private run receipts and public accounting views; no provider I/O."""
 import hashlib
+from functools import lru_cache
 import json
 import math
 import os
@@ -7,6 +8,9 @@ from pathlib import Path
 import platform
 import sys
 import threading
+import zipfile
+
+from .providers import STRICT_SWARM_PARSER
 
 ATTEMPT_FIELDS = frozenset({
     'attempt_id', 'provider', 'model', 'status', 'provider_request_id', 'provider_attempts',
@@ -15,6 +19,59 @@ ATTEMPT_FIELDS = frozenset({
     'http_status', 'error_code',
 })
 MAX_PRIVATE_TEXT_BYTES = 65536
+HISTORICAL_ARCHIVE_SHA256 = 'c55e8acf07ed8dd3c11bc3dc8f70269adebaac6bfa14727642cca7314d1f821a'
+RUN_INPUTS = ('manifest.json', 'truth.json', 'events.jsonl', 'decisions.json')
+
+
+@lru_cache(maxsize=2)
+def _historical_fingerprints(archive, identity):
+    """Hash members only after verifying the full preserved archive."""
+    if hashlib.sha256(archive.read_bytes()).hexdigest() != HISTORICAL_ARCHIVE_SHA256:
+        raise ValueError('historical archive identity mismatch')
+    index = {}
+    with zipfile.ZipFile(archive) as source:
+        for info in source.infolist():
+            parts = info.filename.replace('\\', '/').split('/')
+            if len(parts) == 4 and parts[0] == 'runs' and parts[-1] in RUN_INPUTS:
+                if info.file_size > 32 * 1024 * 1024:
+                    raise ValueError('historical member exceeds limit')
+                key = (parts[1], parts[2])
+                row = index.setdefault(key, {})
+                if parts[-1] in row:
+                    raise ValueError('duplicate historical member')
+                row[parts[-1]] = hashlib.sha256(source.read(info)).hexdigest()
+    return {key: value for key, value in index.items() if set(value) == set(RUN_INPUTS)}
+
+
+def classify_run_treatment(directory, *, legacy_fingerprints=None):
+    """Classify a completed run; legacy identity binds path and all raw inputs."""
+    directory = Path(directory)
+    try:
+        raw = (directory / 'manifest.json').read_bytes()
+        manifest = json.loads(raw)
+        if not isinstance(manifest, dict):
+            raise ValueError('invalid treatment manifest')
+        treatment = manifest.get('parser_treatment')
+        if treatment == STRICT_SWARM_PARSER:
+            start = json.loads((directory / 'run-start.json').read_text(encoding='utf-8'))
+            if (not isinstance(start, dict) or start.get('schema_version') != 'swarm-run-start-v1' or
+                    start.get('parser_treatment') != treatment or start.get('source') != manifest.get('source')):
+                raise ValueError('run start and parser treatment mismatch')
+            return treatment
+        if treatment is None:
+            if legacy_fingerprints is None:
+                archive = Path(__file__).resolve().parents[2] / 'data/fleet-witness-runs-2026-11-08.zip'
+                info = archive.stat()
+                identity = (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+                legacy_fingerprints = _historical_fingerprints(archive, identity)
+            key = (directory.parent.name, directory.name)
+            expected = legacy_fingerprints.get(key)
+            actual = {name: hashlib.sha256((directory / name).read_bytes()).hexdigest() for name in RUN_INPUTS}
+            if expected is not None and expected == actual:
+                return 'legacy-recorded'
+        raise ValueError('unknown or unverified parser treatment')
+    except (OSError, TypeError, ValueError, AttributeError, RecursionError) as error:
+        raise ValueError(f'invalid parser treatment: {error}') from None
 
 
 def prompt_digest(system, user):
@@ -64,6 +121,11 @@ class PrivateRunLog:
         directory.mkdir(mode=0o700)
         descriptor = os.open(directory / 'requests.jsonl',
                              os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+        try:
+            os.fchmod(descriptor, 0o600)
+        except BaseException:
+            os.close(descriptor)
+            raise
         self._handle = os.fdopen(descriptor, 'w', encoding='utf-8')
         self._lock = threading.Lock()
         self._attempts = []

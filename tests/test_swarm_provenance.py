@@ -123,6 +123,47 @@ class RunProvenanceTest(SyntheticSourceTestCase):
             self.assertEqual(json.loads((run / 'run-start.json').read_text())['parser_treatment'], 'swarm-strict-v1')
             self.assertFalse((run / 'manifest.json').exists())
 
+    def test_run_artifacts_are_private_under_permissive_umask(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            root.chmod(0o755)
+            old = os.umask(0o022)
+            try:
+                self.run_fixture(root, FakeClient())
+            finally:
+                os.umask(old)
+            run = root / 'run'
+            for path in (run, run / 'private'):
+                self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o700, str(path))
+            for path in ('truth.json', 'events.jsonl', 'manifest.json', 'decisions.json',
+                         'institution.sqlite3', 'run-start.json', 'private/requests.jsonl'):
+                self.assertEqual(stat.S_IMODE((run / path).stat().st_mode), 0o600, path)
+
+    def test_unsafe_run_directories_are_refused_before_calls(self):
+        class Counting(FakeClient):
+            count = 0
+            def complete(self, *args, **kwargs):
+                self.count += 1
+                return super().complete(*args, **kwargs)
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            existing = root / 'permissive'
+            existing.mkdir(mode=0o755)
+            existing.chmod(0o755)
+            real = root / 'real'
+            real.mkdir(mode=0o700)
+            link = root / 'link'
+            link.symlink_to(real, target_is_directory=True)
+            nonempty = root / 'nonempty'
+            nonempty.mkdir(mode=0o700)
+            (nonempty / 'keep').write_text('preserve')
+            client = Counting()
+            for path in (existing, link, link / 'child', nonempty):
+                with self.subTest(path=path), self.assertRaises((ValueError, OSError)):
+                    run_swarm(path, client, agents=7, cases=1, conditions=['hidden-clean'])
+            self.assertEqual(client.count, 0)
+            self.assertEqual((nonempty / 'keep').read_text(), 'preserve')
+
     def test_new_run_executes_gated_majority_without_a_committee(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
