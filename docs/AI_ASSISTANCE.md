@@ -58,3 +58,9 @@ paragraphs above describe their own dates, not current experiment availability.
 The subsequent repository editorial pass used AI assistance to reconcile dated
 status, clarify terminology, repair navigation and rebuild the latest publication
 artifacts. It changed no experimental data, numerical findings or accepted ADRs.
+
+AI assistance also produced the offline submission verifier and its mutation tests,
+rendered the existing SVG cover to PNG, and captured the actual scripted viewer.
+The three-minute captioned video is an edited sequence of browser states and
+result cards; it is not a new model run or a continuous real-time recording.
+The original paper, experiment data and numerical findings are unchanged.

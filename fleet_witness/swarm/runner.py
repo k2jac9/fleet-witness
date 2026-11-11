@@ -12,6 +12,7 @@ Design (red team / blue team):
   and case validity), manifest.json, witness.sqlite3 (controller state).
 """
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import nullcontext
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -201,6 +202,14 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
     stats_lock = threading.Lock()
     consecutive_errors = [0]
 
+    def collect(pool, function, arguments):
+        # Paid work stays on the caller thread so Ctrl-C reaches its active
+        # ModelClient, which retains the attempt before propagating cancellation.
+        if pool is None:
+            return [function(*items) for items in arguments]
+        futures = [pool.submit(function, *items) for items in arguments]
+        return [future.result() for future in futures]
+
     def call(event, system, user, meta, parse):
         """Shared model call: fills `event` with outcome, usage, cost; handles abort and errors."""
         event['logical_request_id'] = uuid.uuid4().hex
@@ -260,6 +269,18 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
                 if consecutive_errors[0] >= MAX_CONSECUTIVE_ERRORS and not abort.is_set():
                     abort_reason.append(f'{MAX_CONSECUTIVE_ERRORS} consecutive provider errors')
                     abort.set()
+        except BaseException as error:
+            attempts = public_attempts(getattr(error, 'attempts', []))
+            attempted = getattr(error, 'provider_attempts', len(attempts))
+            cost, held = getattr(error, 'cost_usd', 0.0), getattr(error, 'held_usd', 0.0)
+            status = getattr(error, 'status', 'interrupted')
+            event.update(outcome='error', reason='run interrupted', error=type(error).__name__, ok=False)
+            with stats_lock:
+                stats['errors'] += 1
+                if not abort.is_set():
+                    abort_reason.append('run interrupted by ' + type(error).__name__)
+                    abort.set()
+            raise
         finally:
             event.update(attempts=attempts, provider_attempts=attempted, cost_usd=cost,
                          held_usd=held, provider_status=status)
@@ -292,9 +313,11 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
                 'colluder': is_colluder, 'target': case['id'] in targets, 'looks_valid': case['looks_valid'],
                 'board_approve_share': _approve_share(final_board) if visible else None,
                 'talking_point': talking_point}
-        call(event, system, user, meta, parse_sign)
-        event['sign'] = event.get('outcome') == 'sign'
-        log.write(event)
+        try:
+            call(event, system, user, meta, parse_sign)
+        finally:
+            event['sign'] = event.get('outcome') == 'sign'
+            log.write(event)
         return event
 
     def vote(condition, case, wave_index, position, agent_id, board_snapshot):
@@ -315,9 +338,11 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
         meta = {'role': 'reviewer', 'agent_id': agent_id, 'case_id': case['id'], 'condition': condition,
                 'colluder': is_colluder, 'target': case['id'] in targets, 'looks_valid': case['looks_valid'],
                 'tally': tally, 'talking_point': talking_point}
-        call(event, system, user, meta, parse_vote)
-        event['vote'] = event.pop('outcome')
-        log.write(event)
+        try:
+            call(event, system, user, meta, parse_vote)
+        finally:
+            event['vote'] = event.pop('outcome', 'error')
+            log.write(event)
         return event
 
     def run_case(condition, case):
@@ -325,82 +350,89 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
         random.Random(f'{seed}:{condition}:{case["id"]}').shuffle(order)
         size = -(-len(order) // waves)
         board = []
-        with ThreadPoolExecutor(max_workers=1 if ledger is not None else size) as pool:
+        with (nullcontext() if ledger is not None else ThreadPoolExecutor(max_workers=size)) as pool:
             for wave_index in range(waves):
                 wave = order[wave_index * size:(wave_index + 1) * size]
                 snapshot = list(board)
-                futures = [pool.submit(vote, condition, case, wave_index, wave_index * size + offset, agent_id,
-                                       snapshot) for offset, agent_id in enumerate(wave)]
-                board += [future.result() for future in futures]
+                board += collect(pool, vote, [(condition, case, wave_index, wave_index * size + offset, agent_id,
+                                              snapshot) for offset, agent_id in enumerate(wave)])
             # Audit committee: seated by the kernel's draw, sees the final board only when it is visible.
-            futures = [pool.submit(audit, condition, case, agent_id, seat, list(board))
-                       for seat, agent_id in enumerate(committees[case['id']])]
-            attestations = [future.result() for future in futures]
+            attestations = collect(pool, audit, [(condition, case, agent_id, seat, list(board))
+                                                for seat, agent_id in enumerate(committees[case['id']])])
         return condition, case, board, attestations
 
+    interruption = None
     try:
-        # Paid work is sequential. The ledger rejects any competing process/request;
-        # a local thread pool must not turn planned work into budget-denied races.
-        with ThreadPoolExecutor(max_workers=1 if ledger is not None else min(8, len(world) * len(conditions))) as pool:
-            boards = [future.result() for future in
-                      [pool.submit(run_case, condition, case) for condition in conditions for case in world]]
+        # The shared ledger rejects competing requests. Paid work is already
+        # sequential and remains cancellable on its caller thread.
+        with (nullcontext() if ledger is not None else
+              ThreadPoolExecutor(max_workers=min(8, len(world) * len(conditions)))) as pool:
+            boards = collect(pool, run_case, [(condition, case) for condition in conditions for case in world])
+
+        # Governance stage: the same votes and attestations, judged under each institutional regime.
+        database = output / 'institution.sqlite3'
+        kernels = {name: Institution.open(database, evidence_key=key, auditor_keys=auditor_keys,
+                                          quorum=quorum, committee_size=size, require_majority=majority)
+                   for name, (size, quorum, majority) in REGIMES.items()}
+        outcomes = []
+        for condition, case, board, attestations in boards:
+            approvals = sum(1 for e in board if e['vote'] == 'approve')
+            denials = sum(1 for e in board if e['vote'] == 'deny')
+            row = {'condition': condition, 'case_id': case['id'], 'approvals': approvals, 'denials': denials,
+                   'majority_approve': approvals > denials,
+                   'signatures': [bool(a['sign']) for a in attestations], 'regimes': {}}
+            # Direct democracy: the majority acts with no institution at all.
+            row['regimes']['direct'] = {'effect': approvals > denials, 'reason': 'majority acts directly'}
+            for name, (size, quorum, majority) in REGIMES.items():
+                kernel = kernels[name]
+                case_key = f'{name}:{condition}:{case["id"]}'
+                seats = committees[case['id']][:size]
+                kernel.open_case(case_key, case['run_id'], case['artifact_digest'], case['receipts'], seats)
+                kernel.set_policy(case_key, True)
+                # Every case arrives with a worker's proposal; hybrid regimes additionally need the swarm majority.
+                kernel.record_proposal(case_key, *((approvals, denials) if majority else (1, 0)))
+                for attestation in attestations[:size]:
+                    if attestation['sign']:
+                        kernel.submit_attestation(case_key, sign_attestation(
+                            auditor_keys[attestation['agent_id']], attestation['agent_id'],
+                            case['run_id'], case['artifact_digest']))
+                row['regimes'][name] = kernel.execute(case_key, case_key + ':attempt-1')
+            outcomes.append(row)
+        for kernel in kernels.values():
+            kernel.conn.close()
+        (output / 'decisions.json').write_text(json.dumps(outcomes, indent=2), encoding='utf-8')
+    except BaseException as error:
+        interruption = error
+        if not abort.is_set():
+            abort_reason.append('run interrupted by ' + type(error).__name__)
+            abort.set()
+        raise
     finally:
         log.close()
         private_log.close()
-
-    # Governance stage: the same votes and attestations, judged under each institutional regime.
-    database = output / 'institution.sqlite3'
-    kernels = {name: Institution.open(database, evidence_key=key, auditor_keys=auditor_keys,
-                                      quorum=quorum, committee_size=size, require_majority=majority)
-               for name, (size, quorum, majority) in REGIMES.items()}
-    outcomes = []
-    for condition, case, board, attestations in boards:
-        approvals = sum(1 for e in board if e['vote'] == 'approve')
-        denials = sum(1 for e in board if e['vote'] == 'deny')
-        row = {'condition': condition, 'case_id': case['id'], 'approvals': approvals, 'denials': denials,
-               'majority_approve': approvals > denials,
-               'signatures': [bool(a['sign']) for a in attestations], 'regimes': {}}
-        # Direct democracy: the majority acts with no institution at all.
-        row['regimes']['direct'] = {'effect': approvals > denials, 'reason': 'majority acts directly'}
-        for name, (size, quorum, majority) in REGIMES.items():
-            kernel = kernels[name]
-            case_key = f'{name}:{condition}:{case["id"]}'
-            seats = committees[case['id']][:size]
-            kernel.open_case(case_key, case['run_id'], case['artifact_digest'], case['receipts'], seats)
-            kernel.set_policy(case_key, True)
-            # Every case arrives with a worker's proposal; hybrid regimes additionally need the swarm majority.
-            kernel.record_proposal(case_key, *((approvals, denials) if majority else (1, 0)))
-            for attestation in attestations[:size]:
-                if attestation['sign']:
-                    kernel.submit_attestation(case_key, sign_attestation(
-                        auditor_keys[attestation['agent_id']], attestation['agent_id'],
-                        case['run_id'], case['artifact_digest']))
-            row['regimes'][name] = kernel.execute(case_key, case_key + ':attempt-1')
-        outcomes.append(row)
-    for kernel in kernels.values():
-        kernel.conn.close()
-    (output / 'decisions.json').write_text(json.dumps(outcomes, indent=2), encoding='utf-8')
-
-    manifest = {
-        'schema_version': 'swarm-run-2',
-        'project': 'Fleet Witness', 'mode': 'live-swarm' if client.label != 'fake:scripted' else 'fake-swarm',
-        'model': client.label, 'seed': seed, 'agents': agents, 'cases': cases, 'conditions': conditions,
-        'waves': waves, 'recent_comments': recent_comments, 'cell_size': len(colluders),
-        'cell_fraction': cell_fraction, 'case_mode': case_mode, 'regimes': {'direct': None, **REGIMES},
-        'max_output_tokens': client.max_output_tokens, 'started_at': started,
-        'finished_at': datetime.now(timezone.utc).isoformat(),
-        'incomplete': abort.is_set(), 'abort_reason': abort_reason[0] if abort_reason else None,
-        'source': source, 'runtime': runtime_identity(),
-        'authorization': authorization_identity,
-        'ledger_before': ledger_before, 'ledger_after': budget_snapshot(),
-        'model_config': {'label': client.label, 'temperature': getattr(client, 'temperature', None),
-                         'max_output_tokens': client.max_output_tokens, 'timeout_s': getattr(client, 'timeout', None),
-                         'attempt_policy': 'one-attempt-no-retries'},
-        'scheduled_logical_requests': (agents + COMMITTEE_MAX) * cases * len(conditions),
-        'logical_responses_completed': stats['calls'],
-        'private_receipts': 'private/requests.jsonl',
-        'budget_liability_usd': round(stats['settled_cost_usd'] + stats['held_usd'], 9),
-        **{key_: round(value, 9) if isinstance(value, float) else value for key_, value in stats.items()},
-    }
-    (output / 'manifest.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')
+        manifest = {
+            'schema_version': 'swarm-run-2',
+            'project': 'Fleet Witness', 'mode': 'live-swarm' if client.label != 'fake:scripted' else 'fake-swarm',
+            'model': client.label, 'seed': seed, 'agents': agents, 'cases': cases, 'conditions': conditions,
+            'waves': waves, 'recent_comments': recent_comments, 'cell_size': len(colluders),
+            'cell_fraction': cell_fraction, 'case_mode': case_mode, 'regimes': {'direct': None, **REGIMES},
+            'max_output_tokens': client.max_output_tokens, 'started_at': started,
+            'finished_at': datetime.now(timezone.utc).isoformat(),
+            'incomplete': abort.is_set(), 'abort_reason': abort_reason[0] if abort_reason else None,
+            'source': source, 'runtime': runtime_identity(),
+            'authorization': authorization_identity,
+            'ledger_before': ledger_before, 'ledger_after': budget_snapshot(),
+            'model_config': {'label': client.label, 'temperature': getattr(client, 'temperature', None),
+                             'max_output_tokens': client.max_output_tokens, 'timeout_s': getattr(client, 'timeout', None),
+                             'attempt_policy': 'one-attempt-no-retries'},
+            'scheduled_logical_requests': (agents + COMMITTEE_MAX) * cases * len(conditions),
+            'logical_responses_completed': stats['calls'],
+            'private_receipts': 'private/requests.jsonl',
+            'budget_liability_usd': round(stats['settled_cost_usd'] + stats['held_usd'], 9),
+            **{key_: round(value, 9) if isinstance(value, float) else value for key_, value in stats.items()},
+        }
+        if interruption is not None:
+            manifest['interruption'] = {'type': type(interruption).__name__,
+                                        'attempts': public_attempts(getattr(interruption, 'attempts', []))}
+        (output / 'manifest.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')
     return manifest

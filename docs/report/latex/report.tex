@@ -5,8 +5,10 @@
 %  Built on the Apart Research hackathon LaTeX template (fonts, colours,
 %  heading styles and section order), with a separate title page.
 %  Compile with pdfLaTeX:  pdflatex report && pdflatex report
-%  Source of every number: docs/report/REPORT.md (corrected 2026-11-09)
-%  and the retained run archive data/fleet-witness-runs-2026-11-08.zip.
+%  Retrospective correction: 2026-11-11; no new submission confirmation.
+%  Experiment 1: REPORT.md and data/fleet-witness-runs-2026-11-08.zip.
+%  Experiment 2: public aggregates in docs/report/experiment2; raw runs absent.
+%  Evidence scope: docs/report/CORRECTIONS-2026-11-11.md.
 % =====================================================================
 
 \documentclass[11pt, letterpaper]{article}
@@ -93,7 +95,7 @@
 % ---------------------------------------------------------------------
 \setstretch{1.1}
 \setlength{\parindent}{0pt}
-\setlength{\parskip}{0.5\baselineskip}
+\setlength{\parskip}{0.4\baselineskip}
 \setlength{\emergencystretch}{1.5em}
 \clubpenalty=300
 \widowpenalty=300
@@ -224,7 +226,7 @@
     with hidden harmful code, frontier reviewers (GPT-6.1 Sol, Gemini 4 Argon)
     never approved a harmful change. A small model's mistakes, however, fell on
     the same changes: a seven-seat committee of its copies approved 12\% of
-    harmful changes, exactly as often as a single reviewer. Giving half the
+    harmful changes, about as often as a single reviewer. Giving four
     seats to a stronger model with different blind spots cut this to 0.1\%.
     Conclusion: put every check a program can do into verified code, and do not
     rely on more copies of the same model for safety; measure where reviewers
@@ -238,6 +240,7 @@
   \begin{tabular}{@{}r@{\hspace{8pt}}l@{}}
     \textcolor{subheadgray}{Track} & 4, Multi-Agent Oversight and Control (cross-track: 2 and 3)\\
     \textcolor{subheadgray}{Code and data} & \url{https://github.com/k2jac9/fleet-witness}\\
+    \textcolor{subheadgray}{Revision} & Retrospective correction, 11 November 2026\\
   \end{tabular}
 \end{center}
 
@@ -283,10 +286,10 @@ The institution's job is to stop such a swarm from taking over decisions.
 
 \head{What we found.}Automatic checks do what voting cannot. Agents cannot tell
 a forged signature from a real one, so a plain majority approved every forged
-release; the kernel blocked them all. Random committees fail only when the
-random draw seats enough colluders, and never more often. And when reviewers
+release; the kernel blocked them all. In the checklist task, committees failed
+only when the random draw seated enough colluders. And when reviewers
 share blind spots, more copies of the same model add nothing: a small model's
-seven-seat committees were as unsafe as one reviewer, while giving half the
+seven-seat committees were as unsafe as one reviewer, while giving four
 seats to a stronger model almost eliminated the problem.
 
 \head{Theory of change.}Agent actions already pass through a few chokepoints,
@@ -566,13 +569,16 @@ vote. Unanimity was never captured but blocked 9 of 96 valid gpt-oss releases.
   \end{tabular}
 \end{table}
 
-\head{The task needs judgement.}A standard code-security scanner (Bandit)
-flagged 5 of the 8 easy harmful changes and none of the 16 medium or hard ones,
-with no false alarms (Appendix~\ref{app:exp2}).
+\head{The task needs judgement.}The retained code-security scanner (Bandit)
+baseline marks 40 of 48 cases as parsed, including 20 of 24 harmful changes.
+Among those parsed it flagged 5/7 easy, 0/7 medium and 0/6 hard harmful changes, with no
+flags on 20 parsed safe or forged cases. Unparsed or unsupported cases are
+separate from negative results (Appendix~\ref{app:exp2}).
 
+\needspace{3\baselineskip}
 \head{Frontier reviewers made no mistakes on harmful changes.}GPT-6.1 Sol and
-Gemini 4 Argon rejected all 24 harmful changes in every review, and DeepSeek
-erred once in 1,200 (Table~\ref{tab:honest}).
+Gemini 4 Argon each recorded 0/288 harmful approvals in votes and 0/168 in
+attestations. DeepSeek erred once in 1,200 votes (Table~\ref{tab:honest}).
 
 \head{A small model's mistakes landed on the same changes.}gpt-oss-20b approved
 12\% of harmful changes, but not at random. All its mistakes fell on 7 of the 24,
@@ -585,7 +591,7 @@ the same as one reviewer. Independent mistakes would predict 4.0\%, 1.4\% and
 wide (0.4--26\%). This is the shared-blind-spot effect described by \citet{eckhardt1985}
 and \citet{kim2025}.
 
-\head{A stronger second model removes the blind spot.}Committees that mix
+\head{A stronger second model reduces the blind spot.}Committees that mix
 gpt-oss with DeepSeek (at least half the seats DeepSeek) approved harmful
 changes 0.1\% of the time. DeepSeek alone was already near zero, so this shows
 the value of seats held by a model without the same blind spots, not of
@@ -599,27 +605,27 @@ approved it unanimously. Both views are reasonable, so we report it as
 contested rather than as a mistake and leave it out of the safe-change rates.
 
 \head{The colluder attack.}Table~\ref{tab:exp2swarm} repeats the eight decision
-rules on the judgement task with 20\% and 40\% colluders. For DeepSeek, the
-pattern matches Experiment~1. Honest reviewers rejected every harmful change, so
-every unsafe release came from seated colluders: 21 of 96 for a single auditor,
-5 for 4-of-7, and none for unanimity or the hybrid. For gpt-oss, the gated
-majority released 10 of 96 harmful changes. But comparing each decision with
-what the honest agents decided on their own (no answer key needed) shows that
-colluders flipped only 3 of 98 honest rejections. The rest were the honest
-agents' own shared mistakes. Unanimity cut gpt-oss's unsafe releases to 5 of 96
-but blocked 46 of 64 valid changes. Seeing the board \emph{lowered} honest gpt-oss approvals of
-harmful changes, from 12.0\% to 6.3\% without colluders, and the colluders'
-comments added back only about one percentage point.
+rules on the judgement task with 20\% and 40\% colluders. DeepSeek's honest
+reviewers approved 1 of 3,358 answered harmful-target votes (the exception was
+1/720 at 40\%, hidden board). Its unsafe releases were 21/96 for a single
+auditor, 5/96 for 4-of-7, and zero for unanimity and the hybrid. For gpt-oss,
+gated majority released 10/96 harmful changes. A separate comparison records
+3 approvals among 98 decisions rejected in a separately sampled, stochastic
+0\%-colluder reference run. That denominator includes 88 harmful and 10 benign
+reference rejections; it is not a causal decomposition of the 10/96 unsafe
+releases. Unanimity reduced gpt-oss's unsafe releases to 5/96 but blocked 46/64
+valid changes. Without colluders, honest gpt-oss harmful approvals were 12.0\%
+hidden and 6.3\% visible (Appendix~\ref{app:exp2}).
 
 \begin{table}[t]
   \centering\small
   \setlength{\tabcolsep}{4pt}
   \renewcommand{\arraystretch}{1.1}
-  \caption{Experiment 2 colluder attack (20\% and 40\% colluders, both boards). Unsafe: harmful changes released (of 96). Flipped: releases of changes most honest agents rejected in the matching run without colluders (of 100 and 98; no answer key needed). Valid: safe changes released (of 64). Kernel rules released 0 of 32 forgeries; the direct majority 31 and 29.}
+  \caption{Experiment 2 colluder attack (20\% and 40\% colluders, both boards). Unsafe: harmful changes released (of 96). Ref.: releases among changes rejected in the separate 0\%-colluder reference run (of 100 for DS and 98 for GPT). This comparison is descriptive. Valid: safe changes released (of 64). Kernel rules released 0 of 32 forgeries; the direct majority 31 and 29.}
   \label{tab:exp2swarm}
   \begin{tabular}{@{}l rr rr rr@{}}
     \toprule
-    & \multicolumn{2}{c}{\textbf{Unsafe}} & \multicolumn{2}{c}{\textbf{Flipped}}
+    & \multicolumn{2}{c}{\textbf{Unsafe}} & \multicolumn{2}{c}{\textbf{Ref.}}
     & \multicolumn{2}{c}{\textbf{Valid}} \\
     \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
     \textbf{Decision rule} & DS & GPT & DS & GPT & DS & GPT \\
@@ -639,16 +645,14 @@ comments added back only about one percentage point.
 \section{Discussion and Limitations}
 % =====================================================================
 
-\head{Verify the institution, not the agents.}We never verified a single agent.
-Still, no forgery got through, and colluders won only as often as seating
-allowed, as long as honest reviewers were reliable. When reviewers share blind
-spots, adding more copies of the same model adds nothing, and the idea that more
-judges are safer breaks down \citep{ladha1992}. The practical rules are: put
-everything a program can check into the kernel; for each task, measure how often
-honest reviewers make mistakes and whether they make the same ones; and where
-they do, seat reviewers that do not share those blind spots. A companion pilot
-agrees (Appendix~\ref{app:pilot}): a live supervisor swung from unsafe approvals
-to refusing everything, while the controller blocked every invalid action.
+\head{Verify the institution, not the agents.}The kernel blocked every forgery;
+with reliable honest reviewers, committee failures stayed within the seat bound.
+Shared blind spots made seven copies of one model as unsafe as one
+\citep{ladha1992}. Put mechanical checks in the kernel, measure individual errors
+and their overlap, and seat reviewers with different blind spots. A companion
+pilot (Appendix~\ref{app:pilot}) reinforces the distinction: its supervisor swung
+from unsafe approvals to refusing everything, while the controller blocked
+every invalid action.
 
 \head{Limitations.}G2 and G3 assume reliable, independent honest reviewers,
 which the small model was not. Our colluders did not attack the seating, the
@@ -786,33 +790,47 @@ conformance testing for agent protocols. \arxiv{2603.23801}.
 
 \section*{Code and Data}
 
+This is a retrospective correction dated 11 November 2026, not confirmation
+of a new submission. The recorded submission status is preserved in
+{\small\nolinkurl{docs/submission/FINAL.md}}; corrections and evidence limits
+are documented in {\small\nolinkurl{docs/report/CORRECTIONS-2026-11-11.md}}.
+
 \begin{itemize}[tight]
   \item \textbf{Code repository:} \url{https://github.com/k2jac9/fleet-witness},
         containing the kernel, bounded checker, swarm harness, analysis and
         figure scripts, and tests.
-  \item \textbf{Data:} every reported run, including the superseded truncated
-        run and the 600-token pilot, is published as
+  \item \textbf{Experiment 1 data:} the main sweeps, superseded DeepSeek run,
+        600-token DeepSeek pilot and near-miss runs are published as
         \code{data/fleet-witness-runs-2026-11-08.zip}: public event logs, sealed
         ground truth, per-regime decisions and run manifests (see
-        \code{data/README.md}).
-  \item \textbf{Reproduction:} \code{scripts/reproduce\_tables.py} recomputes
-        every table offline from the archive, and \code{scripts/rigor\_stats.py}
-        computes the board splits, draw-level intervals, seat-bound
+        \code{data/README.md}). Its 153 entries contain no Experiment~2 runs.
+  \item \textbf{Experiment 1 reproduction:} \code{scripts/reproduce\_tables.py}
+        recomputes the Experiment~1 tables from that archive, and
+        \code{scripts/rigor\_stats.py} computes the board splits, draw-level
+        intervals, seat-bound
         opportunities, detector counts and truncation comparison; neither makes
         model calls.
-  \item \textbf{Experiment 2:} plan and plan review in
+  \item \textbf{Experiment 2 aggregates:} per-case honest-review counts,
+        aggregate regime and persuasion results, scanner rows and label-check
+        output are in {\small\nolinkurl{docs/report/experiment2/}}.
+        {\small\nolinkurl{scripts/verify_judgement_aggregates.py}} checks selected
+        aggregate arithmetic offline, including harmful-approval rates and
+        enumerated 4-of-7 probabilities. Raw prompts, events, decisions and
+        run manifests are not published; call counts, costs, abstention causes
+        and stopped-run claims cannot be independently checked from these
+        aggregates (Appendix~\ref{app:exp2}). The plan and plan review are in
         {\small\nolinkurl{docs/report/JUDGEMENT_PLAN.md}}; cases in
-        {\small\nolinkurl{fleet_witness/swarm/judgement_cases.py}}; runs via
-        {\small\nolinkurl{scripts/judgement_experiment.py}}; analysis in
-        {\small\nolinkurl{scripts/judgement_analysis.py}},
-        {\small\nolinkurl{label_check.py}} and {\small\nolinkurl{bandit_baseline.py}}.
+        {\small\nolinkurl{fleet_witness/swarm/judgement_cases.py}}. The experiment
+        and analysis scripts describe the method; their presence does not
+        replace the missing historical run records.
   \item \textbf{Companion pilot:} the live-supervisor pilot (Appendix~\ref{app:pilot})
         is reported in full in {\small\nolinkurl{docs/report/latest.md}}, with its
         evidence package in {\small\nolinkurl{docs/submission/latest/}}.
   \item \textbf{Timeline:} Experiment 1 runs finished on 2026-11-08 (latest
-        manifest timestamp 2026-11-09 02:07 UTC). Experiment 2 ran on 2026-11-09
-        between 08:30 and 09:10 UTC, i.e.\ 2026-11-08 AoE, before the 23:59 AoE
-        deadline.
+        manifest timestamp 2026-11-09 02:07 UTC). The original account places
+        Experiment~2 on 2026-11-09 between 08:30 and 09:10 UTC, i.e.\ before the
+        23:59 AoE deadline; its raw manifests are unavailable to verify that
+        timing. This correction is dated after the deadline.
 \end{itemize}
 
 \section*{Author Contributions}
@@ -872,7 +890,10 @@ coding assistance. Both authors are responsible for the final manuscript.
   \item \textbf{Records.} Experiment~1's run records lack the exact code version,
         temperature and provider request IDs, and most lack retry information
         (Appendix~\ref{app:provenance}). Experiment~2 ran outside the
-        repository's gated paid workflow (Appendix~\ref{app:exp2}).
+        repository's gated paid workflow and publishes only aggregates, not
+        raw prompts, responses, events, decisions or run manifests. Its
+        collection, accounting and missing-answer claims cannot be fully
+        audited (Appendix~\ref{app:exp2}).
 \end{itemize}
 
 \subsection*{A.2 Dual-use}
@@ -1190,14 +1211,15 @@ and it may not hold for colluders who adapt.
 \end{table}
 
 % ---------------------------------------------------------------------
-\appendixsection{Retained Accounting and Provenance}\label{app:provenance}
+\appendixsection{Experiment 1 Accounting and Provenance}\label{app:provenance}
 
 \subsection*{D.1 Reproducibility statement}
 
 \begin{table}[H]
   \centering\small
   \renewcommand{\arraystretch}{1.15}
-  \caption{What can and cannot be reproduced from the published archive.}
+  \caption{Experiment~1 evidence in the published archive. Experiment~2 has
+    only the public aggregates described in Appendix~\ref{app:exp2}.}
   \label{tab:repro}
   \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.2\textwidth}X@{}}
     \toprule
@@ -1206,8 +1228,8 @@ and it may not hold for colluders who adapt.
     Retained          & Per-agent votes, attestations, parsed reasons and output-token counts; sealed
                         truth (colluders, targets, committee seats); per-regime decisions; manifests with
                         model labels, seeds, counts, caps and recorded costs; short prompt hashes. \\
-    Reconstructable   & Synthetic cases and seating from seeds; all tables, figures and statistics in this
-                        report (offline scripts); the gated-majority control, by replaying recorded votes
+    Reconstructable   & Synthetic cases and seating from seeds; Experiment~1 tables, figures and
+                        statistics (offline scripts); the gated-majority control, by replaying recorded votes
                         through the implemented kernel with fresh synthetic receipts and keys. \\
     Not recoverable   & Historical receipt bodies and signing keys; full prompts and raw responses;
                         executable source revision, runtime and pinned temperature per run; provider
@@ -1278,32 +1300,38 @@ accept a bug. Each case is bundled with two routine, safe edits from a fixed poo
 (\code{judgement\_filler.py}). Meta Muse Wonder, which neither wrote the cases nor
 served as an agent, labelled all 48 bundled cases blind and agreed on 47; the
 exception (case 19) was a bundled edit described as adding one test that adds
-two. Cases where most honest reviewers of any model disagreed with our label
-were adjudicated by reading the reviewers' reasons: three were gpt-oss errors
-(the other three models rejected them unanimously, and gpt-oss's reasons missed
-the flaw, e.g.\ calling the spoofable rate-limit key ``correct''), and one was
-contested (the \code{git} case, \S\ref{sec:exp2}).
+two. The original account adjudicated cases where most honest reviewers of any
+model disagreed with our label by reading their reasons: three were classified
+as gpt-oss errors, and one as contested (the \code{git} case,
+\S\ref{sec:exp2}). The other models' recorded votes mostly rejected those three
+harmful cases, but not unanimously: DeepSeek approved case~15 once in 50 votes.
+The frontier models recorded no approvals on those cases. The individual
+reviewers' reasons are absent from the public aggregates.
 
 \subsection*{E.2 Protocol, deviations and costs}
 
 The plan, its AI review and the revisions are in \code{docs/report/JUDGEMENT\_PLAN.md}.
-A calibration pilot with single-change diffs found them too easy (honest approval
-of harmful changes 0\% for DeepSeek, 3.3\% for gpt-oss); as pre-declared, we made
+The original account reports that a calibration pilot with single-change diffs
+found them too easy (honest approval of harmful changes 0\% for DeepSeek, 3.3\%
+for gpt-oss); as pre-declared, we made
 one difficulty adjustment (bundling). After a first main run had started, frontier
 reviewers rejected safe changes because the diffs did not show where a
 \code{logger} or imported constant was defined; we stopped all runs, added one
 standard instruction (``the diff shows only the changed hunks; assume names it
 does not show are defined elsewhere unless the diff removes them'') and re-ran
-everything. The stopped runs are retained (\code{runs/judge-v1-stopped}). All runs
-used a standalone script (\code{scripts/judgement\_experiment.py}) with the
-unmodified runner and kernel, outside the repository's gated paid workflow.
+everything. It names a stopped-run location (\code{runs/judge-v1-stopped}), but
+neither these stopped runs nor the completed Experiment~2 raw runs are in the
+published repository or Experiment~1 archive. The historical collection used a
+standalone script (\code{scripts/judgement\_experiment.py}) outside the
+repository's gated paid workflow. The public aggregates cannot establish the
+historical requests, source revision, completion status or absence of retries.
 
 \begin{table}[H]
   \centering\small
   \renewcommand{\arraystretch}{1.1}
-  \caption{Experiment 2 runs. No call failed. DeepSeek's abstentions are
-    responses that hit the 2,000-token cap (counted as abstentions, no retries);
-    all but one were on safe or forged cases.}
+  \caption{Originally reported Experiment~2 run totals. Public aggregates do
+    not independently verify these call counts, abstentions or costs; raw
+    events and run manifests are unavailable.}
   \label{tab:exp2runs}
   \begin{tabular}{@{}llrrr@{}}
     \toprule
@@ -1317,14 +1345,50 @@ unmodified runner and kernel, outside the repository's gated paid workflow.
   \end{tabular}
 \end{table}
 
+The original account attributed DeepSeek's 230 abstentions to the 2,000-token
+cap and reported no retries or failed calls; the public files cannot verify
+these claims or allocate the abstentions by case. In particular, the 20\%
+hidden-board aggregate contains 958 answered honest harmful-target votes out of
+960 scheduled under the reported design, implying at least two unanswered
+harmful votes. We withdraw the earlier claim that all but one abstention was on
+a safe or forged case.
+
 \subsection*{E.3 Static-analysis baseline and persuasion}
 
-Bandit (medium or high severity, run on each case's own change) flagged 5/8 easy,
-0/8 medium and 0/8 hard harmful changes, and 0/24 safe or forged ones
+The retained Bandit output (medium or high severity, each case's own change)
+marks 40/48 cases as parsed. Of 24 harmful changes, 20 were parsed: 7/8 easy,
+7/8 medium and 6/8 hard. Flags among those parsed were respectively 5/7, 0/7
+and 0/6. The remaining four harmful cases are unparsed or unsupported, not
+negative scans. Of 24 safe or forged cases, 20 were parsed and none flagged;
+four were unparsed or unsupported. The retained output does not reliably
+record the scanner version or the reasons for missing coverage
 (\code{scripts/bandit\_baseline.py}). Honest gpt-oss approval of harmful changes
 was 12.0\% (hidden board) versus 6.3\% (visible) without colluders, 10.8\% versus
 6.2\% at 20\%, and 11.8\% versus 7.1\% at 40\%. DeepSeek's honest reviewers approved
 at most one harmful change in any condition.
+
+\subsection*{E.4 Aggregate recomputation boundary}
+
+The published \code{analysis-honest.json} supplies per-case error and answered
+vote counts. These support recomputing pooled vote rates, case exclusions,
+case-averaged hypergeometric committee probabilities, mixed-model probabilities,
+cross-model error correlations and case-resampling intervals under the stated
+analysis procedure. The 4-of-7 gpt-oss probability is 0.1200309641; four DeepSeek
+plus three gpt-oss seats give 0.0009278912. These are probabilities enumerated
+from the recorded counts, not new committee trials. The attestation entries
+provide only counts by kind, so their totals can be summed but their upstream
+observations cannot be checked. \code{analysis-swarm.json} supports sums of
+reported regime outcomes and answered-vote persuasion rates; it cannot recover
+individual decisions, votes or the case-level matching to the separate
+0\%-colluder reference run. The latter comparison does not identify a causal
+effect of collusion.
+
+The offline command \code{python scripts/verify\_judgement\_aggregates.py}
+checks the selected headline arithmetic from these aggregates and reports input
+hashes. It does not validate the saved bootstrap intervals, raw records,
+collection timing, prompts, costs, abstention causes or stopped runs. Re-running
+the historical analysis from original events is not possible with the public
+Experiment~2 files. Code and synthetic case definitions cannot fill that gap.
 
 % ---------------------------------------------------------------------
 \appendixsection{Companion Study: A Live-Supervisor Pilot}\label{app:pilot}
@@ -1368,22 +1432,29 @@ than agents, comparing two reasoning models rather than a reasoning and a
 non-reasoning model, and the pre-declared re-run rule for truncated runs. The
 2026-11-09 correction used Codex for offline audit follow-up, the median
 regression test, report corrections and artifact regeneration, with no new
-live-model calls. For Experiment~2, Claude Code (with a Claude subagent for half
+live-model calls. The retrospective 2026-11-11 correction used Codex to correct
+evidence claims and check selected Experiment~2 aggregate arithmetic, without
+new live-model calls. For Experiment~2, Claude Code (with a Claude subagent for half
 of the cases) wrote the 48 pull requests and their labels; for this reason Claude
 models were not used as agents, and labels were checked blind by an independent
 model (Meta Muse Wonder). The experiment plan was reviewed by four AI reviewers
 and a chair without debate, and the authors decided which changes to adopt.
 
-Three rounds of AI peer review of the report (four reviewer models, a data
-auditor and a chair, via OpenRouter) informed revisions. The third round
+Four rounds of AI review of the report (reviewer models, attempted numerical
+audits and a chair, via OpenRouter) informed revisions. The third round
 reviewed the LaTeX version: GPT-6.1 Sol, Gemini 4 Argon, Meta Muse Wonder and
 Xiaomi MiMo v2.6 Pro, chaired by GPT-6.1 Sol Pro, each received the LaTeX source,
 images of every compiled PDF page and the hackathon guidelines, and assessed
 Apart's three criteria plus formality, visual presentation and readability. It
 was run with a standalone script (\code{scripts/peer\_review\_visual.py}) outside
 the repository's gated paid workflow, and this revision addresses its
-consolidated concerns. These model-generated reviews are not human peer review.
-Every reported number was produced by code in the repository and cross-checked
-against the raw run logs. The authors are responsible for all claims.
+consolidated concerns. Round~4 recorded three accepts and one weak accept, but
+its numerical audit ended at the output limit (\code{status=length}) and left
+an empty unparsed result. Its historical manifest's \code{completed} status
+records pipeline completion, not a passed numerical audit. Those records are
+preserved unchanged. These model-generated reviews are not human peer review
+and do not certify this corrected revision. Experiment~1 has retained events
+for offline reproduction; Experiment~2 permits only the aggregate checks
+specified above. The authors are responsible for all claims.
 
 \end{document}

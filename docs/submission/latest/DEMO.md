@@ -1,6 +1,8 @@
 # Three-minute demo script
 
-This is a recording plan, not a completed video or a claim of live dashboard availability.
+Completed: [three-minute captioned MP4](https://github.com/k2jac9/fleet-witness/blob/main/docs/submission/media/fleet-witness-demo.mp4), with [captions and provenance](https://github.com/k2jac9/fleet-witness/tree/main/docs/submission/media). This is an edited sequence of 16 actual browser states and title/result cards, held for reading. It is not a continuous real-time capture or a claim of live dashboard availability. There is no audio or new model run.
+
+The outline below guided the edit; the WebVTT file gives the actual captions and timing.
 
 ## 0:00–0:30 — The mission
 
@@ -20,4 +22,4 @@ Open Figure 1 in the latest report and the public trial table. “In 80 pairs, t
 
 ## 2:30–3:00 — Show what can be checked
 
-Show the package checksum command and the offline reproduction snippet. Mention the separate historical two-model study and the finite checker. End with the limitations: synthetic tasks, local effects, incomplete historical provenance and no uncontrolled web observation. Link the repository and report.
+Show the one-command package verifier and the offline reproduction snippet. Mention the separate historical two-model study and the finite checker. End with the limitations: synthetic tasks, local effects, incomplete historical provenance and no uncontrolled web observation. Link the repository and report.

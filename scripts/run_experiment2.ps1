@@ -1,18 +1,45 @@
-# Launch Experiment 2 runs in parallel (standalone path; see docs/report/JUDGEMENT_PLAN.md).
-$ErrorActionPreference = 'Continue'
-$env:OPENROUTER_API_KEY = [Environment]::GetEnvironmentVariable('OPENROUTER_API_KEY', 'User')
+#requires -Version 7.0
+<#
+Run on a qualified POSIX host with PowerShell 7. This launcher does not issue
+operator records or read a Windows user-store credential. All four model records
+must share one canonical ledger, run ID, request/deadline envelope and run cap.
+The existing Experiment 2 global ceiling is $15, including every model below.
+Example (placeholders, not qualification):
+  pwsh scripts/run_experiment2.ps1 -Authorization /private/qualified-records.json -Live
+#>
+param(
+    [Parameter(Mandatory = $true)] [string] $Authorization,
+    [string] $Out = 'runs/judge-new',
+    [ValidateRange(0.000000001, 15)] [decimal] $MaxUsd = 15,
+    [string] $Python = 'python',
+    [switch] $Live
+)
+
+$ErrorActionPreference = 'Stop'
+if (-not ($IsLinux -or $IsMacOS)) {
+    throw 'The qualified paid client requires a POSIX host; Windows flag shims are refused.'
+}
+if (-not $Live) {
+    throw 'Paid execution requires explicit -Live and an owner-private -Authorization record.'
+}
+$authorizationPath = (Resolve-Path -LiteralPath $Authorization).Path
 $root = Split-Path $PSScriptRoot -Parent
 Set-Location $root
-New-Item -ItemType Directory -Force runs/judge-logs | Out-Null
 $jobs = @(
-  @('deepseek', 'deepseek/deepseek-v4-flash-0731', 'runs/judge', '0 0.2 0.4', 50, 'hidden-cell visible-cell', 4, 2000),
-  @('gptoss', 'openai/gpt-oss-20b', 'runs/judge', '0 0.2 0.4', 50, 'hidden-cell visible-cell', 4, 2000),
-  @('gpt61sol', 'openai/gpt-6.1-sol', 'runs/judge-frontier', '0', 12, 'hidden-cell', 9, 4000),
-  @('gemini4argon', 'google/gemini-4-argon', 'runs/judge-frontier', '0', 12, 'hidden-cell', 9, 4000)
+    @{ Label = 'deepseek'; Model = 'deepseek/deepseek-v4-flash-0731'; Shares = @('0', '0.2', '0.4'); Agents = 50; Conditions = @('hidden-cell', 'visible-cell') },
+    @{ Label = 'gptoss'; Model = 'openai/gpt-oss-20b'; Shares = @('0', '0.2', '0.4'); Agents = 50; Conditions = @('hidden-cell', 'visible-cell') },
+    @{ Label = 'gpt61sol'; Model = 'openai/gpt-6.1-sol'; Shares = @('0'); Agents = 12; Conditions = @('hidden-cell') },
+    @{ Label = 'gemini4argon'; Model = 'google/gemini-4-argon'; Shares = @('0'); Agents = 12; Conditions = @('hidden-cell') }
 )
-$procs = foreach ($j in $jobs) {
-  $cmd = "scripts/judgement_experiment.py --label $($j[0]) --model $($j[1]) --out $($j[2]) --shares $($j[3]) --agents $($j[4]) --cases 48 --conditions $($j[5]) --max-usd $($j[6]) --max-tokens $($j[7])"
-  Start-Process python -ArgumentList $cmd -NoNewWindow -PassThru -RedirectStandardOutput "runs/judge-logs/$($j[0]).out" -RedirectStandardError "runs/judge-logs/$($j[0]).err"
+$sharedModels = @($jobs | ForEach-Object { $_.Model })
+$cap = $MaxUsd.ToString([Globalization.CultureInfo]::InvariantCulture)
+foreach ($job in $jobs) {
+    $arguments = @('scripts/judgement_experiment.py', '--label', $job.Label, '--model', $job.Model,
+                   '--out', $Out, '--agents', [string]$job.Agents, '--cases', '48', '--max-usd', $cap,
+                   '--authorization', $authorizationPath, '--live', '--shared-models') + $sharedModels +
+                 @('--shares') + $job.Shares + @('--conditions') + $job.Conditions
+    & $Python @arguments
+    if ($LASTEXITCODE -ne 0) {
+        throw "Experiment stopped after $($job.Label) (exit $LASTEXITCODE); retain receipts and reconcile before any new run."
+    }
 }
-$procs | Wait-Process
-foreach ($j in $jobs) { "== $($j[0])"; Get-Content "runs/judge-logs/$($j[0]).out"; Get-Content "runs/judge-logs/$($j[0]).err" -Tail 5 }

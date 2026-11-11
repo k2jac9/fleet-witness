@@ -31,6 +31,9 @@ MEMBERS = {
     'EVIDENCE.md': 'docs/submission/latest/EVIDENCE.md',
     'DEMO.md': 'docs/submission/latest/DEMO.md',
     'LICENSE': 'LICENSE',
+    'fleet-witness-cover.png': 'docs/assets/fleet-witness-cover.png',
+    'fleet-witness-viewer.png': 'docs/assets/fleet-witness-viewer.png',
+    'verify_submission.py': 'scripts/verify_submission.py',
 }
 CSS = '''
 @page { size: Letter; margin: .68in .76in .72in;
@@ -121,7 +124,9 @@ def prepare():
         'template': 'https://docs.google.com/document/d/1_1_27EyZriMlc8n8EBE2YScaeyMjm-8xjR097nmHXAE/edit',
         'checked_date': '2026-11-09', 'deadline_utc': '2026-11-09T11:59:00Z',
         'submission_status': 'prepared; external upload and confirmation not performed',
-        'report': 'latest.pdf', 'video_status': 'script supplied; no video recorded',
+        'report': 'latest.pdf', 'video_status': '180-second captioned edited walkthrough; no audio or new model calls',
+        'video_url': 'https://github.com/k2jac9/fleet-witness/blob/main/docs/submission/media/fleet-witness-demo.mp4',
+        'project_image': 'fleet-witness-cover.png',
     }))
 
 

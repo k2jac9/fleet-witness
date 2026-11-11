@@ -6,12 +6,13 @@
   <strong>🛰️ SWARM ALIGNMENT HACKATHON · MISSION CONTROL FOR AGENT AUTHORITY</strong><br>
   <a href="docs/report/latest.pdf">Read the latest paper</a> ·
   <a href="docs/submission/latest-submission.zip">Get the submission package</a> ·
+  <a href="docs/submission/media/fleet-witness-demo.mp4">Watch the three-minute walkthrough</a> ·
   <a href="#-launch-the-local-lab">Launch the lab</a> ·
   <a href="docs/experiments/2026-11-09-openrouter-paired-pilot.md">Inspect the live pilot</a> ·
   <a href="docs/README.md">Browse the docs</a>
 </p>
 
-> **📄 Hackathon submission:** [*Verify the Institution, Not the Agents: Checks and Balances for AI Swarms, Tested Against Hidden Colluders*](docs/report/latex/report.pdf) (LaTeX source: [`docs/report/latex/`](docs/report/latex/)). It reports the kernel check, both swarm experiments and, in Appendix F, the live-supervisor pilot. The [pilot paper](docs/report/latest.pdf) is its companion report. What was submitted, and when: [`docs/submission/FINAL.md`](docs/submission/FINAL.md).
+> **📄 Hackathon report:** [*Verify the Institution, Not the Agents: Checks and Balances for AI Swarms, Tested Against Hidden Colluders*](docs/report/latex/report.pdf) (LaTeX source: [`docs/report/latex/`](docs/report/latex/)). It reports the kernel check, both swarm experiments and, in Appendix F, the live-supervisor pilot. This edition includes a [retrospective correction dated 11 November 2026](docs/report/CORRECTIONS-2026-11-11.md). The [pilot paper](docs/report/latest.pdf) is its companion report. The [recorded submission status](docs/submission/FINAL.md) remains prepared, awaiting upload confirmation; this correction does not establish a submission or replacement upload.
 
 # Fleet Witness
 
@@ -52,12 +53,38 @@ Every study tests the same idea: agents can be wrong or dishonest, but a small v
 | --- | --- | --- |
 | **Bounded institution check** | 23,376 states, 105,708 transitions; all seven injected mutants caught | Agreement with the project specification inside the explored bounds |
 | **Historical swarm study** | 32,830 completed logical responses; two models; 50-agent swarms | A comparison of majority and committee rules on retained, shared outputs; original provider-attempt totals remain unknown |
-| **Judgement experiment (Experiment 2)** | 48 pull requests; GPT-6.1 Sol and Gemini 4 Argon as honest reviewers; 50-agent colluder attacks with DeepSeek v4 Flash and gpt-oss-20b (about 35,000 calls) | Frontier reviewers approved no harmful change. gpt-oss's mistakes clustered on the same changes, so its seven-seat committees were as unsafe as one reviewer (12%); a stronger second model fixed it. Run outside the gated workflow; see the report's Appendix E |
+| **Judgement experiment (Experiment 2)** | Public aggregates for 48 synthetic pull requests, four reviewer models and 50-agent attacks with DeepSeek v4 Flash and gpt-oss-20b; raw run records are unavailable | Each frontier model recorded 0/288 harmful approvals in votes and 0/168 in attestations. gpt-oss's harmful vote rate was 12%; per-case enumeration gives 12.003% for its 4-of-7 committees and 0.0928% for four DeepSeek plus three gpt-oss seats. Historical collection ran outside the gated workflow; see Appendix E and the [correction note](docs/report/CORRECTIONS-2026-11-11.md) |
 | **New controlled pilot** | 160 requests, 80 pairs, one live supervisor; synthetic workers and reviewers | Raw instructions yielded 18 invalid approvals. Explicit instructions denied every case, including 40 valid ones |
 | **Pilot enforcement** | 30 valid local releases, 28 denied attempts, ten duplicate no-ops | No invalid or revoked attempt produced an effect in this cohort |
 | **Pilot accounting** | $0.2605526 reconciled provider charge; $0.288090 conservative settlement | This cohort's cost only; calibration and historical records are separate |
 
 **The plot twist:** removing unsafe approvals by refusing everything is not useful model judgment. The pilot exposes that failure while showing the controller's enforcement boundary. The new [paper](docs/report/latest.pdf), [public trial table](data/paired-pilot-2026-11-09.json) and [evidence guide](docs/submission/latest/EVIDENCE.md) retain both results. No uncontrolled web swarms were observed.
+
+### Experiment 2 evidence and offline checks
+
+The [153-entry historical archive](data/README.md) contains Experiment 1 runs; it contains no Experiment 2 events. Experiment 2's [published files](docs/report/experiment2/) support checking per-case vote rates, enumerated committee probabilities and sums of reported regime outcomes. They do not recover raw prompts, responses, events, individual decisions or run manifests, or independently establish call counts, costs, abstention causes, collection timing or stopped runs. The retained Bandit rows mark only 40/48 cases as parsed, including 20/24 harmful cases; unsupported or unparsed cases are separate from negative scans.
+
+From the repository root, this standard-library command checks the selected aggregate arithmetic and prints source hashes without modifying the inputs or making model calls:
+
+```sh
+python3 scripts/verify_judgement_aggregates.py --dir docs/report/experiment2
+```
+
+The [correction note](docs/report/CORRECTIONS-2026-11-11.md) identifies the exact calculations and remaining limits. Round 4's historical review manifest says `completed`, but its numerical audit was truncated and empty; that status is not a passed audit or validation of this corrected edition.
+
+## 🎥 Step inside mission control
+
+[Watch the captioned three-minute walkthrough](docs/submission/media/fleet-witness-demo.mp4) ([captions](docs/submission/media/fleet-witness-demo.vtt), [media provenance](docs/submission/media/README.md)). It shows actual scripted viewer states, followed by the separately recorded live-supervisor findings.
+
+![Actual seed-42 Fleet Witness viewer, clearly labeled Scripted demo: 10 evidence pairs, seven invalid recommendations, nine denied attempts and four local effects.](docs/assets/fleet-witness-viewer.png)
+
+Verify the portable submission from this checkout with one offline command:
+
+```sh
+python3 -m scripts.verify_submission
+```
+
+This checks the allowlist, checksums, repository bytes, publication metadata and recomputed pilot totals. It does not authenticate private provider execution. The [evidence guide](docs/submission/latest/EVIDENCE.md) also covers the standalone package.
 
 ## 🚀 Launch the local lab
 
@@ -86,7 +113,7 @@ The [documentation map](docs/README.md) connects the guides and defines the shar
 | --- | --- |
 | **Research desk** | [Latest manuscript source](docs/report/latest.md), [PDF](docs/report/latest.pdf), [verified references](docs/report/latest.references.json), [provenance](docs/report/latest.provenance.json) |
 | **Submission bay** | [Portable package](docs/submission/latest-submission.zip), [submission guide](docs/SUBMISSION.md), [copy-ready form details](docs/submission/latest/SUBMISSION.md), [three-minute demo script](docs/submission/latest/DEMO.md) |
-| **Archive room** | [Preserved earlier report](docs/report/REPORT.pdf), [corrections and reproduction](docs/report/CORRECTIONS-2026-11-09.md), [historical experiment archive](data/fleet-witness-runs-2026-11-08.zip) |
+| **Archive room** | [Preserved earlier report](docs/report/REPORT.pdf), [Experiment 1 corrections and reproduction](docs/report/CORRECTIONS-2026-11-09.md), [11 November evidence corrections](docs/report/CORRECTIONS-2026-11-11.md), [historical experiment archive](data/fleet-witness-runs-2026-11-08.zip) |
 | **Engine room** | [Architecture](docs/architecture.md), [accepted ADRs](docs/adr/README.md), [contributing](CONTRIBUTING.md), [agent contract](AGENTS.md) |
 | **Flight recorder** | [Observed build status](docs/BUILD_STATUS.md), [current gates](docs/GATES.md), [runtime adoption](docs/RUNTIME_ADOPTION.md) |
 | **Fleet workshop** | [Reviewed task workflow](fleet/README.md), [NixOS workers](docs/NIXOS_FLEET.md), [roadmap](docs/ROADMAP.md) |

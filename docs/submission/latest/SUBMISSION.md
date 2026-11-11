@@ -24,4 +24,7 @@ Report upload: `latest.pdf`. The ZIP is a companion evidence package, not a subs
 - If replacing an earlier entry, use the exact same title before the deadline; the latest files replace the earlier files according to the event instructions.
 - Save the confirmation email or receipt privately. A Git push or a prepared ZIP is not submission confirmation.
 
-The official requirements allow at most eight main pages, excluding references and appendices; an abstract of 150–250 words; authors and affiliations; and a Limitations and Dual-Use / Ethical Considerations appendix. The report follows the official template's section structure, whose instructions permit adaptation. The source template is linked in the repository submission guide. The optional three-minute demo script is in `DEMO.md`; no video was recorded by this task.
+The official requirements allow at most eight main pages, excluding references and appendices; an abstract of 150–250 words; authors and affiliations; and a Limitations and Dual-Use / Ethical Considerations appendix. The report follows the official template's section structure, whose instructions permit adaptation. The source template is linked in the repository submission guide. The captioned three-minute walkthrough is linked in `DEMO.md`. The ZIP includes `fleet-witness-cover.png` for the optional project image and `fleet-witness-viewer.png` for an actual scripted viewer preview. The MP4 is published separately to keep the evidence ZIP small.
+
+Optional recording URL: https://github.com/k2jac9/fleet-witness/blob/main/docs/submission/media/fleet-witness-demo.mp4
+Additional material: https://github.com/k2jac9/fleet-witness/blob/main/docs/submission/latest-submission.zip

@@ -1,3 +1,171 @@
+# PR 16 research and evidence corrections — November 11, 2026
+
+This correction starts from reviewed PR head
+`c244c8cb43a0b1e6720ef3b3dfb7f9dba4a60e2c` and incorporates current main
+`416cc81f4c4d840089ff1fef59b2dc01184e97ba`. The README insertion conflict was
+resolved by retaining both the Experiment 2 evidence guide and main's walkthrough
+and submission-verifier guide. The containing revision identifies the published
+correction; final hosted checks are attached to [PR 16](https://github.com/k2jac9/fleet-witness/pull/16).
+Earlier PR checks are not evidence for this revision.
+
+## Corrected behavior
+
+The judgement experiment, label checker and text review pipeline now use the
+existing source-bound operator authorization, single-attempt `ModelClient` and
+canonical SQLite ledger. Future paid entrypoints require `--authorization` and
+deliberate `--live`; optional cap flags must match the record. Experiment 2's
+sequential launcher checks one shared model/run envelope with a ceiling of $15,
+including all four models. Mixed calibration/confirmatory purposes fail before
+dispatch. Existing size, token, response and 30-second deadline bounds remain.
+
+Timeouts, missing usage and known overruns retain their attempted-call identities
+and liabilities. Cancellation preserves the original exception and the exact
+request's canonical state: an undispatched reservation stays reserved, a
+dispatched attempt remains held, and committed settlement is not replaced with a
+new hold. A connecting transport is cancelled before it can dispatch later.
+Paid swarm collection runs on the caller thread, retains the interrupted event,
+private receipt and incomplete manifest, and schedules no subsequent request.
+Scripted-mode concurrency and kernel authorization behavior are preserved.
+
+Required review stages reject truncated, empty, malformed, duplicate-key and
+schema-invalid responses. Earlier completed stages and receipts remain available
+when the pipeline fails or becomes partial. Paper review is explicitly text-only;
+PDF/image input is refused rather than treated as a qualified visual review.
+
+The optional Bandit adapter distinguishes clean/findings from tool errors,
+unparseable input and unsupported files, records its version, and reports partial
+coverage. The summary generator calculates exclusions from supplied counts. The
+new independent aggregate verifier checks selected arithmetic without claiming
+to replay unpublished Experiment 2 runs. The [dated evidence correction](report/CORRECTIONS-2026-11-11.md)
+details the corrected scanner denominators, reference comparison, abstention
+claims and incomplete historical numerical audit.
+
+## Observed verification
+
+| Check | Result |
+| --- | --- |
+| Full `python3 -m unittest discover -s tests -v` on the integrated code | 379 tests in 60.912 seconds: 378 passed, one inherited environment failure described below |
+| Independent final review | No remaining blocking findings; 160 targeted tests passed using standard unittest entrypoints |
+| `node --test tests/viewer.test.mjs` | Five passed |
+| `python3 -m scripts.verify_submission` | Passed: 17 members, 160 trials, 80 pairs, 30 effects; existing pilot package unchanged |
+| `python3 scripts/verify_judgement_aggregates.py --dir docs/report/experiment2` | Passed; selected homogeneous/mixed probabilities, vote/attestation totals, coverage and reference arithmetic reproduced |
+| Real Bandit 1.9.4 | Clean snippet, actual B307 finding and syntax failure distinguished; all 48 cases processed with zero tool errors, 37 fully scanned and three partially scanned |
+| PowerShell 7.7.0 launcher with a harmless fake Python executable | Four sequential jobs, shared cap/auth/model set and paths with spaces preserved; second-job failure stops later jobs; missing live flag and cap 16 dispatch no jobs |
+| Fleet validation and planner | Passed; four existing tasks, external budget zero |
+| Edited Markdown local-path audit | 86 targets checked, none unresolved |
+| `git diff --check` against current main | Passed |
+
+Local runtimes were Python 3.12.14 and Node 24.22.1. The one full-suite failure is
+`test_secure_transport.SecureTransportTests.test_actual_tls_pinned_root_hostname_and_environment_controls`:
+the test expects one pinned root, while this host exposes two after loading the
+fixture. The identical failure was reproduced on the original PR and main;
+an otherwise empty client SSL context already contains an environment root.
+The TLS implementation and test assertion were not weakened or suppressed. This
+local run is not a wholly passing suite; the hosted runtime matrix remains a
+separate source-bound check.
+
+Test-first work reproduced the original overspend/receipt, scanner and summary
+failures. Independent review additionally reproduced cancellation receipt loss,
+late dispatch after cancellation, and mixed-purpose preflight. Transition tests
+cover interruption after dispatch or settlement commits. The full integration
+suite exposed a pre-dispatch pilot compatibility regression; its existing
+`reserved` assertion was retained and the implementation corrected before the
+final run. There are 59 added regression tests beyond current main's 320 tests.
+
+The PowerShell archive matched its official SHA-256
+`c89d9c682d2c403dfe726f3df948e359675235a5bd6fab535776de69729ca0cb`.
+The tested launcher SHA-256 is
+`355204aa10a1458940476bf0964360611de6b1b51c8c6c5a53c2f2b92be831e3`.
+The real-scanner check is fresh adapter validation, not a replacement for the
+historical Bandit JSON; its finer coverage records 45 scanned files of 56, five
+unparseable files and six unsupported files.
+
+## Report and preservation
+
+The corrected LaTeX PDF was rebuilt with pdfTeX 1.40.26, shell escape disabled,
+and inspected across all 19 pages. It retains 11-point text and one-inch margins;
+the title plus narrative occupy eight physical pages, with References starting
+on page nine. The abstract contains 244 whitespace-delimited words. Paragraph
+spacing and discussion prose were tightened to retain that boundary, and the
+reference-comparison caption now says explicitly that it is descriptive. Final
+checks found no unresolved references, overfull/underfull boxes or text outside
+the page. The unused EPS helper reports that shell escape is disabled.
+
+- Corrected PDF SHA-256:
+  `a1fd415284dbb31928e5f9fcd2bfa3f23e3a146cc7d2a2ed425bbff80f8692bb`.
+- LaTeX source SHA-256:
+  `cb85beef8daf467fa2dee42e75c08a4a2ba93b3f62af0bcc44cfa92889230b7e`.
+- Existing pilot package SHA-256:
+  `c4a7f54215b85011cf0b5c00a3d063f4d4f3426ae835d43f21566dd6f206e251`.
+
+Seventy-six scoped historical archive, aggregate, review, pre-registration and
+ADR files remain byte-identical to the original PR head. Main's pilot manuscript,
+provenance, submission ZIP and video also remain unchanged. The original paper
+is recoverable from the original PR commit. The regenerated summary and corrected
+paper are dated retrospective presentations, not new observations or evidence
+of an event upload.
+
+No paid model call, real credential inspection, new operational authorization,
+cloud mutation, external message or event submission was performed. Missing raw
+Experiment 2 records remain unavailable; passing arithmetic checks cannot
+authenticate the original collection. Future paid runs still need applicable
+operator qualification, and visual model review remains unqualified.
+
+---
+
+# Submission finalization — November 9, 2026
+
+Task `submission-finalization-20261109`, based on
+`2ce59d34f92516cfb6666b891a4b35da2b46c9ba` (merged PR #14). The containing commit
+identifies this revision. The public package gains a read-only standard-library
+verifier, a PNG cover and an actual scripted viewer screenshot. A separate
+180-second captioned MP4 walks through actual viewer states and the recorded
+pilot result. README navigation links these assets; the viewer footer now lists
+both human authors.
+
+Observed local acceptance:
+
+- Eight new mutation tests failed before verifier implementation, then passed.
+  The initial qualified Python 3.15.2 suite passed **317 tests**; retained Node
+  26.11.1 passes **five viewer tests**. Pre-existing SQLite ResourceWarnings remain.
+- The verifier passes against the repository ZIP and from its extracted standalone
+  copy: **17 explicit members**, balanced 160-trial / 80-pair cohort and all frozen
+  totals. The ZIP is below 1 MB. It checks consistency, not private provider
+  execution or visual PDF layout. Every Python CI lane now invokes it.
+- PNGs and all 16 video scenes were visually inspected. FFprobe reports exactly
+  **180 seconds**, H.264, 1600 × 900, 25 fps, 2,506,489 bytes; full decoding passes.
+  The video is an edited sequence held for reading, with captions and no audio.
+  Command/result cards are editorial summaries, not a raw terminal recording.
+- The seed-42 scripted demo, fleet validation and planner pass. The report source,
+  HTML, PDF and bibliography remain byte-identical to the base. The PDF remains
+  eight pages (six main pages), with a 218-word abstract.
+- Local Markdown audit: 80 files, 340 links, no unresolved target. Twenty-two
+  protected evidence files and five historical guide bodies remain unchanged.
+  `git diff --check` passes.
+
+Logs, mutation failures, capture attempts, action/request records, authoring scripts,
+video checks and source identities are retained in the sibling
+`submission-finalization-20261109` artifact packet. A first capture failed because
+loopback was included in a DNS block rule; a stale debugging-port retry also
+failed. Fresh isolated profiles and a loopback-only exception resolved capture;
+all recorded page requests were local or data URLs. Failed evidence is preserved.
+
+Independent review found three verifier gaps, reproduced by three additional
+regression tests: changed frozen data/interpretation labels, NUL-suffixed ZIP
+names and decompressor exceptions escaping the sanitized error boundary. The
+owner fixed them in one pass; all eleven verifier tests pass. The reviewed full
+suite passes **320 Python tests**, and all five viewer tests, standalone/repository
+checks and full video decoding pass again. The final hosted matrix is recorded
+with exact identities in the packet.
+
+Independent review and final-source hosted CI are separate gates; the final
+identities and results are recorded in the artifact packet and pull request.
+No new paid inference, cloud mutation, public observation or event submission
+was performed. Required contact details and first/replacement status remain
+unresolved outside Git. A prepared package is not event confirmation.
+
+---
+
 # Repository editorial pass — November 9, 2026
 
 Task `editorial-polish-20261109`, based on

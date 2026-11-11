@@ -1,51 +1,43 @@
-"""Standalone multi-model AI peer review of the LaTeX report, with rendered PDF pages (OpenRouter).
+"""Authorized text-only peer review; the historical filename is retained for compatibility.
 
-NOT part of the gated paid workflow in fleet_witness/swarm (operator authorizations, one request
-at a time). It was run once, at the request of a team member spending their own OpenRouter key,
-because that gate is POSIX-only and its 30 s / 256 KB request limits cannot carry page images or
-high-effort reviews. Never runs by default; requires an explicit --max-usd and OPENROUTER_API_KEY.
+The existing ModelClient supports text only. Image/PDF mode is explicitly refused
+until separately reviewed and qualified; no images are flattened into text and
+no rendered visual assessment is claimed. Historical review artifacts are unchanged.
+Every future stage uses one source-bound shared ledger envelope, one attempt and
+the existing input/output/30-second bounds. Invalid required output stops the
+pipeline with its durable accounting and private receipt intact.
 
-Each reviewer receives: the Apart hackathon guidelines (rubric, submission requirements), the
-LaTeX source, and a PNG image of every page of the compiled PDF. Scores: Apart's three
-dimensions plus two added criteria, formality & visual presentation, and human readability.
-
-Pipeline: independent reviews (parallel) and a data audit, N debate rounds (parallel), chair.
-Usage:
-  python scripts/peer_review_visual.py --tex docs/report/latex/report.tex \
-      --pdf docs/report/latex/report.pdf --guidelines GUIDELINES.md \
-      --data docs/report/review-data.md --data docs/report/CORRECTIONS-2026-11-09.md \
-      --out docs/report/reviews/round-3 --max-usd 10
+Usage (placeholders, not qualification):
+  python scripts/peer_review_visual.py --tex paper.tex --guidelines guidelines.md \
+      --data results.json --out runs/new-text-review \
+      --authorization /private/qualified-records.json --live
 """
 import argparse
-import base64
-from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 import hashlib
 import json
-import os
 from pathlib import Path
-import re
 import sys
-import threading
 import time
-import urllib.error
-import urllib.request
 
-URL = 'https://openrouter.ai/api/v1/chat/completions'
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from fleet_witness.swarm.providers import ProviderError, source_identity  # noqa: E402
+from fleet_witness.swarm.run_records import runtime_identity  # noqa: E402
+from scripts.research_requests import (ResearchRequests, ledger_snapshot, paid_arguments,
+                                       research_clients, strict_object)  # noqa: E402
+
 REVIEWERS = ['openai/gpt-6.1-sol', 'google/gemini-4-argon', 'meta/muse-wonder', 'xiaomi/mimo-v2.6-pro']
 AUDITOR = 'google/gemini-4-argon'
 CHAIR = 'openai/gpt-6.1-sol-pro'
 
 SYSTEM = (
-    'You are an expert, rigorous peer reviewer for an AI-safety research venue (multi-agent oversight, formal '
-    'methods, empirical ML). You review BOTH substance and form. Substance: soundness of methods, whether claims '
-    'are supported by the evidence, statistics, confounds, overclaiming, reproducibility, positioning against prior '
-    'work, and compliance with the hackathon requirements. Form: you are given images of every page of the compiled '
-    'PDF, so judge it as a typeset research paper: formality and register of the writing, structure and headings, '
-    'capitalization and terminology consistency, citation style and reference formatting, figure and table quality '
-    '(legibility, labels, captions, colour, placement), typography and layout, and how easily a human reader can '
-    'follow it. Technical jargon is acceptable when needed; needless convolution is not. Cite the page number, '
-    'section, figure or table for every point. If something seems missing, treat it as a request for clarification. '
-    'Do not invent references; if you suggest related work, say it should be verified.'
+    'You are a rigorous peer reviewer for an AI-safety research venue. This is a TEXT-ONLY review of '
+    'the supplied LaTeX source, guidelines and result data. No PDF page images are supplied. Assess '
+    'methods, evidence, statistics, confounds, overclaiming, reproducibility, prose and source structure. '
+    'Do not claim to have inspected rendered typography, layout, figure legibility or page limits. '
+    'The compatibility score name formality_aesthetics covers source-level writing and structure only. '
+    'Cite source sections, figure labels or table labels. Treat apparently missing evidence as a request '
+    'for clarification, and do not invent references.'
 )
 
 RUBRIC = """This is a 3-day hackathon report (Apart Research Swarm Alignment Sprint). Score five dimensions, 1-5 each.
@@ -59,18 +51,17 @@ EXECUTION QUALITY: 1 seriously flawed; 2 weak (missing validation, flawed design
 PRESENTATION & CLARITY (Apart): 1 incomprehensible; 2 hard to follow (key information buried, excessive length);
  3 clear enough; 4 well presented; 5 exceptionally clear, a model for this type of work.
 Two additional criteria requested by the authors:
-FORMALITY & VISUAL PRESENTATION (judge from the page images): is this a formal, professional research paper? Consider
- register and tone, heading hierarchy and capitalization consistency, citation and reference style, figure legibility
- and labelling, table design, captions, typography, whitespace and layout, and adherence to the official template
- structure. 1 unprofessional; 2 several formatting or style problems; 3 acceptable with noticeable inconsistencies;
- 4 polished with minor issues; 5 publication-quality typesetting and style.
+FORMALITY & SOURCE STRUCTURE (the compatibility key is formality_aesthetics): assess writing register,
+ heading hierarchy, terminology, citation syntax and caption text from source alone. 1 unprofessional;
+ 2 several source-level style problems; 3 acceptable with inconsistencies; 4 polished source with minor issues;
+ 5 exceptionally clear source structure and style. Rendered visual quality is NOT assessed.
 READABILITY (human perspective): can a technically literate reader understand it on one pass? Penalize convoluted
  sentences, needless hedging chains, undefined abbreviations, inconsistent terminology, dense paragraphs and
  over-qualified prose; domain jargon is acceptable. 1 very hard to read; 2 often convoluted; 3 readable with effort;
  4 easy to follow; 5 exceptionally clear and fluent.
 Judge it as a hackathon report: reward a promising, honestly backed idea; penalize overclaiming and any breach of
-the submission requirements (8-page limit excluding references and appendices, 150-250 word abstract, required
-Limitations and Dual-Use / Ethical appendix, authors and affiliations)."""
+the supplied submission requirements. Source can establish abstract wording, appendices and author fields;
+rendered page count and template compliance remain unassessed."""
 
 PLAN_SYSTEM = (
     'You are an expert, rigorous reviewer of research plans for an AI-safety venue (multi-agent oversight, '
@@ -81,8 +72,7 @@ PLAN_SYSTEM = (
 )
 
 PLAN_TASK = """You are reviewing a research PLAN for a hackathon project (official judging rubric and requirements are
-in the guidelines below; the plan's current paper is summarized inside the plan). The team has about 3 hours,
-two inexpensive models (DeepSeek v4 Flash, gpt-oss-20b) and a budget of about $15.
+in the guidelines below). Assess the time, model and budget constraints actually stated in the supplied plan.
 Reply with ONLY a JSON object:
 {"summary": "<3 sentences>",
  "will_it_answer_the_questions": "<does the design actually test RQ1-RQ5? where not, why>",
@@ -108,24 +98,24 @@ SCORES_JSON = '{"impact_innovation": 1-5, "execution": 1-5, "presentation": 1-5,
 
 REVIEW_TASK = RUBRIC + """
 
-Review the manuscript (LaTeX source below, and the attached images of every compiled PDF page, in order).
+Review the manuscript LaTeX source below. This is text-only: no PDF or page images are supplied.
 Reply with ONLY a JSON object:
 {"summary": "<3 sentences>",
  "scores": SCORES,
  "score_rationale": {"impact_innovation": "...", "execution": "...", "presentation": "...", "formality_aesthetics": "...", "readability": "..."},
  "strengths": ["..."],
  "concerns": [{"id": "C1", "severity": "critical|major|minor",
-               "category": "<validity|statistics|overclaiming|confound|reproducibility|related-work|requirements|formality|figures|tables|headings|capitalization|citations|typography|layout|readability>",
-               "location": "<page / section / figure / table>", "issue": "...", "why_it_matters": "...",
+               "category": "<validity|statistics|overclaiming|confound|reproducibility|related-work|requirements|formality|figures|tables|headings|capitalization|citations|source-structure|readability>",
+               "location": "<source section / figure label / table label>", "issue": "...", "why_it_matters": "...",
                "suggested_fix": "<concrete, feasible within a few hours if possible>"}],
  "readability_examples": [{"location": "...", "original": "<short quote>", "suggested_rewrite": "..."}],
  "verdict": "accept|weak accept|borderline|weak reject|reject",
  "confidence": 1-5}"""
 
-DEBATE_TASK = """You previously reviewed this manuscript (LaTeX source and page images are attached again). Below are
+DEBATE_TASK = """You previously reviewed this manuscript (LaTeX source is supplied again; no page images). Below are
 your position and the other anonymous reviewers' positions. For EACH other reviewer's concern decide "agree",
-"disagree" or "factually_wrong" (it misreads the paper or the page images), with a one-sentence reason grounded in the
-manuscript. Then revise your own concerns. Reply with ONLY a JSON object:
+"disagree" or "factually_wrong" (it misreads the supplied source), with a one-sentence reason grounded in the
+source. Do not infer rendered visual quality. Then revise your own concerns. Reply with ONLY a JSON object:
 {"judgements": [{"concern_ref": "<reviewer letter>.<id>", "stance": "agree|disagree|factually_wrong", "reason": "..."}],
  "revised_own_concerns": [{"id": "...", "severity": "critical|major|minor", "issue": "...", "suggested_fix": "..."}],
  "withdrawn": ["<own ids>"],
@@ -143,25 +133,26 @@ OTHER REVIEWERS' CURRENT POSITIONS:
 AUDIT_TASK = """You are a data auditor. Check EVERY numeric claim in the manuscript (abstract, tables, figures,
 findings, appendices) against the result data provided. The data includes a historical review-data file and a dated
 correction record; where they disagree, the correction record supersedes the historical file. Report mismatches,
-unsupported numbers, arithmetic errors, wrong denominators and statistical misstatements, including numbers read off
-the figures in the page images. Reply with ONLY a JSON object:
-{"checked_claims": <int>, "issues": [{"location": "...", "claim": "...", "data_says": "...",
+unsupported numbers, arithmetic errors, wrong denominators and statistical misstatements. Check numbers available
+in the source and supplied result data; numbers available only inside an external image are outside this text-only audit. Reply with ONLY a JSON object:
+{"checked_claims": <positive int>, "issues": [{"location": "...", "claim": "...", "data_says": "...",
   "severity": "critical|major|minor"}], "notes": "..."}
 
 RESULT DATA:
 {data}"""
 
-CHAIR_TASK = """You chair the review. Page images of the PDF are attached so you can calibrate the formality and
-visual-presentation judgements yourself. Consolidate the independent reviews, the debate and the data audit into a
-single ranked list of concerns. Merge duplicates. For each give consensus (how many reviewers raised or agreed),
+CHAIR_TASK = """You chair this TEXT-ONLY review. No PDF or page images are supplied. Calibrate source-level formality,
+structure and readability; rendered layout, typography and figure legibility remain unassessed. Consolidate the
+independent reviews, the debate and the data audit into a single ranked list of concerns. Merge duplicates. For each give consensus (how many reviewers raised or agreed),
 validity (valid / partially valid / invalid, using the debate's factually_wrong judgements), severity, and the single
 most effective fix the authors can make in a few hours, or "future work".
 Reply in Markdown with sections: Rubric scores (table of each reviewer's initial and final scores on all five
 dimensions, plus your own calibrated score with a one-line justification per dimension), Overall assessment (with
 verdict distribution), Substance concerns (ranked table: #, concern, consensus, validity, severity, action, effort),
-Formality and visual presentation (headings, capitalization, citations, figures, tables, typography, layout),
-Readability (with the most useful concrete rewrites), Requirements compliance (page limit, abstract length, required
-appendix, authors and affiliations), Data-audit issues, Points reviewers got wrong, and Bottom line.
+Formality and source structure (heading hierarchy, capitalization, citations, caption text),
+Readability (with the most useful concrete rewrites), Requirements visible in source (abstract wording, required
+appendix, authors and affiliations; rendered page limits remain unassessed), Data-audit issues, Points reviewers
+got wrong, and Bottom line.
 
 INDEPENDENT REVIEWS:
 {reviews}
@@ -172,228 +163,220 @@ DEBATE:
 DATA AUDIT:
 {audit}"""
 
-
-class Budget:
-    def __init__(self, cap):
-        self.cap, self.spent, self.lock = cap, 0.0, threading.Lock()
-
-    def add(self, usd):
-        with self.lock:
-            self.spent += usd
-            if self.spent > self.cap:
-                raise RuntimeError(f'spend cap exceeded: ${self.spent:.4f} > ${self.cap}')
-
-
-def extract_json(text):
-    match = re.search(r'```(?:json)?\s*(\{.*\})\s*```', text or '', re.S) or re.search(r'(\{.*\})', text or '', re.S)
-    if match:
-        try:
-            return json.loads(match.group(1))
-        except json.JSONDecodeError:
-            pass
-    return {'unparsed': (text or '')[:20000]}
-
-
-def render_pages(pdf, dpi):
-    import pymupdf  # optional dependency for this script only
-    doc = pymupdf.open(pdf)
-    return [base64.b64encode(page.get_pixmap(dpi=dpi).tobytes('png')).decode() for page in doc]
+SEVERITY = frozenset(('critical', 'major', 'minor'))
+VERDICT = frozenset(('accept', 'weak accept', 'borderline', 'weak reject', 'reject'))
+SCORES = {key: range(1, 6) for key in SCORE_KEYS}
+CONCERN = {'id': str, 'severity': SEVERITY, 'issue': str, 'suggested_fix': str}
+SCHEMAS = {
+    'plan': {'summary': str, 'will_it_answer_the_questions': str,
+             'predicted_scores_if_executed_well': {key: range(1, 6) for key in SCORE_KEYS[:3]},
+             'top_changes': [{'rank': range(1, 10001), 'change': str, 'why': str, 'cost': str, 'score_effect': str}],
+             'concerns': [CONCERN], 'cut_if_short_on_time': [str],
+             'verdict': frozenset(('proceed', 'proceed with changes', 'redesign'))},
+    'review': {'summary': str, 'scores': SCORES, 'score_rationale': {key: str for key in SCORE_KEYS},
+               'strengths': [str], 'concerns': [{**CONCERN, 'category': str, 'location': str, 'why_it_matters': str}],
+               'readability_examples': [{'location': str, 'original': str, 'suggested_rewrite': str}],
+               'verdict': VERDICT, 'confidence': range(1, 6)},
+    'audit': {'checked_claims': range(1, 2**31),
+              'issues': [{'location': str, 'claim': str, 'data_says': str, 'severity': SEVERITY}], 'notes': str},
+    'debate': {'judgements': [{'concern_ref': str, 'stance': frozenset(('agree', 'disagree', 'factually_wrong')),
+                               'reason': str}],
+               'revised_own_concerns': [CONCERN], 'withdrawn': [str],
+               'new_concerns': [{**CONCERN, 'category': str}],
+               'rebuttals': [{'to': str, 'about': str, 'response': str}],
+               'updated_scores': SCORES, 'updated_verdict': VERDICT},
+}
 
 
-def content(text, images):
-    parts = [{'type': 'text', 'text': text}]
-    for i, image in enumerate(images, 1):
-        parts.append({'type': 'text', 'text': f'[PDF page image {i} of {len(images)}; page 1 is the title page]'})
-        parts.append({'type': 'image_url', 'image_url': {'url': f'data:image/png;base64,{image}'}})
-    return parts
+def _validate(value, schema):
+    if isinstance(schema, dict):
+        if not isinstance(value, dict) or set(value) != set(schema):
+            raise ValueError('missing or unexpected response fields')
+        for key, expected in schema.items():
+            _validate(value[key], expected)
+    elif isinstance(schema, list):
+        if not isinstance(value, list):
+            raise ValueError('expected response list')
+        for item in value:
+            _validate(item, schema[0])
+    elif isinstance(schema, range):
+        if type(value) is not int or value not in schema:
+            raise ValueError('response integer outside its allowed range')
+    elif isinstance(schema, frozenset):
+        if not isinstance(value, str) or value not in schema:
+            raise ValueError('unexpected response category')
+    elif schema is str:
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError('required response text is empty')
+    else:
+        raise ValueError('unknown response schema')
 
 
-def call(model, user, budget, log, label, reasoning, max_tokens, system=None):
-    body = {'model': model, 'temperature': 0.3, 'max_tokens': max_tokens,
-            'reasoning': {'effort': reasoning}, 'usage': {'include': True},
-            'messages': [{'role': 'system', 'content': system or SYSTEM}, {'role': 'user', 'content': user}]}
-    data = json.dumps(body).encode()
-    headers = {'Authorization': f"Bearer {os.environ['OPENROUTER_API_KEY']}", 'Content-Type': 'application/json',
-               'X-Title': 'fleet-witness peer review'}
+def extract_json(text, kind='review'):
+    parsed = strict_object(text)
+    _validate(parsed, SCHEMAS[kind])
+    return parsed
+
+
+def content(text, images=()):
+    if images or not isinstance(text, str):
+        raise ValueError('image mode is not qualified; supply text-only source without PDF/page images')
+    return text
+
+
+def _hash(text):
+    return hashlib.sha256(text.encode()).hexdigest()
+
+
+@contextmanager
+def review_session(args, out, manifest):
+    if getattr(args, 'pdf', None):
+        raise ValueError('image/PDF mode is not qualified; supply text-only source')
+    models = [*REVIEWERS, CHAIR] + ([AUDITOR] if 'auditor' in manifest else [])
+    clients = research_clients(models, args.authorization, live=args.live, max_usd=args.max_usd,
+                               max_output_tokens=args.max_tokens, temperature=.3, reasoning=args.reasoning)
+    client = clients[CHAIR]
+    requests = ResearchRequests(out)
     started = time.monotonic()
-    for attempt in range(1, 4):
-        try:
-            request = urllib.request.Request(URL, data=data, headers=headers, method='POST')
-            with urllib.request.urlopen(request, timeout=1200) as response:
-                payload = json.loads(response.read())
-            break
-        except urllib.error.HTTPError as error:
-            detail = error.read()[:300].decode('utf-8', 'replace')
-            log(label, model, attempt, f'HTTP {error.code}: {detail}', 0.0, None)
-            if error.code not in (408, 429, 500, 502, 503, 504) or attempt == 3:
-                raise
-        except (urllib.error.URLError, TimeoutError) as error:
-            log(label, model, attempt, f'network: {error}', 0.0, None)
-            if attempt == 3:
-                raise
-        time.sleep(5 * attempt)
-    choice = payload['choices'][0]
-    usage = payload.get('usage') or {}
-    cost = float(usage.get('cost') or 0.0)
-    budget.add(cost)
-    log(label, model, attempt, choice.get('finish_reason'), cost, usage, round(time.monotonic() - started, 1))
-    return choice['message'].get('content') or ''
+    manifest.update(status='started', gated_workflow=True, review_mode='text-only', page_images=0,
+                    visual_assessment=False,
+                    scope='Supplied source and text data only; rendered PDF/figure/layout quality not assessed.',
+                    source=source_identity(), runtime=runtime_identity(),
+                    script_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                    private_receipts='private/requests.jsonl', completed_stages=[],
+                    ledger_before=ledger_snapshot(client),
+                    authorization_ids={model: clients[model].authorization['authorization_id'] for model in clients},
+                    reasoning=args.reasoning, attempt_policy='one-attempt-no-retries')
 
+    def ask(model, task, label, *, kind=None, system=SYSTEM, filename=None):
+        manifest['active_stage'] = label
+        print(f'{label}: {model} (text-only, one attempt)', flush=True)
+        result = requests.call(clients[model], system, content(task), label,
+                               validate=(lambda text: extract_json(text, kind)) if kind else None)
+        target = out / (filename or (label + ('.json' if kind else '.md')))
+        if kind:
+            target.write_text(json.dumps({'model': model, **result}, indent=2), encoding='utf-8')
+        else:
+            target.write_text(result, encoding='utf-8')
+        manifest['completed_stages'].append(label)
+        manifest.pop('active_stage', None)
+        return result
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--plan', help='review a research plan (Markdown) instead of a paper; fast, no debate')
-    parser.add_argument('--tex')
-    parser.add_argument('--pdf')
-    parser.add_argument('--guidelines', required=True)
-    parser.add_argument('--data', action='append')
-    parser.add_argument('--out', required=True)
-    parser.add_argument('--max-usd', type=float, required=True)
-    parser.add_argument('--debate-rounds', type=int, default=0,
-                        help='0 (default): independent reviews + chair. Past rounds showed debate rarely moved '
-                             'scores; 1 is available when reviewers disagree sharply.')
-    parser.add_argument('--reasoning', default='high')
-    parser.add_argument('--dpi', type=int, default=110)
-    parser.add_argument('--max-tokens', type=int, default=16000)
-    args = parser.parse_args()
-    if 'OPENROUTER_API_KEY' not in os.environ:
-        parser.error('OPENROUTER_API_KEY is not set')
-    out = Path(args.out)
-    if out.exists():
-        parser.error('output already exists; choose a fresh directory')
-    if args.plan:
-        out.mkdir(parents=True)
-        return review_plan(args, out)
-    if not (args.tex and args.pdf and args.data):
-        parser.error('paper review needs --tex, --pdf and --data (or use --plan)')
-    out.mkdir(parents=True)
-
-    tex = Path(args.tex).read_text(encoding='utf-8')
-    guidelines = Path(args.guidelines).read_text(encoding='utf-8')
-    data = '\n\n'.join(f'=== {Path(p).name} ===\n' + Path(p).read_text(encoding='utf-8') for p in args.data)
-    images = render_pages(args.pdf, args.dpi)
-    paper = (f'HACKATHON GUIDELINES (official rubric and submission requirements):\n{guidelines}\n\n'
-             f'MANUSCRIPT LATEX SOURCE:\n{tex}')
-    budget = Budget(args.max_usd)
-    lock, calls = threading.Lock(), []
-
-    def log(label, model, attempt, status, cost, usage, seconds=None):
-        entry = {'label': label, 'model': model, 'attempt': attempt, 'status': status, 'cost_usd': cost,
-                 'seconds': seconds, 'prompt_tokens': (usage or {}).get('prompt_tokens'),
-                 'completion_tokens': (usage or {}).get('completion_tokens')}
-        with lock:
-            calls.append(entry)
-        print(f"  {label:<12} {model:<28} {status} ${cost:.4f} {seconds or ''}s", flush=True)
-
-    def ask(model, text, label, with_images=True):
-        return call(model, content(text, images if with_images else []), budget, log, label,
-                    args.reasoning, args.max_tokens)
-
-    letters = {m: chr(ord('A') + i) for i, m in enumerate(REVIEWERS)}
-    manifest = {'schema_version': 'visual-review-1', 'gated_workflow': False,
-                'note': 'Standalone run outside the authorized paid workflow; see script docstring.',
-                'reviewers': {letters[m]: m for m in REVIEWERS}, 'auditor': AUDITOR, 'chair': CHAIR,
-                'reasoning': args.reasoning, 'debate_rounds': args.debate_rounds, 'page_images': len(images),
-                'image_dpi': args.dpi,
-                'tex_sha256': hashlib.sha256(tex.encode()).hexdigest(),
-                'pdf_sha256': hashlib.sha256(Path(args.pdf).read_bytes()).hexdigest(),
-                'guidelines_sha256': hashlib.sha256(guidelines.encode()).hexdigest(),
-                'data_sha256': hashlib.sha256(data.encode()).hexdigest(),
-                'script_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
-                'status': 'started'}
-    started = time.monotonic()
     try:
-        review_task = REVIEW_TASK.replace('SCORES', SCORES_JSON) + '\n\n' + paper
-        print('Independent reviews + data audit (parallel) ...', flush=True)
-        with ThreadPoolExecutor(len(REVIEWERS) + 1) as pool:
-            futures = {m: pool.submit(ask, m, review_task, f'review_{letters[m]}') for m in REVIEWERS}
-            audit_future = pool.submit(ask, AUDITOR, AUDIT_TASK.replace('{data}', data) + '\n\n' + paper, 'audit')
-            reviews = {m: extract_json(f.result()) for m, f in futures.items()}
-            audit = extract_json(audit_future.result())
-        for m in REVIEWERS:
-            (out / f'review_{letters[m]}.json').write_text(json.dumps({'model': m, **reviews[m]}, indent=2), encoding='utf-8')
-        (out / 'data_audit.json').write_text(json.dumps({'model': AUDITOR, **audit}, indent=2), encoding='utf-8')
-
-        debate, transcript = {}, []
-
-        def position(m):
-            latest = {'review': reviews[m]}
-            if m in debate:
-                latest['latest_debate_response'] = debate[m]
-            return json.dumps(latest, indent=1)
-
-        for round_no in range(1, args.debate_rounds + 1):
-            print(f'Debate round {round_no} (parallel) ...', flush=True)
-            tasks = {m: DEBATE_TASK.replace('SCORES', SCORES_JSON).replace('{own}', position(m)).replace(
-                '{others}', '\n\n'.join(f'Reviewer {letters[o]}:\n{position(o)}' for o in REVIEWERS if o != m))
-                + '\n\n' + paper for m in REVIEWERS}
-            with ThreadPoolExecutor(len(REVIEWERS)) as pool:
-                futures = {m: pool.submit(ask, m, tasks[m], f'debate{round_no}_{letters[m]}') for m in REVIEWERS}
-                new = {m: extract_json(f.result()) for m, f in futures.items()}
-            for m in REVIEWERS:
-                (out / f'debate{round_no}_{letters[m]}.json').write_text(json.dumps({'model': m, **new[m]}, indent=2),
-                                                                      encoding='utf-8')
-            debate = new
-            transcript.append(new)
-
-        print('Chair ...', flush=True)
-        anon = json.dumps({f'Reviewer {letters[m]}': v for m, v in reviews.items()}, indent=1)
-        full_debate = json.dumps([{f'Reviewer {letters[m]}': v for m, v in rnd.items()} for rnd in transcript], indent=1)
-        chair_task = RUBRIC + '\n\n' + CHAIR_TASK.replace('{reviews}', anon).replace('{debate}', full_debate).replace(
-            '{audit}', json.dumps(audit, indent=1))
-        meta = ask(CHAIR, chair_task, 'chair')
-        (out / 'meta_review.md').write_text(meta, encoding='utf-8')
-        manifest['verdicts_after_debate'] = {letters[m]: debate.get(m, {}).get('updated_verdict') or reviews[m].get('verdict')
-                                             for m in REVIEWERS}
-        manifest['rubric_scores'] = {letters[m]: {'initial': reviews[m].get('scores'),
-                                                  'final': debate.get(m, {}).get('updated_scores')} for m in REVIEWERS}
+        yield ask
         manifest['status'] = 'completed'
-    except Exception as error:
-        manifest.update(status='failed', error=f'{type(error).__name__}: {str(error)[:300]}')
+    except BaseException as error:
+        manifest.update(status='partial' if manifest['completed_stages'] else 'failed',
+                        error=type(error).__name__, failed_stage=manifest.get('active_stage'))
         raise
     finally:
-        manifest.update(cost_usd=round(budget.spent, 6), wall_seconds=round(time.monotonic() - started, 1), calls=calls)
+        manifest.update(**requests.summary(), ledger_after=ledger_snapshot(client),
+                        wall_seconds=round(time.monotonic() - started, 3))
+        requests.close()
         (out / 'manifest.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')
-        print(f'Done ({manifest["status"]}): ${budget.spent:.4f}, {manifest["wall_seconds"]}s -> {out}', flush=True)
+        print(f"Review {manifest['status']}: ${manifest['cost_usd']:.6f} settled / "
+              f"${manifest['held_usd']:.6f} held -> {out}", flush=True)
 
 
 def review_plan(args, out):
-    """Fast plan review: parallel independent reviews, then an action-first chair. No debate."""
+    """Independent text reviews followed by a chair, within one shared envelope."""
     plan = Path(args.plan).read_text(encoding='utf-8')
     guidelines = Path(args.guidelines).read_text(encoding='utf-8')
-    budget, lock, calls = Budget(args.max_usd), threading.Lock(), []
-    letters = {m: chr(ord('A') + i) for i, m in enumerate(REVIEWERS)}
-
-    def log(label, model, attempt, status, cost, usage, seconds=None):
-        with lock:
-            calls.append({'label': label, 'model': model, 'attempt': attempt, 'status': status, 'cost_usd': cost,
-                          'seconds': seconds})
-        print(f"  {label:<12} {model:<28} {status} ${cost:.4f} {seconds or ''}s", flush=True)
-
+    letters = {model: chr(ord('A') + index) for index, model in enumerate(REVIEWERS)}
+    manifest = {'schema_version': 'plan-review-2', 'reviewers': {letters[m]: m for m in REVIEWERS},
+                'chair': CHAIR, 'debate_rounds': 0, 'plan_sha256': _hash(plan),
+                'guidelines_sha256': _hash(guidelines),
+                'required_stages': [*[f'plan_review_{letters[m]}' for m in REVIEWERS], 'chair']}
     task = PLAN_TASK + f'\n\nGUIDELINES:\n{guidelines}\n\nPLAN:\n{plan}'
-    started = time.monotonic()
-    print('Plan review: independent reviews (parallel) ...', flush=True)
-    with ThreadPoolExecutor(len(REVIEWERS)) as pool:
-        futures = {m: pool.submit(call, m, task, budget, log, f'plan_{letters[m]}', args.reasoning,
-                                  args.max_tokens, PLAN_SYSTEM) for m in REVIEWERS}
-        reviews = {m: extract_json(f.result()) for m, f in futures.items()}
-    for m in REVIEWERS:
-        (out / f'plan_review_{letters[m]}.json').write_text(json.dumps({'model': m, **reviews[m]}, indent=2),
-                                                            encoding='utf-8')
-    print('Chair ...', flush=True)
-    anon = json.dumps({f'Reviewer {letters[m]}': v for m, v in reviews.items()}, indent=1)
-    meta = call(CHAIR, PLAN_CHAIR.replace('{reviews}', anon) + f'\n\nPLAN:\n{plan}', budget, log, 'chair',
-                args.reasoning, args.max_tokens, PLAN_SYSTEM)
-    (out / 'plan_meta_review.md').write_text(meta, encoding='utf-8')
-    manifest = {'schema_version': 'plan-review-1', 'gated_workflow': False,
-                'reviewers': {letters[m]: m for m in REVIEWERS}, 'chair': CHAIR, 'debate_rounds': 0,
-                'plan_sha256': hashlib.sha256(plan.encode()).hexdigest(),
-                'verdicts': {letters[m]: reviews[m].get('verdict') for m in REVIEWERS},
-                'cost_usd': round(budget.spent, 6), 'wall_seconds': round(time.monotonic() - started, 1),
-                'calls': calls}
-    (out / 'manifest.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')
-    print(f'Done: ${budget.spent:.4f}, {manifest["wall_seconds"]}s -> {out}', flush=True)
+    with review_session(args, out, manifest) as ask:
+        reviews = {model: ask(model, task, f'plan_review_{letters[model]}', kind='plan', system=PLAN_SYSTEM)
+                   for model in REVIEWERS}
+        anon = json.dumps({f'Reviewer {letters[m]}': value for m, value in reviews.items()}, indent=1)
+        ask(CHAIR, PLAN_CHAIR.replace('{reviews}', anon) + f'\n\nPLAN:\n{plan}', 'chair',
+            system=PLAN_SYSTEM, filename='plan_meta_review.md')
+        manifest['verdicts'] = {letters[model]: reviews[model]['verdict'] for model in REVIEWERS}
+    return manifest
+
+
+def review_paper(args, out):
+    tex = Path(args.tex).read_text(encoding='utf-8')
+    guidelines = Path(args.guidelines).read_text(encoding='utf-8')
+    data = '\n\n'.join(f'=== {Path(path).name} ===\n' + Path(path).read_text(encoding='utf-8') for path in args.data)
+    paper = (f'GUIDELINES:\n{guidelines}\n\nTEXT-ONLY MANUSCRIPT LATEX SOURCE (no PDF/page images):\n{tex}')
+    letters = {model: chr(ord('A') + index) for index, model in enumerate(REVIEWERS)}
+    manifest = {'schema_version': 'text-review-2', 'reviewers': {letters[m]: m for m in REVIEWERS},
+                'auditor': AUDITOR, 'chair': CHAIR, 'debate_rounds': args.debate_rounds,
+                'tex_sha256': _hash(tex), 'guidelines_sha256': _hash(guidelines), 'data_sha256': _hash(data),
+                'required_stages': [*[f'review_{letters[m]}' for m in REVIEWERS], 'audit',
+                    *[f'debate{round_no}_{letters[m]}' for round_no in range(1, args.debate_rounds + 1)
+                      for m in REVIEWERS], 'chair']}
+    with review_session(args, out, manifest) as ask:
+        review_task = REVIEW_TASK.replace('SCORES', SCORES_JSON) + '\n\n' + paper
+        reviews = {model: ask(model, review_task, f'review_{letters[model]}', kind='review') for model in REVIEWERS}
+        audit = ask(AUDITOR, AUDIT_TASK.replace('{data}', data) + '\n\n' + paper,
+                    'audit', kind='audit', filename='data_audit.json')
+        debate, transcript = {}, []
+
+        def position(model):
+            latest = {'review': reviews[model]}
+            if model in debate:
+                latest['latest_debate_response'] = debate[model]
+            return json.dumps(latest, indent=1)
+
+        for round_no in range(1, args.debate_rounds + 1):
+            tasks = {model: DEBATE_TASK.replace('SCORES', SCORES_JSON).replace('{own}', position(model)).replace(
+                '{others}', '\n\n'.join(f'Reviewer {letters[other]}:\n{position(other)}'
+                                        for other in REVIEWERS if other != model)) + '\n\n' + paper
+                for model in REVIEWERS}
+            debate = {model: ask(model, tasks[model], f'debate{round_no}_{letters[model]}', kind='debate')
+                      for model in REVIEWERS}
+            transcript.append(debate)
+        anon = json.dumps({f'Reviewer {letters[m]}': value for m, value in reviews.items()}, indent=1)
+        full_debate = json.dumps([{f'Reviewer {letters[m]}': value for m, value in rnd.items()}
+                                 for rnd in transcript], indent=1)
+        chair_task = RUBRIC + '\n\n' + CHAIR_TASK.replace('{reviews}', anon).replace('{debate}', full_debate).replace(
+            '{audit}', json.dumps(audit, indent=1)) + '\n\n' + paper
+        ask(CHAIR, chair_task, 'chair', filename='meta_review.md')
+        manifest['verdicts_after_debate'] = {letters[m]: debate.get(m, {}).get('updated_verdict') or reviews[m]['verdict']
+                                            for m in REVIEWERS}
+        manifest['rubric_scores'] = {letters[m]: {'initial': reviews[m]['scores'],
+                                                'final': debate.get(m, {}).get('updated_scores', reviews[m]['scores'])}
+                                     for m in REVIEWERS}
+    return manifest
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--plan', help='review a research plan instead of a manuscript; no debate')
+    parser.add_argument('--tex')
+    parser.add_argument('--pdf', help='unsupported legacy image-mode input; refused until separately qualified')
+    parser.add_argument('--guidelines', required=True)
+    parser.add_argument('--data', action='append')
+    parser.add_argument('--out', required=True)
+    parser.add_argument('--debate-rounds', type=int, default=0)
+    parser.add_argument('--reasoning', choices=('none', 'minimal', 'low', 'medium', 'high'), default='high')
+    paid_arguments(parser)
+    args = parser.parse_args()
+    if args.pdf:
+        parser.error('image/PDF mode is not qualified; text-only review accepts --tex without --pdf')
+    if not args.live:
+        parser.error('paid research requires explicit --live and --authorization')
+    if args.plan and (args.tex or args.data or args.debate_rounds):
+        parser.error('--plan cannot be combined with manuscript data or debate rounds')
+    if not args.plan and not (args.tex and args.data):
+        parser.error('text-only paper review requires --tex and --data (or use --plan)')
+    if args.debate_rounds < 0:
+        parser.error('--debate-rounds must be nonnegative')
+    out = Path(args.out)
+    if out.exists():
+        parser.error('output already exists; choose a fresh directory')
+    out.mkdir(mode=0o700, parents=True)
+    if args.plan:
+        review_plan(args, out)
+    else:
+        review_paper(args, out)
+    return 0
 
 
 if __name__ == '__main__':
-    main()
+    raise SystemExit(main())

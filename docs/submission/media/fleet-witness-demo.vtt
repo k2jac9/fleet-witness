@@ -1,0 +1,50 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:10.000
+A swarm can agree on a release and still lack the evidence or authority to perform it.
+
+00:00:10.000 --> 00:00:20.000
+Authenticity. Applicability. Current authorization. A trustworthy system checks all three.
+
+00:00:20.000 --> 00:00:30.000
+Fleet Witness traces the recommendation, the controller decision, and the actual database effect.
+
+00:00:30.000 --> 00:00:42.000
+This is the actual seed-42 viewer. Its deterministic agents illustrate the mechanism; they are not measured models.
+
+00:00:42.000 --> 00:00:54.000
+Here the reviewer promotes a genuine build receipt into a release-safety claim. The raw supervisor approves.
+
+00:00:54.000 --> 00:01:05.000
+The recommendation is incorrect. The controller denies execution: a build receipt does not prove release safety.
+
+00:01:05.000 --> 00:01:15.000
+Switch to the paired scope-explicit presentation. The scripted supervisor now denies this unsupported release.
+
+00:01:15.000 --> 00:01:26.000
+This recommendation was valid at its snapshot. Permission is revoked before the execution attempt.
+
+00:01:26.000 --> 00:01:38.000
+The controller checks current permission and blocks the revoked attempt. No release record is committed.
+
+00:01:38.000 --> 00:01:50.000
+An authorized duplicate request is a no-op. A release here is a local SQLite record, not a public deployment.
+
+00:01:50.000 --> 00:02:02.000
+A separate recorded study used one real supervisor with synthetic workers and reviewers: 160 trials in 80 pairs.
+
+00:02:02.000 --> 00:02:15.000
+Raw: 18 invalid approvals. Scope explicit: zero invalid approvals, but 40 invalid denials—it denied every request.
+
+00:02:15.000 --> 00:02:30.000
+All invalid and revoked attempts were blocked. Thirty authorized effects committed. These are synthetic, local tasks.
+
+00:02:30.000 --> 00:02:42.000
+One offline command checks every packaged hash, compares repository sources, and recomputes the frozen trial totals.
+
+00:02:42.000 --> 00:02:52.000
+Run the offline demo and finite checker. The report also distinguishes the separate historical two-model study.
+
+00:02:52.000 --> 00:03:00.000
+Limits remain: synthetic tasks, local effects, incomplete historical provenance, and no uncontrolled web observation.
+

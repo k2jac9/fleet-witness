@@ -4,7 +4,21 @@
 Update this line with the upload time and confirmation once the official form has been submitted.
 A Git push is not a submission confirmation.
 
-## What is submitted
+## Retrospective correction: 11 November 2026
+
+The report source now includes the [11 November evidence correction](../report/CORRECTIONS-2026-11-11.md),
+dated after the recorded preparation and event deadline. It scopes archive reproduction to Experiment 1,
+documents Experiment 2's aggregate-only public evidence, and corrects scanner coverage, missing-answer
+and reference-run attribution claims. It does not establish an official upload, a replacement submission
+or acceptance. The preparation status above remains unchanged because no upload confirmation is recorded.
+The original plan, run aggregates, review outputs and review manifests remain historical records.
+
+Round 4 recorded three AI accept verdicts and one weak accept, but its numerical audit ended with
+`status: "length"` and an empty `unparsed` result. The manifest's `status: "completed"` describes the
+historical pipeline outcome; it does not show a passed numerical audit. Those model reviews do not
+certify the retrospectively corrected report.
+
+## Prepared submission details
 
 | Field | Value |
 | --- | --- |
@@ -17,13 +31,17 @@ A Git push is not a submission confirmation.
 
 ## How this relates to the other report in the repository
 
-The submitted report covers four studies: the kernel check, Experiment 1 (checklist task), Experiment 2
+The prepared report covers four studies: the kernel check, Experiment 1 (checklist task), Experiment 2
 (judgement task) and, in Appendix F, the live-supervisor pilot. The pilot was designed and run by
 Alejandro Castellanos; its full write-up is the companion report [`docs/report/latest.md`](../report/latest.md)
 with its evidence package in [`docs/submission/latest/`](latest/). That package was prepared overnight
 with an earlier title and was not uploaded; it is kept unchanged as the pilot's evidence.
 
-## Abstract (as entered in the form)
+## Historical prepared abstract (9 November record)
+
+The text below preserves the earlier prepared abstract. Its prior heading, "as entered in the form",
+did not establish an upload confirmation. The corrected manuscript and evidence note qualify its
+rounded committee comparison and public evidence scope.
 
 When many AI agents work together, a few of them can secretly coordinate to push a harmful action
 through, and checking every agent one by one does not scale. We show that a small institution, a
@@ -41,11 +59,15 @@ seats to a stronger model with different blind spots cut this to 0.1%. Conclusio
 program can do into verified code, and do not rely on more copies of the same model for safety; measure
 where reviewers share blind spots and seat reviewers who do not share them.
 
-## Pre-submission checks
+## Historical preparation checks (9 November record)
+
+These describe the earlier prepared edition. Current compilation and verification belong to the
+dated correction and [build evidence](../BUILD_STATUS.md), not to this historical checklist.
 
 - Main body 7 pages after the title page (limit 8, excluding references and appendices).
 - Abstract 245 words (limit 150–250).
 - Authors and affiliations on the title page.
 - Required "Limitations and Dual-Use / Ethical Considerations" appendix: Appendix A.
-- Final AI review (round 4, fast format): 3 accept, 1 weak accept; its quick fixes are applied
-  ([`docs/report/reviews/round-4/`](../report/reviews/round-4/)).
+- Final AI review (round 4, fast format): 3 accept, 1 weak accept
+  ([`docs/report/reviews/round-4/`](../report/reviews/round-4/)); its numerical audit was incomplete,
+  as documented above.
