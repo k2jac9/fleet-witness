@@ -1,4 +1,5 @@
 import json
+from contextlib import closing
 from pathlib import Path
 import sqlite3
 import tempfile
@@ -57,7 +58,7 @@ class ExperimentTests(unittest.TestCase):
         self.assertEqual(self.replay['schema_version'], '1.0')
         self.assertEqual(self.replay['mode'], 'scripted-demo')
         self.assertEqual(self.replay['project'], 'Fleet Witness')
-        with sqlite3.connect(self.root / 'demo/witness.sqlite3') as conn:
+        with closing(sqlite3.connect(self.root / 'demo/witness.sqlite3')) as conn, conn:
             self.assertEqual(conn.execute('SELECT count(*) FROM releases').fetchone()[0], 4)
             self.assertEqual(conn.execute('SELECT count(*) FROM attempts').fetchone()[0], 15)
             stored = {row[0]: json.loads(row[1]) for row in conn.execute('SELECT id,supervisor_input FROM decisions')}

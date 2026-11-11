@@ -17,8 +17,10 @@ EKEY = b'evidence'
 KEYS = {name: name.encode() * 4 for name in ('a', 'b', 'c', 'outsider')}
 
 
-def kernel(quorum=2, require_majority=True, intact=True):
-    k = Institution(sqlite3.connect(':memory:', isolation_level=None), evidence_key=EKEY, auditor_keys=KEYS,
+def kernel(test_case, quorum=2, require_majority=True, intact=True):
+    connection = sqlite3.connect(':memory:', isolation_level=None)
+    test_case.addCleanup(connection.close)
+    k = Institution(connection, evidence_key=EKEY, auditor_keys=KEYS,
                     quorum=quorum, committee_size=3, require_majority=require_majority)
     receipt = issue_receipt(EKEY, issuer='i', claim='c', scope='s', artifact_digest='d', run_id='r')
     if not intact:
@@ -81,7 +83,7 @@ class InstitutionTest(unittest.TestCase):
         self.assertEqual(k.conn.execute("SELECT COUNT(*) FROM audit WHERE kind='release'").fetchone()[0], 1)
 
     def test_quorum_of_seated_auditors_authorizes_exactly_once(self):
-        k = kernel()
+        k = kernel(self)
         k.record_proposal('C', 5, 1)
         k.submit_attestation('C', sign_attestation(KEYS['a'], 'a', 'r', 'd'))
         self.assertFalse(k.execute('C', 'x1')['effect'])
@@ -91,7 +93,7 @@ class InstitutionTest(unittest.TestCase):
         self.assertEqual(k.conn.execute('SELECT COUNT(*) FROM releases').fetchone()[0], 1)
 
     def test_outsiders_duplicates_and_misbound_attestations_do_not_count(self):
-        k = kernel()
+        k = kernel(self)
         k.record_proposal('C', 5, 1)
         k.submit_attestation('C', sign_attestation(KEYS['a'], 'a', 'r', 'd'))
         k.submit_attestation('C', sign_attestation(KEYS['a'], 'a', 'r', 'd'))
@@ -103,8 +105,7 @@ class InstitutionTest(unittest.TestCase):
         self.assertIn('only 1 of 2', result['reason'])
 
     def test_malformed_attestations_do_not_poison_a_later_valid_quorum(self):
-        k = kernel()
-        self.addCleanup(k.conn.close)
+        k = kernel(self)
         k.record_proposal('C', 5, 1)
         valid_a = sign_attestation(KEYS['a'], 'a', 'r', 'd')
         for value in (
@@ -155,15 +156,13 @@ class InstitutionTest(unittest.TestCase):
                 self.assertEqual(conn.execute("SELECT COUNT(*) FROM audit WHERE kind='denied'").fetchone()[0], 1)
 
     def test_attestation_admission_rejects_oversized_values(self):
-        k = kernel()
-        self.addCleanup(k.conn.close)
+        k = kernel(self)
         with self.assertRaises(ValueError):
             k.submit_attestation('C', {'auditor': 'a', 'padding': 'x' * 1_048_576})
         self.assertEqual(k.conn.execute('SELECT COUNT(*) FROM attestations').fetchone()[0], 0)
 
     def test_attestation_admission_handles_unpaired_surrogates(self):
-        k = kernel()
-        self.addCleanup(k.conn.close)
+        k = kernel(self)
         k.record_proposal('C', 5, 1)
         k.submit_attestation('C', {'auditor': '\ud800'})
         for name in ('a', 'b'):
@@ -171,12 +170,12 @@ class InstitutionTest(unittest.TestCase):
         self.assertTrue(k.execute('C', 'safe')['effect'])
 
     def test_tampered_evidence_and_revoked_policy_block(self):
-        k = kernel(intact=False)
+        k = kernel(self, intact=False)
         k.record_proposal('C', 5, 1)
         for name in ('a', 'b', 'c'):
             k.submit_attestation('C', sign_attestation(KEYS[name], name, 'r', 'd'))
         self.assertEqual(k.execute('C', 'x')['reason'], 'evidence integrity failed')
-        k2 = kernel()
+        k2 = kernel(self)
         k2.record_proposal('C', 5, 1)
         for name in ('a', 'b'):
             k2.submit_attestation('C', sign_attestation(KEYS[name], name, 'r', 'd'))
@@ -184,7 +183,7 @@ class InstitutionTest(unittest.TestCase):
         self.assertFalse(k2.execute('C', 'x')['effect'])
 
     def test_committee_only_mode_does_not_need_majority(self):
-        k = kernel(require_majority=False)
+        k = kernel(self, require_majority=False)
         k.record_proposal('C', 1, 0)
         for name in ('a', 'b'):
             k.submit_attestation('C', sign_attestation(KEYS[name], name, 'r', 'd'))

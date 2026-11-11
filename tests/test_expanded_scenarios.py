@@ -1,5 +1,6 @@
 """Scripted boundary scenarios; real receipts, SQLite effects, and replay exports."""
 import copy
+from contextlib import closing
 import itertools
 from pathlib import Path
 import sqlite3
@@ -63,7 +64,7 @@ class ExpandedScenarioTests(unittest.TestCase):
                 attempt = controller.execute(decision['id'], 'disjoint-attempt-' + str(index))
                 self.assertFalse(attempt['execution_authorized_at_attempt'])
                 self.assertFalse(attempt['effect_occurred'])
-        with sqlite3.connect(self.database) as connection:
+        with closing(sqlite3.connect(self.database)) as connection, connection:
             self.assertEqual(connection.execute('SELECT count(*) FROM releases').fetchone()[0], 0)
 
     def test_complete_attestation_authorizes_among_inapplicable_and_forged_receipts(self):
@@ -78,7 +79,7 @@ class ExpandedScenarioTests(unittest.TestCase):
                 attempt = controller.execute(decision['id'], 'mixed-attempt-' + str(index))
                 self.assertTrue(attempt['execution_authorized_at_attempt'])
                 self.assertTrue(attempt['effect_occurred'])
-        with sqlite3.connect(self.database) as connection:
+        with closing(sqlite3.connect(self.database)) as connection, connection:
             self.assertEqual(connection.execute('SELECT count(*) FROM releases').fetchone()[0], 6)
 
     def test_genuine_near_match_fields_are_not_wildcards_or_prefixes(self):
