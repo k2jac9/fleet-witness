@@ -1,10 +1,14 @@
 import json
+import contextlib
+import io
 import sqlite3
 import unittest
+from unittest.mock import patch
 
 from fleet_witness.evidence import issue_receipt
 from fleet_witness.institution import Institution, sign_attestation
 from fleet_witness.verify_institution import MUTANTS, capture_probability, check
+from fleet_witness import verify_institution
 
 EKEY = b'evidence'
 KEYS = {name: name.encode() * 4 for name in ('a', 'b', 'c', 'outsider')}
@@ -118,6 +122,13 @@ class InstitutionTest(unittest.TestCase):
         self.assertIn('only 1 of 2', denied['reason'])
         self.assertEqual(k.conn.execute("SELECT COUNT(*) FROM audit WHERE kind='denied'").fetchone()[0], 1)
         k.submit_attestation('C', sign_attestation(KEYS['b'], 'b', 'r', 'd'))
+        k.conn.execute("CREATE TRIGGER fail_release_audit BEFORE INSERT ON audit WHEN NEW.kind='release' "
+                       "BEGIN SELECT RAISE(ABORT, 'audit failed'); END")
+        with self.assertRaises(sqlite3.IntegrityError):
+            k.execute('C', 'valid-second')
+        self.assertEqual(k.conn.execute('SELECT COUNT(*) FROM releases').fetchone()[0], 0)
+        self.assertEqual(k.conn.execute("SELECT COUNT(*) FROM attempts WHERE id='valid-second'").fetchone()[0], 0)
+        k.conn.execute('DROP TRIGGER fail_release_audit')
         self.assertTrue(k.execute('C', 'valid-second')['effect'])
         self.assertFalse(k.execute('C', 'duplicate')['effect'])
         self.assertEqual(k.conn.execute('SELECT COUNT(*) FROM releases').fetchone()[0], 1)
@@ -139,6 +150,22 @@ class InstitutionTest(unittest.TestCase):
                 self.assertEqual(k.execute('C', 'bad-evidence')['reason'], 'evidence integrity failed')
                 self.assertEqual(conn.execute('SELECT COUNT(*) FROM releases').fetchone()[0], 0)
                 self.assertEqual(conn.execute("SELECT COUNT(*) FROM audit WHERE kind='denied'").fetchone()[0], 1)
+
+    def test_attestation_admission_rejects_oversized_values(self):
+        k = kernel()
+        self.addCleanup(k.conn.close)
+        with self.assertRaises(ValueError):
+            k.submit_attestation('C', {'auditor': 'a', 'padding': 'x' * 1_048_576})
+        self.assertEqual(k.conn.execute('SELECT COUNT(*) FROM attestations').fetchone()[0], 0)
+
+    def test_attestation_admission_handles_unpaired_surrogates(self):
+        k = kernel()
+        self.addCleanup(k.conn.close)
+        k.record_proposal('C', 5, 1)
+        k.submit_attestation('C', {'auditor': '\ud800'})
+        for name in ('a', 'b'):
+            k.submit_attestation('C', sign_attestation(KEYS[name], name, 'r', 'd'))
+        self.assertTrue(k.execute('C', 'safe')['effect'])
 
     def test_tampered_evidence_and_revoked_policy_block(self):
         k = kernel(intact=False)
@@ -162,6 +189,40 @@ class InstitutionTest(unittest.TestCase):
 
 
 class BoundedCheckTest(unittest.TestCase):
+    @staticmethod
+    def result(verified):
+        return {'depth': 1, 'mutations': [], 'distinct_states': 1, 'transitions_checked': 1,
+                'violations': [] if verified else [{'trace': ['test'], 'problems': ['injected']}],
+                'verified': verified, 'seconds': 0.0}
+
+    def test_checker_reports_base_violation_with_nonzero_status(self):
+        with patch.object(verify_institution, 'check', return_value=self.result(False)), \
+                contextlib.redirect_stdout(io.StringIO()) as output:
+            result = verify_institution.main(['--depth', '1', '--json'])
+        self.assertEqual(result, 1)
+        data = json.loads(output.getvalue())
+        self.assertFalse(data['passed'])
+
+    def test_checker_reports_uncaught_mutant_with_nonzero_status(self):
+        def fake_check(depth, mutations=frozenset(), **kwargs):
+            return self.result(not mutations or 'skip_audit' in mutations)
+        with patch.object(verify_institution, 'check', side_effect=fake_check), \
+                contextlib.redirect_stdout(io.StringIO()) as output:
+            result = verify_institution.main(['--depth', '1', '--mutants', '--json'])
+        self.assertEqual(result, 1)
+        data = json.loads(output.getvalue())
+        self.assertTrue(data['mutants']['skip_audit']['verified'])
+        self.assertFalse(data['passed'])
+
+    def test_checker_rejects_nonpositive_depth(self):
+        for depth in ('0', '-1'):
+            with self.subTest(depth=depth), contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as result:
+                    verify_institution.main(['--depth', depth])
+                self.assertNotEqual(result.exception.code, 0)
+                with self.assertRaises(ValueError):
+                    check(depth=int(depth))
+
     def test_kernel_verified_and_every_mutant_caught(self):
         for majority in (True, False):
             self.assertTrue(check(depth=4, require_majority=majority)['verified'])

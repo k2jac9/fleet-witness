@@ -20,6 +20,7 @@ if __package__ in (None, ''):
     sys.path.insert(0, str(REPO))
 from scripts import baselines, independence, report_stats
 from fleet_witness.swarm.sweep import summarize, format_summary
+from fleet_witness.verify_institution import MUTANTS
 
 MAIN_ROOTS = ('sweep-deepseek2k', 'sweep-gptoss')
 AMBIG_ROOTS = {name: tuple(f'ambig-{stem}-s{seed}' for seed in (3000, 4000, 5000))
@@ -50,6 +51,56 @@ def _write(root, name, value):
     with (root / name).open('x', encoding='utf-8') as handle:
         json.dump(value, handle, indent=2, allow_nan=False)
         handle.write('\n')
+
+
+def _checker_report_passed(data):
+    """Validate the closed depth-six checker result before accepting it."""
+    if (not isinstance(data, dict) or set(data) != {'schema_version', 'depth', 'base', 'mutants', 'passed'} or
+            data['schema_version'] != 'institution-check-v1' or data['depth'] != 6 or
+            type(data['depth']) is not int or type(data['passed']) is not bool or
+            not isinstance(data['base'], dict) or set(data['base']) != {'hybrid', 'committee_only'} or
+            not isinstance(data['mutants'], dict) or set(data['mutants']) != set(MUTANTS)):
+        return False
+    def valid(entry, mutations, verified):
+        return (isinstance(entry, dict) and set(entry) == {'depth', 'mutations', 'distinct_states',
+                'transitions_checked', 'violations', 'verified', 'seconds'} and entry['depth'] == 6 and
+                type(entry['depth']) is int and entry['mutations'] == mutations and
+                type(entry['distinct_states']) is int and entry['distinct_states'] > 0 and
+                type(entry['transitions_checked']) is int and entry['transitions_checked'] > 0 and
+                type(entry['verified']) is bool and entry['verified'] is verified and
+                isinstance(entry['violations'], list) and bool(entry['violations']) != verified and
+                isinstance(entry['seconds'], (int, float)) and not isinstance(entry['seconds'], bool) and
+                0 <= entry['seconds'] < float('inf'))
+    return (data['passed'] and all(valid(entry, [], True) for entry in data['base'].values()) and
+            all(valid(data['mutants'][name], [name], False) for name in MUTANTS))
+
+
+def _run_checker(output_root):
+    command = [sys.executable, '-m', 'fleet_witness.verify_institution', '--depth', '6', '--mutants', '--json']
+    result = {'executed': True, 'command': command, 'returncode': None, 'passed': False}
+    with (output_root / 'verify-depth6.json').open('x', encoding='utf-8') as stdout, \
+            (output_root / 'verify-depth6.stderr').open('x', encoding='utf-8') as stderr:
+        try:
+            completed = subprocess.run(command, cwd=REPO, stdout=stdout, stderr=stderr, check=False)
+            result['returncode'] = completed.returncode
+        except OSError as error:
+            stderr.write(f'checker launch failed: {error}\n')
+    try:
+        raw = (output_root / 'verify-depth6.json').read_bytes()
+        if len(raw) > 1024 * 1024:
+            raise ValueError('checker result exceeds limit')
+        def unique(pairs):
+            out = {}
+            for key, value in pairs:
+                if key in out:
+                    raise ValueError('duplicate checker result field')
+                out[key] = value
+            return out
+        report = json.loads(raw, object_pairs_hook=unique, parse_constant=lambda _: (_ for _ in ()).throw(ValueError()))
+        result['passed'] = result['returncode'] == 0 and _checker_report_passed(report)
+    except (ValueError, TypeError, UnicodeError, RecursionError):
+        pass
+    return result
 
 
 def reproduce(input_root, output_root, *, skip_checker=False):
@@ -107,10 +158,7 @@ def reproduce(input_root, output_root, *, skip_checker=False):
     print(text.getvalue(), end='')
     checker = {'executed': False, 'reason': 'explicit --skip-checker'}
     if not skip_checker:
-        command = [sys.executable, '-m', 'fleet_witness.verify_institution', '--depth', '6', '--mutants']
-        with (output_root / 'verify-depth6.txt').open('x', encoding='utf-8') as handle:
-            result = subprocess.run(command, cwd=REPO, stdout=handle, stderr=subprocess.STDOUT, check=False)
-        checker = {'executed': True, 'command': command, 'returncode': result.returncode}
+        checker = _run_checker(output_root)
     after = {str(p.relative_to(input_root)): hashlib.sha256(p.read_bytes()).hexdigest()
              for p in input_root.rglob('*') if p.is_file()}
     if after != input_hashes:
@@ -132,7 +180,7 @@ def reproduce(input_root, output_root, *, skip_checker=False):
                   'output_files_sha256': {str(p.relative_to(output_root)): hashlib.sha256(p.read_bytes()).hexdigest()
                                          for p in output_root.rglob('*') if p.is_file()}}
     _write(output_root, 'reproduction-provenance.json', provenance)
-    if checker.get('returncode', 0):
+    if checker['executed'] and not checker['passed']:
         raise RuntimeError('bounded checker failed; see retained output and provenance')
     return provenance
 

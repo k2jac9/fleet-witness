@@ -24,6 +24,7 @@ which breaks the independence assumption; the swarm experiments measure that gap
 """
 import argparse
 from collections import deque
+import json
 from math import comb
 import sqlite3
 import time
@@ -122,6 +123,8 @@ def _fingerprint(kernel, spec) -> tuple:
 
 
 def check(depth: int = 6, mutations=frozenset(), stop_at_first: bool = True, require_majority: bool = True) -> dict:
+    if type(depth) is not int or depth < 1:
+        raise ValueError('depth must be a positive integer')
     started = time.monotonic()
     queue, seen, violations, transitions = deque(), set(), [], 0
     for intact in (True, False):
@@ -180,28 +183,45 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description='Bounded exhaustive check of the institution kernel')
     parser.add_argument('--depth', type=int, default=6)
     parser.add_argument('--mutants', action='store_true', help='also check deliberately broken kernels')
+    parser.add_argument('--json', action='store_true', help='emit a machine-readable result')
     args = parser.parse_args(argv)
+    if args.depth < 1:
+        parser.error('depth must be at least 1')
+    bases = {}
     for majority in (True, False):
         result = check(args.depth, require_majority=majority)
         label = 'hybrid (majority + quorum)' if majority else 'committee-only (quorum)'
-        print(f"Kernel {label}: depth {result['depth']}, {result['distinct_states']} distinct states, "
-              f"{result['transitions_checked']} transitions, {result['seconds']}s -> "
-              + ('ALL INVARIANTS HOLD' if result['verified'] else f"VIOLATION {result['violations'][0]}"))
+        bases['hybrid' if majority else 'committee_only'] = result
+        if not args.json:
+            print(f"Kernel {label}: depth {result['depth']}, {result['distinct_states']} distinct states, "
+                  f"{result['transitions_checked']} transitions, {result['seconds']}s -> "
+                  + ('ALL INVARIANTS HOLD' if result['verified'] else f"VIOLATION {result['violations'][0]}"))
+    mutants = {}
     if args.mutants:
         for mutant in MUTANTS:
             found = check(args.depth, frozenset({mutant}))
+            mutants[mutant] = found
+            if args.json:
+                continue
             if found['verified']:
                 print(f'  mutant {mutant:<20} NOT caught within depth {args.depth}')
             else:
                 v = found['violations'][0]
                 print(f"  mutant {mutant:<20} caught: {v['problems'][0]}  trace={' > '.join(v['trace'])}")
+    passed = all(result['verified'] for result in bases.values()) and all(
+        not result['verified'] for result in mutants.values())
+    if args.json:
+        print(json.dumps({'schema_version': 'institution-check-v1', 'depth': args.depth,
+                          'base': bases, 'mutants': mutants, 'passed': passed}, allow_nan=False))
+        return 0 if passed else 1
     print('\nCapture probability, N=100 agents, by colluder share (honest error 0):')
     print('  share   1-of-1   2-of-3   3-of-5   4-of-7   7-of-7')
     for share in (0.05, 0.1, 0.2, 0.3, 0.4, 0.5):
         c = round(100 * share)
         row = [capture_probability(100, c, m, k) for m, k in ((1, 1), (3, 2), (5, 3), (7, 4), (7, 7))]
         print(f'  {share:>5.0%}  ' + '  '.join(f'{p:7.4f}' for p in row))
+    return 0 if passed else 1
 
 
 if __name__ == '__main__':
-    main()
+    raise SystemExit(main())

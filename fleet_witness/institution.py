@@ -26,6 +26,7 @@ import sqlite3
 from .evidence import FIELDS, _payload
 
 ATTESTATION_FIELDS = ('auditor', 'claim', 'run_id', 'artifact_digest')
+MAX_ATTESTATION_BYTES = 32768
 
 
 def _signature_format(value):
@@ -115,11 +116,22 @@ class Institution:
 
     # Auditors ---------------------------------------------------------------------
     def submit_attestation(self, case_id: str, attestation: dict):
-        """Anyone may submit anything; validity is decided only at execution time."""
+        """Accept bounded JSON data; validity is decided only at execution time."""
+        try:
+            body = json.dumps(attestation, sort_keys=True, ensure_ascii=True, allow_nan=False)
+        except (TypeError, ValueError, RecursionError):
+            raise ValueError('attestation must be bounded JSON data') from None
+        if len(body.encode('ascii')) > MAX_ATTESTATION_BYTES:
+            raise ValueError('attestation exceeds byte limit')
         auditor = attestation.get('auditor') if isinstance(attestation, dict) else None
+        try:
+            auditor_text = str(auditor)
+            auditor_text.encode('utf-8')
+        except UnicodeError:
+            auditor_text = '[invalid]'
         with self._tx():
             self.conn.execute('INSERT INTO attestations VALUES(?,?,?)',
-                              (case_id, str(auditor), json.dumps(attestation, sort_keys=True)))
+                              (case_id, auditor_text, body))
             self._audit(case_id, 'attestation_submitted', {'auditor': auditor})
 
     # Checks ---------------------------------------------------------------------------

@@ -7,6 +7,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 import zipfile
@@ -76,6 +77,51 @@ class ArchiveTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             extract_archive(self.root / 'in.zip', self.root / 'alias/new')
         self.assertFalse((self.root / 'out/new').exists())
+
+
+class CheckerReportingTest(unittest.TestCase):
+    def test_valid_structured_checker_pass_is_retained(self):
+        from fleet_witness.verify_institution import MUTANTS
+        from scripts.reproduce_tables import _run_checker
+        def entry(verified, mutations):
+            return {'depth': 6, 'mutations': mutations, 'distinct_states': 1, 'transitions_checked': 1,
+                    'verified': verified, 'violations': [] if verified else [{'trace': ['test'], 'problems': ['found']}],
+                    'seconds': 0.0}
+        data = {'schema_version': 'institution-check-v1', 'depth': 6,
+                'base': {'hybrid': entry(True, []), 'committee_only': entry(True, [])},
+                'mutants': {name: entry(False, [name]) for name in MUTANTS}, 'passed': True}
+        with tempfile.TemporaryDirectory() as tmp:
+            def run(command, **kwargs):
+                kwargs['stdout'].write(json.dumps(data))
+                return SimpleNamespace(returncode=0)
+            with patch('scripts.reproduce_tables.subprocess.run', side_effect=run):
+                result = _run_checker(Path(tmp))
+            self.assertTrue(result['passed'])
+            self.assertEqual(json.loads((Path(tmp) / 'verify-depth6.json').read_text()), data)
+
+    def test_checker_process_failure_and_malformed_json_are_retained_as_failures(self):
+        from scripts.reproduce_tables import _run_checker
+        for response, returncode in (('not-json', 0), ('{}', 1)):
+            with self.subTest(response=response, returncode=returncode), tempfile.TemporaryDirectory() as tmp:
+                def run(command, **kwargs):
+                    kwargs['stdout'].write(response)
+                    kwargs['stderr'].write('synthetic diagnostic')
+                    return SimpleNamespace(returncode=returncode)
+                with patch('scripts.reproduce_tables.subprocess.run', side_effect=run):
+                    result = _run_checker(Path(tmp))
+                self.assertTrue(result['executed'])
+                self.assertFalse(result['passed'])
+                self.assertEqual((Path(tmp) / 'verify-depth6.json').read_text(), response)
+                self.assertEqual((Path(tmp) / 'verify-depth6.stderr').read_text(), 'synthetic diagnostic')
+
+    def test_checker_launch_failure_is_recorded_and_not_a_pass(self):
+        from scripts.reproduce_tables import _run_checker
+        with tempfile.TemporaryDirectory() as tmp, \
+                patch('scripts.reproduce_tables.subprocess.run', side_effect=OSError('synthetic failure')):
+            result = _run_checker(Path(tmp))
+            self.assertTrue(result['executed'])
+            self.assertFalse(result['passed'])
+            self.assertIn('synthetic failure', (Path(tmp) / 'verify-depth6.stderr').read_text())
 
 
 class ReproductionTest(unittest.TestCase):
