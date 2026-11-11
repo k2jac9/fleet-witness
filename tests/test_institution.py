@@ -1,3 +1,4 @@
+import json
 import sqlite3
 import unittest
 
@@ -93,6 +94,51 @@ class InstitutionTest(unittest.TestCase):
         result = k.execute('C', 'x')
         self.assertFalse(result['effect'])
         self.assertIn('only 1 of 2', result['reason'])
+
+    def test_malformed_attestations_do_not_poison_a_later_valid_quorum(self):
+        k = kernel()
+        self.addCleanup(k.conn.close)
+        k.record_proposal('C', 5, 1)
+        valid_a = sign_attestation(KEYS['a'], 'a', 'r', 'd')
+        for value in (
+            ['not-an-object'],
+            {'auditor': ['a']},
+            {**valid_a, 'signature': 'é'},
+            {**valid_a, 'signature': ['bad']},
+            {**valid_a, 'claim': None},
+            {'auditor': 'a'},
+        ):
+            k.submit_attestation('C', value)
+        # Legacy persisted rows may have JSON values the public method would
+        # not itself accept. They must not poison the rest of the case.
+        k.conn.execute('INSERT INTO attestations VALUES(?,?,?)', ('C', 'bad', json.dumps(['bad'])))
+        k.submit_attestation('C', valid_a)
+        denied = k.execute('C', 'invalid-first')
+        self.assertFalse(denied['effect'])
+        self.assertIn('only 1 of 2', denied['reason'])
+        self.assertEqual(k.conn.execute("SELECT COUNT(*) FROM audit WHERE kind='denied'").fetchone()[0], 1)
+        k.submit_attestation('C', sign_attestation(KEYS['b'], 'b', 'r', 'd'))
+        self.assertTrue(k.execute('C', 'valid-second')['effect'])
+        self.assertFalse(k.execute('C', 'duplicate')['effect'])
+        self.assertEqual(k.conn.execute('SELECT COUNT(*) FROM releases').fetchone()[0], 1)
+        self.assertEqual(k.conn.execute("SELECT COUNT(*) FROM audit WHERE kind='release'").fetchone()[0], 1)
+
+    def test_malformed_evidence_is_an_audited_denial_even_with_a_valid_quorum(self):
+        for signature in ('é', ['bad'], None):
+            with self.subTest(signature=signature):
+                conn = sqlite3.connect(':memory:', isolation_level=None)
+                self.addCleanup(conn.close)
+                k = Institution(conn, evidence_key=EKEY, auditor_keys=KEYS, quorum=2, committee_size=3)
+                receipt = issue_receipt(EKEY, issuer='i', claim='c', scope='s', artifact_digest='d', run_id='r')
+                receipt['signature'] = signature
+                k.open_case('C', 'r', 'd', [receipt], ['a', 'b', 'c'])
+                k.set_policy('C', True)
+                k.record_proposal('C', 5, 1)
+                for name in ('a', 'b'):
+                    k.submit_attestation('C', sign_attestation(KEYS[name], name, 'r', 'd'))
+                self.assertEqual(k.execute('C', 'bad-evidence')['reason'], 'evidence integrity failed')
+                self.assertEqual(conn.execute('SELECT COUNT(*) FROM releases').fetchone()[0], 0)
+                self.assertEqual(conn.execute("SELECT COUNT(*) FROM audit WHERE kind='denied'").fetchone()[0], 1)
 
     def test_tampered_evidence_and_revoked_policy_block(self):
         k = kernel(intact=False)
