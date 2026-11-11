@@ -109,6 +109,19 @@ class RunProvenanceTest(SyntheticSourceTestCase):
             self.assertTrue(manifest.get('runtime', {}).get('python_version'))
             self.assertIn('temperature', manifest.get('model_config', {}))
             self.assertEqual(manifest.get('scheduled_logical_requests'), 14)
+            self.assertEqual(manifest.get('parser_treatment'), 'swarm-strict-v1')
+
+    def test_interrupted_run_retains_parser_identity_before_model_call(self):
+        class Interrupted(FakeClient):
+            def complete(self, system, user, meta=None):
+                raise KeyboardInterrupt('synthetic interruption')
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            with self.assertRaises(KeyboardInterrupt):
+                self.run_fixture(root, Interrupted())
+            run = root / 'run'
+            self.assertEqual(json.loads((run / 'run-start.json').read_text())['parser_treatment'], 'swarm-strict-v1')
+            self.assertFalse((run / 'manifest.json').exists())
 
     def test_new_run_executes_gated_majority_without_a_committee(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -131,8 +144,8 @@ class RunProvenanceTest(SyntheticSourceTestCase):
             def transport(url, key, body, timeout, **kwargs):
                 import time
                 time.sleep(.005)  # Exercise overlapping runner submissions.
-                answer = ('{"sign":true}' if 'audit committee' in body['messages'][0]['content']
-                          else '{"vote":"approve"}')
+                answer = ('{"sign":true,"reason":"ok"}' if 'audit committee' in body['messages'][0]['content']
+                          else '{"vote":"approve","reason":"ok"}')
                 return json.dumps({'id': 'synthetic', 'choices': [{'message': {'content': answer},
                                     'finish_reason': 'stop'}],
                                    'usage': {'prompt_tokens': 10, 'completion_tokens': 10}}).encode()

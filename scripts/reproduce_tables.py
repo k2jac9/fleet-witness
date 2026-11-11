@@ -14,6 +14,7 @@ from pathlib import Path
 import platform
 import subprocess
 import sys
+import zipfile
 
 REPO = Path(__file__).resolve().parents[1]
 if __package__ in (None, ''):
@@ -27,6 +28,18 @@ AMBIG_ROOTS = {name: tuple(f'ambig-{stem}-s{seed}' for seed in (3000, 4000, 5000
                for name, stem in (('DeepSeek', 'deepseek'), ('gpt-oss', 'gptoss'))}
 MODELS = {'DeepSeek': 'openrouter:deepseek/deepseek-v4-flash-0731',
           'gpt-oss': 'openrouter:openai/gpt-oss-20b'}
+HISTORICAL_ARCHIVE_SHA256 = 'c55e8acf07ed8dd3c11bc3dc8f70269adebaac6bfa14727642cca7314d1f821a'
+
+
+def _historical_manifest_hashes():
+    """Allow only manifest bytes from the preserved, digest-pinned archive."""
+    archive = REPO / 'data/fleet-witness-runs-2026-11-08.zip'
+    if hashlib.sha256(archive.read_bytes()).hexdigest() != HISTORICAL_ARCHIVE_SHA256:
+        raise ValueError('historical archive identity mismatch')
+    with zipfile.ZipFile(archive) as source:
+        return frozenset(hashlib.sha256(source.read(info)).hexdigest() for info in source.infolist()
+                         if info.filename.replace('\\', '/').endswith('/manifest.json') and
+                         info.file_size <= 1024 * 1024)
 
 
 def validate_sweep_identity(name, runs):
@@ -120,6 +133,7 @@ def reproduce(input_root, output_root, *, skip_checker=False):
         raise ValueError('output root must be outside the immutable input root')
     roots = [*MAIN_ROOTS, *(name for group in AMBIG_ROOTS.values() for name in group)]
     loaded, identities = {}, {}
+    historical_manifest_hashes = _historical_manifest_hashes()
     # Validate every required main/near-miss input before creating output. A
     # missing fraction is not silently turned into a smaller report denominator.
     for name in roots:
@@ -146,7 +160,8 @@ def reproduce(input_root, output_root, *, skip_checker=False):
             stats.append(statistic)
             print(report_stats.format_statistics(statistic))
             views = {r['directory']: r['decisions'] for r in loaded[name]}
-            summary = summarize([input_root / name], analysis_root=output_root / 'analyses', decision_overrides=views)
+            summary = summarize([input_root / name], analysis_root=output_root / 'analyses', decision_overrides=views,
+                                historical_manifest_hashes=historical_manifest_hashes)
             _write(output_root, name + '-summary.json', summary)
             print(format_summary(summary))
         ambiguous, independent_results = {}, {}

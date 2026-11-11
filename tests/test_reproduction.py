@@ -222,6 +222,22 @@ class ReproductionTest(unittest.TestCase):
         summarize([self.root])
         self.assertEqual((self.run / 'analysis.json').read_text(), 'historical analysis')
 
+    def test_summary_refuses_unknown_and_mixed_parser_treatments(self):
+        manifest = self.run / 'manifest.json'
+        saved = manifest.read_bytes()
+        data = json.loads(saved)
+        data.pop('parser_treatment', None)
+        manifest.write_text(json.dumps(data))
+        legacy_hash = hashlib.sha256(manifest.read_bytes()).hexdigest()
+        with self.assertRaisesRegex(ValueError, 'treatment'):
+            summarize([self.root])
+        legacy = summarize([self.root], historical_manifest_hashes={legacy_hash})
+        self.assertEqual(legacy['parser_treatment'], 'legacy-recorded')
+        run_swarm(self.root / 'f40', FakeClient(), agents=7, cases=1,
+                  conditions=['hidden-cell'], cell_fraction=0.4, seed=13)
+        with self.assertRaisesRegex(ValueError, 'treatment'):
+            summarize([self.root], historical_manifest_hashes={legacy_hash})
+
     def test_reproduction_rejects_missing_runs_before_creating_output(self):
         output = Path(self.tmp.name) / 'derived'
         result = subprocess.run([sys.executable, 'scripts/reproduce_tables.py', '--input-root', str(self.root),

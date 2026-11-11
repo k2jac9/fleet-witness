@@ -5,6 +5,7 @@ pools every sweep directory given, so runs on different providers (same model)
 combine into one table with observed and predicted capture rates.
 """
 from collections import defaultdict
+import hashlib
 import json
 from pathlib import Path
 import shutil
@@ -13,6 +14,7 @@ import tempfile
 from ..verify_institution import capture_probability
 from .detect import analyze
 from .runner import REGIMES, run_swarm
+from .providers import STRICT_SWARM_PARSER
 
 DEFAULT_FRACTIONS = (0.0, 0.1, 0.2, 0.3, 0.4, 0.5)
 
@@ -36,69 +38,89 @@ def run_sweep(root: Path, client, *, fractions=DEFAULT_FRACTIONS, agents=50, cas
             break
 
 
-def summarize(roots: list[Path], *, analysis_root=None, decision_overrides=None) -> dict:
+def summarize(roots: list[Path], *, analysis_root=None, decision_overrides=None,
+              historical_manifest_hashes=frozenset()) -> dict:
     """Read raw runs without rewriting them; optional analyses use a separate root.
 
     Offline reproduction may supply validated synthetic decision views, indexed
     by resolved run directory. They are never written over historical decisions.
     """
+    directories, treatments = [], set()
+    for root in roots:
+        for directory in sorted(Path(root).glob('f*')):
+            manifest_path = directory / 'manifest.json'
+            if not manifest_path.exists():
+                continue
+            raw = manifest_path.read_bytes()
+            manifest = json.loads(raw)
+            treatment = manifest.get('parser_treatment')
+            if treatment is None and hashlib.sha256(raw).hexdigest() in historical_manifest_hashes:
+                treatment = 'legacy-recorded'
+            elif treatment == STRICT_SWARM_PARSER:
+                start = json.loads((directory / 'run-start.json').read_text(encoding='utf-8'))
+                if (start.get('schema_version') != 'swarm-run-start-v1' or
+                        start.get('parser_treatment') != treatment or start.get('source') != manifest.get('source')):
+                    raise ValueError('run start and parser treatment mismatch')
+            else:
+                raise ValueError('unknown or unverified parser treatment')
+            treatments.add(treatment)
+            directories.append((root, directory))
+    if len(treatments) > 1:
+        raise ValueError('mixed parser treatments cannot be pooled')
     pooled = defaultdict(lambda: defaultdict(lambda: {'unsafe': 0, 'targets': 0, 'valid_released': 0,
                                                       'valid': 0, 'predicted_sum': 0.0, 'seated_capture': 0}))
     auditors = defaultdict(lambda: {'honest_sign_targets': [], 'honest_sign_valid': [], 'runs': 0,
                                     'swarm_invalid_approved': [0, 0], 'detect': []})
     runs = []
-    for root in roots:
-        for directory in sorted(Path(root).glob('f*')):
-            if not (directory / 'manifest.json').exists():
-                continue
-            with tempfile.TemporaryDirectory(prefix='fleet-summary-') as temporary:
-                scratch = Path(temporary)
-                for filename in ('manifest.json', 'truth.json', 'events.jsonl', 'decisions.json'):
-                    shutil.copyfile(directory / filename, scratch / filename)
-                if decision_overrides is not None:
-                    (scratch / 'decisions.json').write_text(json.dumps(
-                        decision_overrides[str(directory.resolve())], allow_nan=False), encoding='utf-8')
-                report = analyze(scratch)
-            if analysis_root is not None:
-                output = Path(analysis_root) / Path(root).name / directory.name
-                output.mkdir(parents=True, exist_ok=True)
-                with (output / 'analysis.json').open('x', encoding='utf-8') as handle:
-                    json.dump(report, handle, indent=2, allow_nan=False)
-            m = report['manifest']
-            if m['incomplete']:
-                continue
-            runs.append(str(directory))
-            fraction = m['cell_fraction']
-            truth = json.loads((directory / 'truth.json').read_text(encoding='utf-8'))
-            cell = set(truth['colluders'])
-            for condition, c in report['conditions'].items():
-                key = (fraction, condition)
-                eps = c['auditors']['honest_sign_rate_on_targets'] or 0.0
-                a = auditors[key]
-                a['runs'] += 1
-                if c['auditors']['honest_sign_rate_on_targets'] is not None:
-                    a['honest_sign_targets'].append(c['auditors']['honest_sign_rate_on_targets'])
-                if c['auditors']['honest_sign_rate_on_valid'] is not None:
-                    a['honest_sign_valid'].append(c['auditors']['honest_sign_rate_on_valid'])
-                approved, total = map(int, c['swarm_approved_invalid_cases'].split('/'))
-                a['swarm_invalid_approved'][0] += approved
-                a['swarm_invalid_approved'][1] += total
-                if 'f1' in c['detection']:
-                    a['detect'].append(c['detection']['f1'])
-                for regime, g in c['regimes'].items():
-                    p = pooled[key][regime]
-                    p['unsafe'] += g['unsafe_on_targets']
-                    p['targets'] += g['target_cases']
-                    p['valid_released'] += g['valid_released']
-                    p['valid'] += g['valid_cases']
-                    if regime in REGIMES and REGIMES[regime][0] > 0:
-                        size, quorum, _ = REGIMES[regime]
-                        p['predicted_sum'] += g['target_cases'] * capture_probability(
-                            m['agents'], m['cell_size'], size, quorum, eps)
-                        # Given the seats actually drawn: captured iff >= quorum colluders were seated
-                        # (assumes every seated colluder complies and no honest auditor errs).
-                        p['seated_capture'] += sum(
-                            len(cell & set(truth['committees'][case][:size])) >= quorum for case in truth['targets'])
+    for root, directory in directories:
+        with tempfile.TemporaryDirectory(prefix='fleet-summary-') as temporary:
+            scratch = Path(temporary)
+            for filename in ('manifest.json', 'truth.json', 'events.jsonl', 'decisions.json'):
+                shutil.copyfile(directory / filename, scratch / filename)
+            if decision_overrides is not None:
+                (scratch / 'decisions.json').write_text(json.dumps(
+                    decision_overrides[str(directory.resolve())], allow_nan=False), encoding='utf-8')
+            report = analyze(scratch)
+        if analysis_root is not None:
+            output = Path(analysis_root) / Path(root).name / directory.name
+            output.mkdir(parents=True, exist_ok=True)
+            with (output / 'analysis.json').open('x', encoding='utf-8') as handle:
+                json.dump(report, handle, indent=2, allow_nan=False)
+        m = report['manifest']
+        if m['incomplete']:
+            continue
+        runs.append(str(directory))
+        fraction = m['cell_fraction']
+        truth = json.loads((directory / 'truth.json').read_text(encoding='utf-8'))
+        cell = set(truth['colluders'])
+        for condition, c in report['conditions'].items():
+            key = (fraction, condition)
+            eps = c['auditors']['honest_sign_rate_on_targets'] or 0.0
+            a = auditors[key]
+            a['runs'] += 1
+            if c['auditors']['honest_sign_rate_on_targets'] is not None:
+                a['honest_sign_targets'].append(c['auditors']['honest_sign_rate_on_targets'])
+            if c['auditors']['honest_sign_rate_on_valid'] is not None:
+                a['honest_sign_valid'].append(c['auditors']['honest_sign_rate_on_valid'])
+            approved, total = map(int, c['swarm_approved_invalid_cases'].split('/'))
+            a['swarm_invalid_approved'][0] += approved
+            a['swarm_invalid_approved'][1] += total
+            if 'f1' in c['detection']:
+                a['detect'].append(c['detection']['f1'])
+            for regime, g in c['regimes'].items():
+                p = pooled[key][regime]
+                p['unsafe'] += g['unsafe_on_targets']
+                p['targets'] += g['target_cases']
+                p['valid_released'] += g['valid_released']
+                p['valid'] += g['valid_cases']
+                if regime in REGIMES and REGIMES[regime][0] > 0:
+                    size, quorum, _ = REGIMES[regime]
+                    p['predicted_sum'] += g['target_cases'] * capture_probability(
+                        m['agents'], m['cell_size'], size, quorum, eps)
+                    # Given the seats actually drawn: captured iff >= quorum colluders were seated
+                    # (assumes every seated colluder complies and no honest auditor errs).
+                    p['seated_capture'] += sum(
+                        len(cell & set(truth['committees'][case][:size])) >= quorum for case in truth['targets'])
     table = []
     for (fraction, condition) in sorted(pooled):
         a = auditors[fraction, condition]
@@ -117,7 +139,7 @@ def summarize(roots: list[Path], *, analysis_root=None, decision_overrides=None)
                 'n_targets': p['targets'],
                 'valid_throughput': round(p['valid_released'] / p['valid'], 3) if p['valid'] else None}
         table.append(row)
-    return {'runs': runs, 'table': table}
+    return {'runs': runs, 'table': table, 'parser_treatment': next(iter(treatments), None)}
 
 
 def _mean(values):

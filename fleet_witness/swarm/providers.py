@@ -592,6 +592,37 @@ class FakeClient:
 
 
 VOTE_RE = re.compile(r'\{.*\}', re.S)
+STRICT_SWARM_PARSER = 'swarm-strict-v1'
+
+
+def _strict_swarm_output(text, field):
+    try:
+        if not isinstance(text, str):
+            raise ValueError('expected JSON text')
+        raw = text.encode('utf-8')
+        data = _parse_json(raw, 32768)
+        if set(data) != {field, 'reason'}:
+            raise ValueError('invalid output fields')
+        reason = data['reason']
+        if not isinstance(reason, str) or not reason.strip() or len(reason) > 400:
+            raise ValueError('invalid output reason')
+        reason.encode('utf-8')
+        value = data[field]
+        if field == 'vote' and isinstance(value, str) and value in ('approve', 'deny'):
+            return value, reason
+        if field == 'sign' and type(value) is bool:
+            return ('sign' if value else 'refuse'), reason
+    except (ValueError, UnicodeError, RecursionError):
+        pass
+    return 'abstain', 'invalid structured output'
+
+
+def parse_vote_strict(text: str) -> tuple[str, str]:
+    return _strict_swarm_output(text, 'vote')
+
+
+def parse_sign_strict(text: str) -> tuple[str, str]:
+    return _strict_swarm_output(text, 'sign')
 
 
 def parse_sign(text: str) -> tuple[str, str]:

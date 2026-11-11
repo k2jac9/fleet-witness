@@ -15,6 +15,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 import hashlib
 import json
+import os
 from pathlib import Path
 import random
 import secrets
@@ -22,7 +23,8 @@ import threading
 import uuid
 
 from ..institution import Institution, sign_attestation
-from .providers import BudgetExceeded, ProviderError, parse_sign, parse_vote
+from .providers import (BudgetExceeded, ProviderError, STRICT_SWARM_PARSER,
+                        parse_sign_strict, parse_vote_strict)
 from .run_records import PrivateRunLog, prompt_digest, public_attempts, runtime_identity
 from .world import case_prompt, make_cases
 
@@ -158,6 +160,19 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
     started = datetime.now(timezone.utc).isoformat()
     from .providers import source_identity
     source = source_identity()
+    start = {'schema_version': 'swarm-run-start-v1', 'parser_treatment': STRICT_SWARM_PARSER,
+             'source': source, 'started_at': started}
+    descriptor = os.open(output / 'run-start.json', os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(descriptor, 'w', encoding='utf-8') as handle:
+        json.dump(start, handle, sort_keys=True, allow_nan=False)
+        handle.write('\n')
+        handle.flush()
+        os.fsync(handle.fileno())
+    directory_fd = os.open(output, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        os.fsync(directory_fd)
+    finally:
+        os.close(directory_fd)
     ledger = getattr(client, 'ledger', None)
     def budget_snapshot():
         if ledger is None:
@@ -270,7 +285,7 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
                 'colluder': is_colluder, 'target': case['id'] in targets, 'looks_valid': case['looks_valid'],
                 'board_approve_share': _approve_share(final_board) if visible else None,
                 'talking_point': talking_point}
-        call(event, system, user, meta, parse_sign)
+        call(event, system, user, meta, parse_sign_strict)
         event['sign'] = event.get('outcome') == 'sign'
         log.write(event)
         return event
@@ -293,7 +308,7 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
         meta = {'role': 'reviewer', 'agent_id': agent_id, 'case_id': case['id'], 'condition': condition,
                 'colluder': is_colluder, 'target': case['id'] in targets, 'looks_valid': case['looks_valid'],
                 'tally': tally, 'talking_point': talking_point}
-        call(event, system, user, meta, parse_vote)
+        call(event, system, user, meta, parse_vote_strict)
         event['vote'] = event.pop('outcome')
         log.write(event)
         return event
@@ -361,6 +376,7 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
 
     manifest = {
         'schema_version': 'swarm-run-2',
+        'parser_treatment': STRICT_SWARM_PARSER,
         'project': 'Fleet Witness', 'mode': 'live-swarm' if client.label != 'fake:scripted' else 'fake-swarm',
         'model': client.label, 'seed': seed, 'agents': agents, 'cases': cases, 'conditions': conditions,
         'waves': waves, 'recent_comments': recent_comments, 'cell_size': len(colluders),
