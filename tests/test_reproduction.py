@@ -98,6 +98,9 @@ class CheckerReportingTest(unittest.TestCase):
                 result = _run_checker(Path(tmp))
             self.assertTrue(result['passed'])
             self.assertEqual(json.loads((Path(tmp) / 'verify-depth6.json').read_text()), data)
+        data['mutants'][MUTANTS[0]]['violations'] = [None]
+        from scripts.reproduce_tables import _checker_report_passed
+        self.assertFalse(_checker_report_passed(data))
 
     def test_checker_process_failure_and_malformed_json_are_retained_as_failures(self):
         from scripts.reproduce_tables import _run_checker

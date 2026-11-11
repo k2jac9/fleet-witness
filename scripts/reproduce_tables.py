@@ -61,6 +61,12 @@ def _checker_report_passed(data):
             not isinstance(data['base'], dict) or set(data['base']) != {'hybrid', 'committee_only'} or
             not isinstance(data['mutants'], dict) or set(data['mutants']) != set(MUTANTS)):
         return False
+    def valid_violation(item):
+        return (isinstance(item, dict) and set(item) == {'trace', 'problems'} and
+                isinstance(item['trace'], list) and 1 <= len(item['trace']) <= 7 and
+                isinstance(item['problems'], list) and 1 <= len(item['problems']) <= 10 and
+                all(isinstance(value, str) and 0 < len(value) <= 1024
+                    for value in item['trace'] + item['problems']))
     def valid(entry, mutations, verified):
         return (isinstance(entry, dict) and set(entry) == {'depth', 'mutations', 'distinct_states',
                 'transitions_checked', 'violations', 'verified', 'seconds'} and entry['depth'] == 6 and
@@ -69,6 +75,7 @@ def _checker_report_passed(data):
                 type(entry['transitions_checked']) is int and entry['transitions_checked'] > 0 and
                 type(entry['verified']) is bool and entry['verified'] is verified and
                 isinstance(entry['violations'], list) and bool(entry['violations']) != verified and
+                len(entry['violations']) <= 3 and all(valid_violation(item) for item in entry['violations']) and
                 isinstance(entry['seconds'], (int, float)) and not isinstance(entry['seconds'], bool) and
                 0 <= entry['seconds'] < float('inf'))
     return (data['passed'] and all(valid(entry, [], True) for entry in data['base'].values()) and

@@ -46,21 +46,29 @@ MUTANTS = ['skip_policy_recheck', 'skip_integrity', 'skip_seat_check', 'skip_bin
 
 def _new_kernel(intact: bool, mutations=frozenset(), require_majority=True):
     conn = sqlite3.connect(':memory:', isolation_level=None)
-    kernel = Institution(conn, evidence_key=EVIDENCE_KEY, auditor_keys=AUDITORS, quorum=QUORUM,
-                         committee_size=len(SEATS), require_majority=require_majority, mutations=mutations)
-    receipt = issue_receipt(EVIDENCE_KEY, issuer='build-issuer', claim='build_succeeded', scope='build',
-                            artifact_digest=DIGEST, run_id=RUN)
-    if not intact:
-        receipt['signature'] = '0' * 64
-    kernel.open_case('C', RUN, DIGEST, [receipt], SEATS)
-    return kernel
+    try:
+        kernel = Institution(conn, evidence_key=EVIDENCE_KEY, auditor_keys=AUDITORS, quorum=QUORUM,
+                             committee_size=len(SEATS), require_majority=require_majority, mutations=mutations)
+        receipt = issue_receipt(EVIDENCE_KEY, issuer='build-issuer', claim='build_succeeded', scope='build',
+                                artifact_digest=DIGEST, run_id=RUN)
+        if not intact:
+            receipt['signature'] = '0' * 64
+        kernel.open_case('C', RUN, DIGEST, [receipt], SEATS)
+        return kernel
+    except BaseException:
+        conn.close()
+        raise
 
 
 def _clone(kernel, mutations):
     conn = sqlite3.connect(':memory:', isolation_level=None)
-    conn.deserialize(kernel.conn.serialize())
-    return Institution(conn, evidence_key=EVIDENCE_KEY, auditor_keys=AUDITORS, quorum=QUORUM,
-                       committee_size=len(SEATS), require_majority=kernel.require_majority, mutations=mutations)
+    try:
+        conn.deserialize(kernel.conn.serialize())
+        return Institution(conn, evidence_key=EVIDENCE_KEY, auditor_keys=AUDITORS, quorum=QUORUM,
+                           committee_size=len(SEATS), require_majority=kernel.require_majority, mutations=mutations)
+    except BaseException:
+        conn.close()
+        raise
 
 
 def _apply(kernel, spec: dict, action: str):
@@ -127,36 +135,55 @@ def check(depth: int = 6, mutations=frozenset(), stop_at_first: bool = True, req
         raise ValueError('depth must be a positive integer')
     started = time.monotonic()
     queue, seen, violations, transitions = deque(), set(), [], 0
-    for intact in (True, False):
-        kernel = _new_kernel(intact, mutations, require_majority)
-        spec = {'intact': intact, 'proposal': None, 'policy': None, 'attesters': frozenset(),
-                'attempts': frozenset(), 'released': False}
-        queue.append((kernel, spec, ('evidence-intact' if intact else 'evidence-tampered',)))
-        seen.add(_fingerprint(kernel, spec))
-    while queue:
-        kernel, spec, trace = queue.popleft()
-        if len(trace) - 1 >= depth:
-            continue
-        for action in ACTIONS:
-            child = _clone(kernel, mutations)
-            new_spec, outcome = _apply(child, spec, action)
-            transitions += 1
-            new_trace = trace + (action,)
-            problems = _global_violations(child)
-            if outcome and outcome[0] and not outcome[1]:
-                problems.append('S1 violated: kernel released when the specification forbids it')
-            if outcome and not outcome[0] and outcome[1]:
-                problems.append('S2 violated: kernel refused a release the specification allows')
-            if problems:
-                violations.append({'trace': list(new_trace), 'problems': problems})
-                if stop_at_first:
-                    return _summary(depth, mutations, seen, transitions, violations, started)
-                continue
-            key = _fingerprint(child, new_spec)
-            if key not in seen:
-                seen.add(key)
-                queue.append((child, new_spec, new_trace))
-    return _summary(depth, mutations, seen, transitions, violations, started)
+    try:
+        for intact in (True, False):
+            kernel = _new_kernel(intact, mutations, require_majority)
+            try:
+                spec = {'intact': intact, 'proposal': None, 'policy': None, 'attesters': frozenset(),
+                        'attempts': frozenset(), 'released': False}
+                fingerprint = _fingerprint(kernel, spec)
+                queue.append((kernel, spec, ('evidence-intact' if intact else 'evidence-tampered',)))
+                kernel = None  # ownership transferred to the queue
+                seen.add(fingerprint)
+            finally:
+                if kernel is not None:
+                    kernel.conn.close()
+        while queue:
+            kernel, spec, trace = queue.popleft()
+            try:
+                if len(trace) - 1 >= depth:
+                    continue
+                for action in ACTIONS:
+                    child = _clone(kernel, mutations)
+                    try:
+                        new_spec, outcome = _apply(child, spec, action)
+                        transitions += 1
+                        new_trace = trace + (action,)
+                        problems = _global_violations(child)
+                        if outcome and outcome[0] and not outcome[1]:
+                            problems.append('S1 violated: kernel released when the specification forbids it')
+                        if outcome and not outcome[0] and outcome[1]:
+                            problems.append('S2 violated: kernel refused a release the specification allows')
+                        if problems:
+                            violations.append({'trace': list(new_trace), 'problems': problems})
+                            if stop_at_first:
+                                return _summary(depth, mutations, seen, transitions, violations, started)
+                            continue
+                        key = _fingerprint(child, new_spec)
+                        if key not in seen:
+                            seen.add(key)
+                            queue.append((child, new_spec, new_trace))
+                            child = None  # ownership transferred to the queue
+                    finally:
+                        if child is not None:
+                            child.conn.close()
+            finally:
+                kernel.conn.close()
+        return _summary(depth, mutations, seen, transitions, violations, started)
+    finally:
+        while queue:
+            kernel, _, _ = queue.popleft()
+            kernel.conn.close()
 
 
 def _summary(depth, mutations, seen, transitions, violations, started):

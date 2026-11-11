@@ -1,7 +1,10 @@
 import json
 import contextlib
 import io
+import os
 import sqlite3
+import subprocess
+import sys
 import unittest
 from unittest.mock import patch
 
@@ -222,6 +225,43 @@ class BoundedCheckTest(unittest.TestCase):
                 self.assertNotEqual(result.exception.code, 0)
                 with self.assertRaises(ValueError):
                     check(depth=int(depth))
+
+    def test_checker_closes_all_connections_on_normal_early_and_exception_paths(self):
+        original_connect = sqlite3.connect
+        for mode in ('normal', 'violation', 'exception'):
+            with self.subTest(mode=mode):
+                created = []
+                class TrackedConnection(sqlite3.Connection):
+                    closed = False
+                    def close(self):
+                        self.closed = True
+                        super().close()
+                def connect(*args, **kwargs):
+                    conn = original_connect(*args, **kwargs, factory=TrackedConnection)
+                    created.append(conn)
+                    return conn
+                with patch.object(verify_institution.sqlite3, 'connect', side_effect=connect):
+                    if mode == 'violation':
+                        with patch.object(verify_institution, '_global_violations', return_value=['injected']):
+                            result = check(depth=2)
+                        self.assertFalse(result['verified'])
+                        self.assertEqual(result['violations'][0]['problems'], ['injected'])
+                    elif mode == 'exception':
+                        with patch.object(verify_institution, '_apply', side_effect=RuntimeError('injected')):
+                            with self.assertRaisesRegex(RuntimeError, 'injected'):
+                                check(depth=2)
+                    else:
+                        self.assertTrue(check(depth=2)['verified'])
+                self.assertTrue(created)
+                self.assertTrue(all(conn.closed for conn in created))
+
+    def test_checker_does_not_emit_unclosed_database_warnings(self):
+        env = {**os.environ, 'PYTHONDONTWRITEBYTECODE': '1'}
+        result = subprocess.run([sys.executable, '-W', 'always::ResourceWarning', '-c',
+            'import gc; from fleet_witness.verify_institution import check; check(depth=2); gc.collect()'],
+            env=env, text=True, capture_output=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn('ResourceWarning', result.stderr)
 
     def test_kernel_verified_and_every_mutant_caught(self):
         for majority in (True, False):
