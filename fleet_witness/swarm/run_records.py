@@ -43,7 +43,7 @@ def _historical_fingerprints(archive, identity):
     return {key: value for key, value in index.items() if set(value) == set(RUN_INPUTS)}
 
 
-def classify_run_treatment(directory, *, legacy_fingerprints=None):
+def classify_run_treatment(directory):
     """Classify a completed run; legacy identity binds path and all raw inputs."""
     directory = Path(directory)
     try:
@@ -59,11 +59,10 @@ def classify_run_treatment(directory, *, legacy_fingerprints=None):
                 raise ValueError('run start and parser treatment mismatch')
             return treatment
         if treatment is None:
-            if legacy_fingerprints is None:
-                archive = Path(__file__).resolve().parents[2] / 'data/fleet-witness-runs-2026-11-08.zip'
-                info = archive.stat()
-                identity = (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
-                legacy_fingerprints = _historical_fingerprints(archive, identity)
+            archive = Path(__file__).resolve().parents[2] / 'data/fleet-witness-runs-2026-11-08.zip'
+            info = archive.stat()
+            identity = (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+            legacy_fingerprints = _historical_fingerprints(archive, identity)
             key = (directory.parent.name, directory.name)
             expected = legacy_fingerprints.get(key)
             actual = {name: hashlib.sha256((directory / name).read_bytes()).hexdigest() for name in RUN_INPUTS}

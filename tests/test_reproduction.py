@@ -208,6 +208,26 @@ class TreatmentBoundaryReviewTest(unittest.TestCase):
             self.assertEqual(client.calls, 0)
             self.assertFalse((root / 'f10').exists())
 
+    def test_partial_strict_sweep_refuses_changed_temperature_before_dispatch(self):
+        from fleet_witness.swarm.sweep import run_sweep
+        class Counting(FakeClient):
+            calls = 0
+            temperature = 0.0
+            timeout = 30
+            def complete(self, *args, **kwargs):
+                self.calls += 1
+                return super().complete(*args, **kwargs)
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / 'sweep'
+            client = Counting()
+            run_sweep(root, client, fractions=(0.0,), agents=7, cases=1)
+            client.calls = 0
+            client.temperature = 2.0
+            with self.assertRaisesRegex(ValueError, 'configuration'):
+                run_sweep(root, client, fractions=(0.0, 0.1), agents=7, cases=1)
+            self.assertEqual(client.calls, 0)
+            self.assertFalse((root / 'f10').exists())
+
 
 class ReproductionTest(unittest.TestCase):
     def setUp(self):
@@ -315,12 +335,13 @@ class ReproductionTest(unittest.TestCase):
         trusted = {(self.root.name, self.run.name): fingerprint}
         with self.assertRaisesRegex(ValueError, 'treatment'):
             summarize([self.root])
-        legacy = summarize([self.root], legacy_fingerprints=trusted)
-        self.assertEqual(legacy['parser_treatment'], 'legacy-recorded')
-        run_swarm(self.root / 'f40', FakeClient(), agents=7, cases=1,
-                  conditions=['hidden-cell'], cell_fraction=0.4, seed=13)
-        with self.assertRaisesRegex(ValueError, 'treatment'):
-            summarize([self.root], legacy_fingerprints=trusted)
+        with patch('fleet_witness.swarm.run_records._historical_fingerprints', return_value=trusted):
+            legacy = summarize([self.root])
+            self.assertEqual(legacy['parser_treatment'], 'legacy-recorded')
+            run_swarm(self.root / 'f40', FakeClient(), agents=7, cases=1,
+                      conditions=['hidden-cell'], cell_fraction=0.4, seed=13)
+            with self.assertRaisesRegex(ValueError, 'treatment'):
+                summarize([self.root])
 
     def test_reproduction_rejects_missing_runs_before_creating_output(self):
         output = Path(self.tmp.name) / 'derived'

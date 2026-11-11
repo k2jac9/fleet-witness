@@ -5,6 +5,7 @@ pools every sweep directory given, so runs on different providers (same model)
 combine into one table with observed and predicted capture rates.
 """
 from collections import defaultdict
+import hashlib
 import json
 from pathlib import Path
 import shutil
@@ -29,6 +30,15 @@ def run_sweep(root: Path, client, *, fractions=DEFAULT_FRACTIONS, agents=50, cas
     if root.exists():
         from .providers import source_identity
         source = source_identity()
+        authorization = getattr(client, 'authorization', None)
+        authorization_identity = None if authorization is None else {
+            'id': authorization['authorization_id'], 'purpose': authorization['purpose'],
+            'sha256': hashlib.sha256(json.dumps(authorization, sort_keys=True, separators=(',', ':'),
+                                               allow_nan=False).encode()).hexdigest()}
+        model_config = {'label': client.label, 'temperature': getattr(client, 'temperature', None),
+                        'max_output_tokens': client.max_output_tokens, 'timeout_s': getattr(client, 'timeout', None),
+                        'extra_body': getattr(client, 'extra_body', {}),
+                        'attempt_policy': 'one-attempt-no-retries'}
         expected = dict(zip(names, fractions))
         for output in sorted(root.glob('f*')):
             if output.name not in expected or not output.is_dir() or not (output / 'manifest.json').is_file():
@@ -45,6 +55,8 @@ def run_sweep(root: Path, client, *, fractions=DEFAULT_FRACTIONS, agents=50, cas
                 raise ValueError('existing sweep configuration differs from requested run')
             if manifest.get('source') != source:
                 raise ValueError('existing sweep source differs from current source')
+            if manifest.get('model_config') != model_config or manifest.get('authorization') != authorization_identity:
+                raise ValueError('existing sweep model or authorization configuration differs')
     for fraction in fractions:
         output = root / f'f{int(round(fraction * 100)):02d}'
         if (output / 'manifest.json').exists():
@@ -61,8 +73,7 @@ def run_sweep(root: Path, client, *, fractions=DEFAULT_FRACTIONS, agents=50, cas
             break
 
 
-def summarize(roots: list[Path], *, analysis_root=None, decision_overrides=None,
-              legacy_fingerprints=None) -> dict:
+def summarize(roots: list[Path], *, analysis_root=None, decision_overrides=None) -> dict:
     """Read raw runs without rewriting them; optional analyses use a separate root.
 
     Offline reproduction may supply validated synthetic decision views, indexed
@@ -74,7 +85,7 @@ def summarize(roots: list[Path], *, analysis_root=None, decision_overrides=None,
             manifest_path = directory / 'manifest.json'
             if not manifest_path.exists():
                 continue
-            treatment = classify_run_treatment(directory, legacy_fingerprints=legacy_fingerprints)
+            treatment = classify_run_treatment(directory)
             treatments.add(treatment)
             directories.append((root, directory))
     if len(treatments) > 1:

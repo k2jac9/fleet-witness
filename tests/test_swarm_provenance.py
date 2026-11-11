@@ -164,6 +164,31 @@ class RunProvenanceTest(SyntheticSourceTestCase):
             self.assertEqual(client.count, 0)
             self.assertEqual((nonempty / 'keep').read_text(), 'preserve')
 
+    def test_replaced_run_directory_is_refused_before_any_call(self):
+        from fleet_witness.swarm import runner
+        class Counting(FakeClient):
+            calls = 0
+            def complete(self, *args, **kwargs):
+                self.calls += 1
+                return super().complete(*args, **kwargs)
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            decoy = root / 'decoy'
+            decoy.mkdir(mode=0o700)
+            original = runner._prepare_run_directory
+            def swap(path):
+                result = original(path)
+                path = Path(path)
+                path.rename(root / 'moved')
+                path.symlink_to(decoy, target_is_directory=True)
+                return result
+            client = Counting()
+            with patch.object(runner, '_prepare_run_directory', side_effect=swap):
+                with self.assertRaises((ValueError, OSError)):
+                    run_swarm(root / 'run', client, agents=7, cases=1, conditions=['hidden-clean'])
+            self.assertEqual(client.calls, 0)
+            self.assertFalse(list(decoy.iterdir()))
+
     def test_new_run_executes_gated_majority_without_a_committee(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

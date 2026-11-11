@@ -1,5 +1,10 @@
 # Current acceptance gates
 
+Local assurance work on `fix/local-assurance-20261110` is a candidate, not hosted
+CI or deployment acceptance. See the latest entry in [BUILD_STATUS.md](BUILD_STATUS.md)
+for observed checks. Aggregate attestation admission and rate control remain open;
+the 32 KiB per-submission bound does not prevent a flood of smaller submissions.
+
 Updated for the editorial checkpoint on **2026-11-09**. The completed pilot,
 publication and offline tests have source-bound evidence. Current cloud inventory
 and account balances were not refreshed during this pass. See

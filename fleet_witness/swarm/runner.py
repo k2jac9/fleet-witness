@@ -139,12 +139,15 @@ def _prepare_run_directory(output):
     """Create/open a private empty run directory without following symlinks."""
     output = Path(os.path.abspath(output))
     descriptor = os.open('/', os.O_RDONLY | os.O_DIRECTORY)
+    transferred = False
     try:
         parts = output.parts[1:]
         if not parts:
             raise ValueError('root is not a run directory')
         for index, name in enumerate(parts):
             parent = os.fstat(descriptor)
+            if parent.st_uid not in (0, os.getuid()):
+                raise ValueError('run directory ancestor has an untrusted owner')
             if parent.st_mode & 0o022 and not parent.st_mode & stat.S_ISVTX:
                 raise ValueError('writable run directory ancestor is not sticky')
             created = False
@@ -164,9 +167,11 @@ def _prepare_run_directory(output):
                     raise ValueError('run directory must be owner-private')
                 if os.listdir(descriptor):
                     raise ValueError('run directory is not empty; choose a new one')
+        transferred = True
+        return output, descriptor
     finally:
-        os.close(descriptor)
-    return output
+        if not transferred:
+            os.close(descriptor)
 
 
 def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditions=None,
@@ -178,8 +183,23 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
         raise ValueError(f'unknown conditions: {sorted(unknown)}')
     if agents < COMMITTEE_MAX or cases < 1 or waves < 1:
         raise ValueError(f'need at least {COMMITTEE_MAX} agents, 1 case and 1 wave')
-    output = _prepare_run_directory(output)
+    output, run_fd = _prepare_run_directory(output)
+    try:
+        current = os.stat(output, follow_symlinks=False)
+        held = os.fstat(run_fd)
+        if not stat.S_ISDIR(current.st_mode) or (current.st_dev, current.st_ino) != (held.st_dev, held.st_ino):
+            raise ValueError('run directory changed after validation')
+        # Anchor all later opens to the held directory, not its mutable name.
+        output = Path('/proc/self/fd') / str(run_fd)
+        return _run_swarm_anchored(output, client, agents=agents, cases=cases, conditions=conditions,
+                                   cell_fraction=cell_fraction, waves=waves, recent_comments=recent_comments,
+                                   seed=seed, case_mode=case_mode)
+    finally:
+        os.close(run_fd)
 
+
+def _run_swarm_anchored(output, client, *, agents, cases, conditions, cell_fraction, waves,
+                         recent_comments, seed, case_mode):
     rng = random.Random(seed)
     key = secrets.token_bytes(32)  # controller-only; never written out
     world = make_cases(cases, seed, key, mode=case_mode)
@@ -437,6 +457,7 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
         'ledger_before': ledger_before, 'ledger_after': budget_snapshot(),
         'model_config': {'label': client.label, 'temperature': getattr(client, 'temperature', None),
                          'max_output_tokens': client.max_output_tokens, 'timeout_s': getattr(client, 'timeout', None),
+                         'extra_body': getattr(client, 'extra_body', {}),
                          'attempt_policy': 'one-attempt-no-retries'},
         'scheduled_logical_requests': (agents + COMMITTEE_MAX) * cases * len(conditions),
         'logical_responses_completed': stats['calls'],

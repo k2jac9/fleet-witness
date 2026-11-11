@@ -57,8 +57,10 @@ Use the explicit extraction/reproduction commands in [SWARM.md](SWARM.md) for th
 retained archive. Default reproduction includes the depth-six checker and seven
 mutants; `--skip-checker` must be reported as an omitted check. Source/runtime,
 raw input and derived hashes are retained in `reproduction-provenance.json`.
-Inherited unclosed-SQLite warnings remain visible in the full test logs; a pass
-does not assert warning-free execution or production isolation.
+The bounded checker explicitly closes explored SQLite states on success,
+early violation and exception paths. The full test suite can still emit
+unclosed-SQLite warnings from other fixtures; retain and report them. A pass does
+not assert warning-free execution or production isolation.
 
 ## Full offline smoke
 
