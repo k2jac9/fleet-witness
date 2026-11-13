@@ -1,0 +1,118 @@
+{
+  "model": "xiaomi/mimo-v2.6-pro",
+  "summary": "Experiment 2 replaces Experiment 1's exact-match task with a judgement task (reviewing synthetic PRs for hidden harmful behaviour) and tests honest error, error correlation, model diversity, eight institutional regimes, and board persuasion with two cheap models, 24 sealed-label cases, and pre-declared analyses. The motivation is strong and the sweep is roughly affordable, but the two headline tests (RQ2 correlated error, RQ5 persuasion) are confounded as specified, and 16,416 calls plus pilot, calibration, analysis and a report rewrite in ~3.5 hours is optimistic. Fixing the independence null, the board-visibility attribution, and staging the runs would make this a credible, honest contribution.",
+  "will_it_answer_the_questions": "RQ1 yes: 0%-share runs give clean honest false-approval / false-rejection rates per model and difficulty tier, though n=12 harmful cases yields wide CIs. RQ2 no as specified: the G3 prediction 'using the pooled honest error rate' is confounded by case-difficulty heterogeneity \u2014 a mixture of easy and hard cases produces overdispersion and excess committee failure even when reviewer errors are conditionally independent given the case, so H2 would be confirmed by construction; the independence null must be built from per-case error rates (or a within-case permutation / hypergeometric null that preserves per-case rates). RQ3 partially: alternating seats does build mixed committees, but comparing them to single-model committees conflates complementary blind spots with simple averaging of two different base rates; the right comparator is the per-case product of the two models' error rates (mixed failure below that = genuinely decorrelated blind spots). RQ4 yes descriptively, but each regime x share x board x model cell contains only 12 target cases and the plan claims 'draw-level bootstrap' while specifying only one seat draw per case; pre-declare one primary regime comparison and resample many seat draws offline from the stored 50 votes (zero API cost) to get real draw-level variance. RQ5 no: the visible board exposes both the tally and colluders' comments, so any increase in honest approval conflates persuasion, bandwagon herding and generic social information; either rename the claim to 'board-visibility effect', add a wave-dose-response analysis (later waves see more colluder comments), or add a comments-without-tally arm on a subset.",
+  "predicted_scores_if_executed_well": {
+    "impact_innovation": 4,
+    "execution": 3,
+    "presentation": 4
+  },
+  "top_changes": [
+    {
+      "rank": 1,
+      "change": "Rebuild the RQ2 independence null from per-case honest error rates (or a within-case permutation/hypergeometric null that preserves each case's error rate) instead of the pooled rate; keep the pooled-rate version only as a secondary, explicitly labelled 'naive independence' comparison.",
+      "why": "As written, H2 is guaranteed by case heterogeneity: the 24 cases are deliberately stratified into easy/hard tiers, so a mixture of binomials already gives variance ratio > 1 and excess committee failure. Without this fix the paper's central claim about correlated honest errors is uninterpretable.",
+      "cost": "30-45 min of analysis code, no extra API calls",
+      "score_effect": "Execution: moves the headline result from confounded to interpretable (3 -> 4 potential)"
+    },
+    {
+      "rank": 2,
+      "change": "Stage the sweep and cut per-call cost: (a) instruct reviewers to output 'VOTE: approve/reject + 2-sentence comment' and cap output at ~400 tokens, (b) run 0%-share hidden-board first (satisfies RQ1-RQ3), then 20%/40%, (c) run with high concurrency and a live spend log, (d) write Method/Task-design sections while runs execute, hard stop experiments at ~05:45 and reserve the last 75 min for results, figure, and the required appendix.",
+      "why": "16,416 calls at a 2,000-token cap will not finish in 30-45 min and can approach the $15 cap once the pilot and the one allowed re-run are included; the report rewrite (condensing Experiment 1, new main section, figure, table) is itself 60+ min and is currently unallocated.",
+      "cost": "~0 extra money; saves 1-2 h and several dollars",
+      "score_effect": "Execution and Presentation: makes the study completable and the write-up non-rushed"
+    },
+    {
+      "rank": 3,
+      "change": "Fix RQ5 attribution: rename it to a 'board-visibility effect' and add a pre-declared wave-dose-response analysis (waves 1-2 see few/no colluder comments, waves 4-5 see many) using data already collected; if time permits, add a comments-without-tally arm on 4-6 cases at 40% share.",
+      "why": "Visible vs hidden currently bundles persuasion, conformity to the tally, and generic social information; the plan's own hypothesis ('after seeing colluders' arguments') is not identified by the contrast it specifies.",
+      "cost": "20 min analysis, or ~1,400 extra calls (~$1) for the extra arm",
+      "score_effect": "Execution: converts an unidentifiable claim into a defensible one; Presentation: honest framing of what the result shows"
+    },
+    {
+      "rank": 4,
+      "change": "Pre-declare one primary regime comparison (e.g., 3-of-5 vs direct majority at 40% share, hidden board) and treat the remaining 8 x 3 x 2 x 2 grid as descriptive with exact counts; resample ~200 seat draws offline from the stored 50 votes per case to obtain genuine draw-level intervals.",
+      "why": "With 12 target cases per cell, most regime differences will be noise; the current 'draw-level bootstrap' is mislabelled (one draw per case) and understates or misstates uncertainty.",
+      "cost": "20-30 min, zero API cost",
+      "score_effect": "Execution: honest uncertainty, avoids overclaiming regime rankings"
+    },
+    {
+      "rank": 5,
+      "change": "Replace 'three strong models not used as agents (from the review panel)' with a concrete cheap protocol: each harmful case must have a one-line policy-violation clause and each benign case a one-line 'no violation' rationale written by a team member; then have the two study models label all 24 cases blind (temp 0) as a sanity check and report agreement. Pre-write 4 spare hard cases before the pilot so the single calibration adjustment is a swap, not fresh authoring.",
+      "why": "The 'review panel' is undefined, unbudgeted, and models-as-judges is weak ground truth for author-written cases; and a post-pilot rewrite of 24 cases is the biggest hidden time sink in the plan.",
+      "cost": "30-40 min, <$1",
+      "score_effect": "Execution: defensible labels and a calibration step that fits the clock"
+    },
+    {
+      "rank": 6,
+      "change": "Add a trivial non-LLM baseline (semgrep/bandit rules or a keyword heuristic for the 12 harmful patterns) run over the 24 diffs, and state explicitly in the required Limitations and Dual-Use appendix that the harmful diffs are synthetic and non-operational and that the collusion findings could aid evasion.",
+      "why": "A static baseline contextualises whether agent committees add anything over pattern matching (cheap credibility), and the dual-use appendix is a hard submission requirement the plan only half-covers.",
+      "cost": "20-30 min, $0",
+      "score_effect": "Impact/Innovation (baseline strengthens the theory of change) and Presentation (compliance with required appendix)"
+    }
+  ],
+  "concerns": [
+    {
+      "id": "C1",
+      "severity": "critical",
+      "issue": "RQ2's independence null uses the pooled honest error rate, so case-difficulty heterogeneity alone produces overdispersion and excess committee failure; H2 is confirmable by construction.",
+      "suggested_fix": "Compute the independence prediction per case (binomial/hypergeometric with per-case p_c estimated from the 50 voters, or a within-case permutation null), and report the pooled-rate version only as a naive baseline."
+    },
+    {
+      "id": "C2",
+      "severity": "major",
+      "issue": "RQ5's visible-vs-hidden contrast bundles persuasion, bandwagon herding from the tally, and generic social information, so it cannot support the claim about colluders' arguments.",
+      "suggested_fix": "Rename to 'board-visibility effect', add a wave dose-response analysis, and/or add a comments-without-tally arm on a subset at 40% share."
+    },
+    {
+      "id": "C3",
+      "severity": "major",
+      "issue": "Wall time is understated: 16,416 calls at a 2,000-token cap plus pilot, one calibration rewrite, one possible full re-run, analysis, and a two-experiment report rewrite will not fit 3.5 hours at the stated 30-45 min for the sweep.",
+      "suggested_fix": "Stage runs (0% hidden first), cap reviewer output at ~400 tokens with a fixed vote format, parallelise, write Method sections during runs, and hold a hard stop at ~05:45 with the last 75 min reserved for writing."
+    },
+    {
+      "id": "C4",
+      "severity": "major",
+      "issue": "Per-cell sample size is 12 harmful cases for each regime x share x board x model cell, and only one seat draw per case is specified while the plan claims draw-level bootstrap; regime rankings will be mostly noise and the uncertainty statement is wrong.",
+      "suggested_fix": "Pre-declare one primary regime comparison, report exact counts, and resample many seat draws offline from stored votes (free) for genuine draw-level intervals."
+    },
+    {
+      "id": "C5",
+      "severity": "major",
+      "issue": "RQ3's mixed-vs-single committee comparison conflates complementary blind spots with averaging of two different base error rates.",
+      "suggested_fix": "Compare observed mixed-committee failure against the per-case product of the two models' error rates (independence given the case); only a deficit below that supports differing blind spots."
+    },
+    {
+      "id": "C6",
+      "severity": "minor",
+      "issue": "Label validation relies on undefined 'strong models from the review panel' with unspecified cost, and models-as-judges is weak ground truth for author-written synthetic cases.",
+      "suggested_fix": "Team-member clause-level rationales as ground truth plus blind labelling by the two study models as a reported sanity check; state that labels are author-constructed."
+    },
+    {
+      "id": "C7",
+      "severity": "minor",
+      "issue": "Budget risk: ~20k calls including pilot and a full re-run at a 2,000-token cap can exceed the $15 hard cap; the '>2% failed calls => re-run once in full' rule can double cost.",
+      "suggested_fix": "Cap outputs, log spend per run, and re-run only failed calls rather than the whole run."
+    },
+    {
+      "id": "C8",
+      "severity": "minor",
+      "issue": "Temperature 0.7 with 'same seeds' is not reliably reproducible across OpenRouter providers, and sampling noise inflates the error variance used in RQ2.",
+      "suggested_fix": "Either drop the reproducibility claim to 'same prompts and settings' or use temperature 0 for voters and reserve 0.7 for a small robustness check; state the choice."
+    },
+    {
+      "id": "C9",
+      "severity": "minor",
+      "issue": "The required Limitations and Dual-Use / Ethical Considerations appendix is only partially planned (limitations listed, dual-use not), and the harmful diffs plus collusion talking points have obvious dual-use surface.",
+      "suggested_fix": "Write the appendix explicitly: synthetic non-operational harmful code, no real systems touched, and a note on how the collusion/committee-capture results could be misused or misread."
+    }
+  ],
+  "cut_if_short_on_time": [
+    "Drop the 20% colluder-share level (keep 0% and 40%): RQ5 survives at 40%, RQ4 survives at 0/40%, saves ~5,500 calls",
+    "Drop the visible-board cells and RQ5 entirely (hidden board only): halves remaining calls and keeps RQ1-RQ4 intact",
+    "Reduce reviewers from 50 to 30 per case (or cases from 24 to 16, keeping all 12 harmful tiers): proportionally cuts calls",
+    "Drop the blind label-validation panel and the static-analysis baseline (keep the team-written clause-level rationales)",
+    "Drop the optional video demo and any figure beyond the single pre-declared one"
+  ],
+  "verdict": "proceed with changes"
+}

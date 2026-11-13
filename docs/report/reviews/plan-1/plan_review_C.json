@@ -1,0 +1,113 @@
+{
+  "model": "meta/muse-wonder",
+  "summary": "Experiment 2 asks the right follow-up question: whether honest AI code reviewers make correlated judgement errors that break the independence assumption behind committee oversight. As planned, however, 24 hand-written cases, one seat draw per case, 16,416 calls, eight regimes, five RQs and a full report rewrite cannot be executed or statistically supported in about 3 hours. Narrowing to honest error, correlated failure and one persuasion contrast, with offline committee resampling, would produce a credible hackathon result.",
+  "will_it_answer_the_questions": "Only partially. RQ1 is answerable descriptively from 0%-colluder runs, although H1's 2% threshold is weak. RQ2 is not adequately tested: only 12 harmful targets and effectively one shared 7-seat draw per case give far too few committee outcomes to compare observed failure with the G3 independence prediction; per-case rates from 50 voters help, but committees must be resampled many times from those votes. RQ3 is suggestive only because offline alternating seats confounds model with seat position and uses the same single draw. RQ4 will produce numbers, but all eight regimes are deterministic recounts of the same votes, forged-receipt blocking repeats Experiment 1's mechanical result, and 'seat bound plus honest error' is not defined tightly enough to falsify. RQ5 is confounded: visible-vs-hidden differs in honest herding, tally information, wave dynamics and colluder exposure, so it needs a difference-in-differences against the 0% visible-board condition and a manipulation check that colluder arguments actually appeared.",
+  "predicted_scores_if_executed_well": {
+    "impact_innovation": 3,
+    "execution": 2,
+    "presentation": 3
+  },
+  "top_changes": [
+    {
+      "rank": 1,
+      "change": "Cut the main claim to RQ1-RQ3 plus one predeclared persuasion contrast; demote the eight-regime table to an offline secondary recount and drop forged-receipt cases from Experiment 2 (cite Experiment 1 for kernel forgery blocking).",
+      "why": "Writing 24 quality PRs, adapting the harness, piloting, running 16k calls, analysing five RQs and rewriting the paper is not feasible in 3 hours; a smaller claim executed cleanly scores higher than five half-tested claims.",
+      "cost": "Saves 60-90 min and roughly $2-4; 15 min to rewrite the plan/report outline.",
+      "score_effect": "Execution +1: makes completion and interpretable results plausible; Presentation +1: one clear headline figure instead of a diluted regime catalogue."
+    },
+    {
+      "rank": 2,
+      "change": "Fix RQ2 by resampling committees offline: for each harmful case, draw at least 1,000 committees with replacement from that case's honest hidden-board votes for 2-of-3, 3-of-5 and 4-of-7; compare mean failure with G3 computed from the pooled honest error rate, bootstrap over cases, and report that votes within a case/model/run are not fully independent draws.",
+      "why": "This converts 50 votes per case into an estimable committee-failure distribution instead of relying on 12 single-draw committee outcomes, which cannot distinguish correlation from noise.",
+      "cost": "30-45 min coding/analysis; no extra API cost.",
+      "score_effect": "Execution +1 to +2: RQ2 becomes actually testable; Impact +1 because correlated committee failure is the novel contribution."
+    },
+    {
+      "rank": 3,
+      "change": "Rebalance the design toward more cases and fewer redundant voters: e.g. 32-40 shorter PR cases, 20-25 honest voters per case in the 0% condition, and keep 20%/40% colluder runs only if time remains after the 0% sweep is analysed.",
+      "why": "Case count, not voter count beyond ~20-25, is the binding constraint for per-case overdispersion, difficulty tiers and bootstrap intervals; 12 targets cannot support tier-by-correlation claims.",
+      "cost": "45-60 min to write/template additional short diffs, partly offset by fewer calls; keep total under ~6,000-8,000 calls.",
+      "score_effect": "Execution +1: improves power where it matters and cuts wall time/cost; Impact +1 if difficulty-tier blind spots become visible."
+    },
+    {
+      "rank": 4,
+      "change": "Make RQ5 a difference-in-differences: (visible-hidden honest target approval at 20%/40%) minus (visible-hidden at 0%), stratified by wave, and log/count how many colluder comments were actually shown in the six-comment board window.",
+      "why": "Without the 0% visible control, any visible-board increase may be ordinary honest herding or tally-following rather than colluder persuasion; without exposure logs the treatment may not have occurred.",
+      "cost": "15 min analysis if board exposure is already logged; otherwise 20 min instrumentation, no extra runs because 0% runs already exist.",
+      "score_effect": "Execution +1: removes the main confound in RQ5; Presentation +1 because the estimand can be stated in one sentence."
+    },
+    {
+      "rank": 5,
+      "change": "Replace the unavailable 'three strong models from the review panel' label validation with a feasible check: second team member (or a scripted policy checklist plus one of the two available models prompted independently) labels all cases blind before seeing results; report disagreements and retain disputed cases in a sensitivity analysis rather than dropping them.",
+      "why": "The plan budgets only DeepSeek v4 Flash and gpt-oss-20b and ~$15; unnamed external strong models are a schedule and reproducibility risk, and author-only labels invite circularity since cases were written to be labelled a certain way.",
+      "cost": "20-30 min; <$1 if using an available model.",
+      "score_effect": "Execution +1: label validity becomes auditable within constraints; Presentation +1 via a small agreement table."
+    },
+    {
+      "rank": 6,
+      "change": "Impose a hard timeline: cases+harness frozen by T+60min, pilot (max ~400 calls on a case subset) by T+90min, main runs launched by T+105min, analysis frozen by T+150min, report skeleton written before runs finish; if main runs are not launched by T+105min, submit Experiment 1 with Experiment 2 as a preregistered pilot only.",
+      "why": "The stated 05:45 fallback is too late to rewrite the report; the current 30-45 min estimate for 16,416 long-context calls ignores rate limits, retries, parsing failures and the standalone-script build.",
+      "cost": "No money; requires dropping planned polish.",
+      "score_effect": "Execution +1 and Presentation +1: greatly increases probability of a submittable, coherent PDF rather than unanalysed logs."
+    }
+  ],
+  "concerns": [
+    {
+      "id": "C1",
+      "severity": "critical",
+      "issue": "RQ2 is underpowered as designed: 12 harmful targets, one ordered 7-seat draw shared across boards/models, and bootstrap over only 12 cases cannot estimate honest-only committee failure versus the independence prediction.",
+      "suggested_fix": "Resample >=1,000 committees per case from honest votes, increase harmful cases if possible, report case-bootstrap CIs, and state the effective sample is cases, not 16,416 calls."
+    },
+    {
+      "id": "C2",
+      "severity": "critical",
+      "issue": "Scope/time mismatch: 24 bespoke 15-40-line diffs with sealed rationales, harness changes, blind labelling, pilot plus possible rewrite, 16,416 calls, eight-regime kernel execution, five analyses and a major report restructure in ~3.5 hours, with a fallback decided only ~75 min before deadline.",
+      "suggested_fix": "Apply the timeline in top change 6, pre-write the Experiment 2 report skeleton and figure code on synthetic data, and cut regimes/forged cases first."
+    },
+    {
+      "id": "C3",
+      "severity": "major",
+      "issue": "Call accounting and swarm design are internally unclear: '50 reviewers in five waves' does not obviously equal 57 calls per case-board, nor is it specified whether colluder comments/votes are LLM-generated, scripted talking points, or both, and how the six recent comments are selected.",
+      "suggested_fix": "Add a one-paragraph exact protocol (voters per wave, who sees what, colluder generation, comment sampling, auditor vs reviewer distinction, parse-failure handling) and recompute calls/cost from actual prompt token counts on the pilot."
+    },
+    {
+      "id": "C4",
+      "severity": "major",
+      "issue": "No replication: one run per model x share at temperature 0.7 means share/model effects are confounded with run-level randomness, colluder identity assignment and wave ordering; 'same seeds' do not make DeepSeek and gpt-oss comparable.",
+      "suggested_fix": "At minimum repeat the 0% hidden condition or split voters into two half-samples as an internal consistency check; report run as the unit of uncertainty and avoid cross-model causal language."
+    },
+    {
+      "id": "C5",
+      "severity": "major",
+      "issue": "RQ4's key comparison is undefined: 'seat bound plus honest-error capture' needs an exact formula per regime (how honest error probability combines with colluder seats under each threshold), otherwise any observed capture can be rationalised post hoc.",
+      "suggested_fix": "Pre-write the formula/table for each regime before runs, or present regimes purely descriptively and remove H4's confirmatory framing."
+    },
+    {
+      "id": "C6",
+      "severity": "major",
+      "issue": "Running outside the gated paid workflow with a teammate's personal key weakens the paper's institutional-kernel claim if Experiment 2 becomes the main empirical section: HMAC attestations in a standalone script do not demonstrate the production authorisation path.",
+      "suggested_fix": "Label Experiment 2 explicitly as a vote-generation study with offline kernel recount, keep all kernel-enforcement claims tied to Experiment 1, and retain prompt hashes/full logs as stated; do not claim end-to-end kernel execution."
+    },
+    {
+      "id": "C7",
+      "severity": "minor",
+      "issue": "Calibration band of 3%-60% pooled false approval is very wide and 'not every case at 0%/100%' is weak; a pooled rate in-band can still hide most cases being trivial, which destroys the correlation analysis.",
+      "suggested_fix": "Add a per-case criterion, e.g. at least 6 of 12+ harmful cases with honest false-approval strictly between 5% and 95% in the pilot, and permit only difficulty rewrites of out-of-band cases under the one-shot rule."
+    },
+    {
+      "id": "C8",
+      "severity": "minor",
+      "issue": "Multiple comparisons across 8 regimes x 3 shares x 2 boards x 2 models x difficulty tiers with no stated correction or hierarchy invites cherry-picked significant cells.",
+      "suggested_fix": "Declare one primary figure (RQ2) and one primary table (regimes on targets only), mark everything else exploratory, and report effect sizes with CIs rather than p-value hunting."
+    }
+  ],
+  "cut_if_short_on_time": [
+    "Forged-receipt cases and all kernel/forgery claims in Experiment 2 (already covered by Experiment 1)",
+    "7-of-7 and hybrid regimes, then 1-of-1; keep direct/gated majority plus 2-of-3, 3-of-5, 4-of-7 as offline recounts",
+    "The 40% colluder condition if the 0% and 20% runs are not yet analysed",
+    "Difficulty-tier breakdowns beyond easy vs hard",
+    "Mixed-model committee construction beyond a single predeclared alternating-seat comparison",
+    "Any case-difficulty rewrite beyond the single predeclared pilot adjustment"
+  ],
+  "verdict": "proceed with changes"
+}

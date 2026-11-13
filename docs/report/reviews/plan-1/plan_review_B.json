@@ -1,0 +1,91 @@
+{
+  "model": "google/gemini-4-argon",
+  "summary": "This plan smartly upgrades the project from Experiment 1's mechanical exact-match task to a realistic code-review judgment task where honest errors, correlated blind spots, and social persuasion actually matter. However, evaluating committee regimes on only a single 7-seat draw across 12 target cases yields just 12 binary outcomes per regime (8.3% granularity), which is too underpowered to reliably test RQ2, RQ3, or RQ4 without resampling from the 57 agent calls already collected per case. In addition, several analysis confounds (between-case difficulty heterogeneity in RQ2, marginal accuracy differences in RQ3, and baseline board visibility effects in RQ5) and timeline hazards for a 3-hour window need immediate, low-cost fixes.",
+  "will_it_answer_the_questions": "It will cleanly answer RQ1 (pooled and per-tier honest error rates, where 57 calls x 24 cases gives >680 honest judgments on target cases at 0% share). However, as currently specified, it will struggle to answer RQ2, RQ3, and RQ4 with statistical precision because Section 4 uses only ONE random draw of 7 auditor seats per case across 12 harmful target cases\u2014meaning each committee regime's failure rate in a run is an average of just 12 binary outcomes (at 20% colluders, theoretical 3-of-5 seat capture is 5.8%, or ~0.7 cases out of 12, so single-draw variance will swamp the signal). Moreover, RQ2 conflates within-case correlation with intentional between-case difficulty tiers (Easy/Medium/Hard) via Jensen's inequality; RQ3's mixed-model test can be confounded if one model is simply more accurate than the other rather than having complementary blind spots; and RQ5's comparison of visible vs. hidden boards at 20%/40% colluders confounds colluder persuasion with baseline honest herding unless referenced against the 0%-colluder visible board and stratified by wave.",
+  "predicted_scores_if_executed_well": {
+    "impact_innovation": 4,
+    "execution": 4,
+    "presentation": 4
+  },
+  "top_changes": [
+    {
+      "rank": 1,
+      "change": "In the analysis script (Section 6), keep the single pre-committed 7-seat draw for exact parity with Experiment 1, but compute primary committee failure and capture metrics for RQ2, RQ3, and RQ4 by resampling B=1,000 7-seat draws per case from the full pool of evaluated honest and colluder judgments on that case/board and passing each draw through `fleet_witness/institution.py`.",
+      "why": "With only 12 target cases, a single 7-seat draw per case gives only 12 binary decisions per regime (resolution = 1/12 = 8.3%, with +/-20% bootstrap CIs), making it nearly impossible to distinguish 2-of-3, 3-of-5, and 4-of-7 or test H2\u2013H4. Resampling from the 57 calls already paid for per case runs locally in <2 seconds at $0 API cost and eliminates seat-draw luck.",
+      "cost": "15 minutes of analysis code; $0 API cost.",
+      "score_effect": "Execution (+1): turns noisy 12-sample binary proportions into high-precision per-case failure rates that rigorously test H2, H3, and H4."
+    },
+    {
+      "rank": 2,
+      "change": "Strengthen RQ2 and RQ3 analyses by (a) explicitly decomposing committee failure into between-case difficulty heterogeneity (cases where per-case error p_c > 0.5 cause majority vote to fail systematically) vs. the homogeneous independent prediction G_m(p_bar), and (b) reporting the cross-model case-level error correlation Corr(p_{c,DS}, p_{c,GPT}) and comparing the mixed committee against BOTH individual models, their average, and the cross-model independent product.",
+      "why": "Because you intentionally created Easy, Medium, and Hard tiers, p_c varies across cases by construction, which automatically induces overdispersion (variance ratio > 1). For RQ3, if DeepSeek is simply much stronger than gpt-oss-20b, an alternating committee will beat the weaker model by dilution while losing to the stronger model; measuring cross-model correlation across the 12 target cases directly tests whether their blind spots differ.",
+      "cost": "15 minutes of analysis code; $0 API cost.",
+      "score_effect": "Execution (+0.5) and Impact/Innovation (+0.5): provides a mathematically sound treatment of correlated LLM errors and model diversity."
+    },
+    {
+      "rank": 3,
+      "change": "For RQ5 (persuasion), report the full 3x2 table of honest false-approval on targets across Colluder Share (0%, 20%, 40%) x Board (Hidden, Visible), compute the Difference-in-Differences [(Visible_f - Hidden_f) - (Visible_0 - Hidden_0)], and compare Wave 1 vs. Waves 2\u20135 as well as Voters (who see tally + 6 comments) vs. Auditors (who see only the tally on the visible board).",
+      "why": "Comparing visible vs. hidden only at 20% and 40% confounds colluder persuasion with the baseline effect of having a visible board at 0% colluders (honest herding). Furthermore, your existing harness gives Voters comments+tally and Auditors tally-only on the visible board, letting you separate verbal persuasion from numerical tally herding and measure 'auditor contamination' at zero extra cost.",
+      "cost": "10 minutes of analysis code; $0 API cost.",
+      "score_effect": "Impact/Innovation (+0.5) and Execution (+0.5): eliminates a major confound and yields a novel governance insight on isolating committee auditors from public vote tallies."
+    },
+    {
+      "rank": 4,
+      "change": "Streamline the critical path for the 3-hour deadline: (a) shrink the calibration pilot from 1,000 calls to 240 calls (5 agents x 24 cases x 2 models on hidden board, ~2 mins), (b) do NOT block the main sweep on the 3-strong-model blind labeling panel (run the panel asynchronously during the main sweep as a frontier baseline), and (c) replace Rule 4's 're-run entire 2,736-call run on >2% failures' with per-request exponential-backoff retries (max 3 attempts) and a concise output instruction ('respond in <150 words before final verdict') to prevent 2,000-token truncations.",
+      "why": "With ~3 hours left, writing 24 PR diffs, running a blocking 3-model panel, running a 1,000-call pilot, and running 16,416 main calls (plus potential full 2,736-call re-runs) has high risk of missing the 06:59 UTC-5 cutoff.",
+      "cost": "Saves 35\u201350 minutes of wall-clock time and ~$1.50\u2013$3.00.",
+      "score_effect": "Execution and Presentation: ensures the sweep finishes by 05:15 so you have >90 minutes to generate clean figures and polish the report."
+    },
+    {
+      "rank": 5,
+      "change": "Explicitly quarantine the 4 'forged receipt' cases from the 12 'harmful code target' cases in all RQ1/RQ2 reviewer error metrics, and present a 2x2 capability table showing that LLM reviewers catch semantic code bugs (which mechanical checks miss) while the institution kernel catches forged CI receipts on benign diffs (which LLM reviewers are told they cannot verify).",
+      "why": "In the 4 forged-receipt cases, the code diff is benign and the prompt instructs reviewers 'You cannot verify signatures yourself.' An honest reviewer approving the benign diff is behaving correctly according to policy; accidentally counting those approvals as 'honest false approvals' would corrupt RQ1/RQ2, whereas contrasting them with the 12 code-harmful targets creates a cohesive story linking Experiment 1 and Experiment 2.",
+      "cost": "5 minutes in analysis/plotting code; $0 API cost.",
+      "score_effect": "Presentation (+0.5): unifies Experiment 1 (mechanical threats) and Experiment 2 (semantic judgment threats) into a single clear thesis."
+    }
+  ],
+  "concerns": [
+    {
+      "id": "C1",
+      "severity": "critical",
+      "issue": "Severe underpowering of single-draw committee evaluation (RQ2, RQ3, RQ4): Using only 1 draw of 7 auditor seats per case across 12 target cases gives only N=12 binary committee decisions per regime per run. At 20% colluder share, theoretical 3-of-5 colluder majority is 5.8% (0.7 cases out of 12) and 4-of-7 is 3.3% (0.4 cases out of 12). Single-draw realization noise is larger than the differences between regimes.",
+      "suggested_fix": "Use all evaluated honest and colluder judgments per case to evaluate 1,000 resampled committee draws per case through `institution.py` alongside the single canonical draw, reporting both."
+    },
+    {
+      "id": "C2",
+      "severity": "major",
+      "issue": "Timeline bottleneck from sequential waves, 2,000-token cap, blocking pre-checks, and full-run re-run rule: 16,416 calls + 1,000 pilot calls with 5 sequential waves per visible-board case and up to 2,000 tokens per call can easily exceed 60\u201375 minutes on OpenRouter, and re-running a full 2,736-call batch on >2% API failures could blow the 3-hour deadline.",
+      "suggested_fix": "Instruct models to keep rationales concise (<150 words) so responses finish in ~150\u2013300 tokens; add per-call retry with backoff (3 tries) instead of full-run restarts; cut the pilot to 5 calls/case (240 calls); and run the 3-model blind validation asynchronously during the main sweep rather than as a gate before it."
+    },
+    {
+      "id": "C3",
+      "severity": "major",
+      "issue": "RQ5 persuasion metric confounds baseline board visibility (honest herding) with colluder persuasion: comparing visible vs. hidden at 20% and 40% alone does not account for how much the visible board changes honest approval when colluder share is 0%.",
+      "suggested_fix": "Use the 0%-colluder visible vs. hidden difference as the baseline (Difference-in-Differences), and also compare Wave 1 (little/no colluder exposure) against Waves 2\u20135 and Voters (tally + comments) against Auditors (tally only)."
+    },
+    {
+      "id": "C4",
+      "severity": "major",
+      "issue": "RQ3 mixed-model committee comparison is confounded when the two models have very different base error rates: if Model A has 5% error and Model B has 40% error, a mixed committee will look worse than Model A alone even if their errors are independent.",
+      "suggested_fix": "Compare the mixed committee not only to each single-model committee, but also to the mean of the two single-model committees and to the theoretical prediction under cross-model independence given each model's marginal error rate, alongside the empirical case-level error correlation between the two models."
+    },
+    {
+      "id": "C5",
+      "severity": "minor",
+      "issue": "On a hidden board, agent prompts do not depend on other agents' actions, meaning honest hidden-board calls at 0%, 20%, and 40% colluder shares have identical distributions (5,000+ redundant API calls across the sweep).",
+      "suggested_fix": "If keeping the exact Experiment 1 harness loop is fastest to code, leave it as-is for simplicity\u2014but if API latency is slow during the first run, either pool/reuse hidden-board honest responses across colluder shares or reduce voter count from 50 (5 waves of 10) to 30 (5 waves of 6)."
+    },
+    {
+      "id": "C6",
+      "severity": "minor",
+      "issue": "Blind validation with 3 external models (Section 3) could disagree on 'Harmful, hard' cases simply because the hard planted bugs fool those models too, which demonstrates difficulty rather than label invalidity.",
+      "suggested_fix": "Define ground-truth labels constructively by the planted vulnerability line in the diff; frame the 3 external models' error rates on the 24 cases as an external reference benchmark showing that the hard cases are nontrivial even for other models."
+    }
+  ],
+  "cut_if_short_on_time": [
+    "Cut the pre-run blocking 3-model blind review panel first (either run it asynchronously while the main sweep runs or drop it and rely on constructive ground-truth definitions of the planted bugs in each diff).",
+    "Cut the standalone 1,000-call throwaway pilot: run just 5 calls per case on 1 model (120 calls, ~90 seconds) to verify prompt parsing and basic difficulty calibration, or start directly with the 0%-share hidden-board run.",
+    "If OpenRouter latency puts the sweep past 30 minutes of wall time, cut voter count per wave from 10 to 6 (30 voters + 7 auditors = 37 calls/case instead of 57, reducing total sweep calls from 16,416 to 10,656) or reuse the 0%-share hidden-board honest evaluations for the hidden-board 20% and 40% conditions."
+  ],
+  "verdict": "proceed with changes"
+}

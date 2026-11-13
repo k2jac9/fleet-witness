@@ -1,0 +1,117 @@
+{
+  "model": "google/gemini-4-argon",
+  "summary": "This report argues that multi-agent safety guarantees should reside in a mechanically verified institutional kernel rather than per-agent alignment, implementing a SQLite-backed separation-of-powers kernel verified via bounded exhaustive state exploration (23,376 states, 7 mutation tests) and stress-tested across 50-agent LLM swarms (32,830 main-sweep responses across two reasoning models). Empirically, the authors show that mechanical checks in the kernel eliminate forged-signature releases that fool plain majority voting (0/48 vs. 48/48), that a mechanically gated majority achieves perfect safety on this task, and that random k-of-m committees reduce model requests at the cost of capture rates strictly bounded by realized colluder seat draws. The execution, ablation honesty, and statistical transparency are standout for a 3-day sprint, though the empirical benchmark relies on syntactic string-matching receipts where honest LLM errors are near zero, leaving correlated judgment failures untested.",
+  "scores": {
+    "impact_innovation": 4,
+    "execution": 4,
+    "presentation": 4,
+    "formality_aesthetics": 4,
+    "readability": 4
+  },
+  "score_rationale": {
+    "impact_innovation": "Score 4 (Significant). Reframing swarm oversight around a bounded-verified institutional gateway kernel and decomposing system safety into mechanical invariants (G1), realized seat bounds (G2), and probabilistic hypergeometric-binomial bounds (G3) is a sharp, buildable contribution spanning Tracks 4, 3, and 2. It stops short of a 5 because the empirical task delegates syntactic receipt field checks (wrong run ID, wrong artifact ID, digest mismatch) to LLM auditors rather than genuinely ambiguous semantic safety judgments.",
+    "execution": "Score 4 (Strong). Combining bounded state-space model checking of the actual SQLite implementation (validated via mutation testing) with 84,813 retained LLM records across main, near-miss, and truncation-pilot sweeps is remarkably thorough for a weekend hackathon. The authors also include the crucial 'gated majority' control\u2014honestly showing that committees do not improve safety over a mechanically gated majority\u2014and audit their own truncation confounds and pairing structure. It falls short of 5 mainly because each colluder share in the main sweep uses a single seed (12 independent committee draws per share) and reuses prefixes of one 7-seat draw across committee sizes.",
+    "presentation": "Score 4 (Well presented). The central thesis, conditional guarantees (G1\u2013G3), and negative/control findings are communicated with admirable clarity and intellectual honesty. It is held back from 5 by the absence of a concrete example of the receipt schema and agent prompts, the unexplained omission of the 3-of-5 regime from Figure 1 and Table 3, and the omission of the realized G2 bound curve in Figure 1 to explain the non-monotonic dip at 40% collusion.",
+    "formality_aesthetics": "Score 4 (Polished with minor issues). The manuscript is handsomely typeset in LaTeX matching the Apart template typography, with clean vector pgfplots figures and booktabs tables, and complies with the 8-page main-body limit (7 numbered content pages + 1 title page) and 150\u2013250 word abstract requirement (~218 words). Minor defects prevent a 5: a missing affiliation for the first author on the title page, citing an arXiv paper by a title fragment ('From Logic Monopoly, 2026') instead of author names, a yearless '(SQLite)' citation, inconsistent 'et al.' truncation in the bibliography, and telegraphic two-word subsections ('Table 2.', 'Table 4.') in the appendices.",
+    "readability": "Score 4 (Easy to follow). The prose is direct, economical, and well-signposted with bold run-in headers. It is held back from 5 by overly compressed experimental mechanics in Section 3.4 (which never explicitly explain how 1-of-1, 2-of-3, and 3-of-5 are sliced from the single 7-seat draw) and dense, forensic self-audit disclaimers in the appendices that read like an internal errata log."
+  },
+  "strengths": [
+    "Clear architectural separation between mechanical verification at the gateway (G1) and behavioral parameters of the agent population (colluder seat draws G2, honest error rate and correlation G3).",
+    "Bounded exhaustive model checking runs directly against serialized SQLite states of the real Python implementation rather than only a detached mock, and mutation testing proves the checker catches all seven planted bugs (including showing why depth 6 is required for uniqueness).",
+    "Exceptional intellectual and methodological honesty: the authors introduce the 'gated majority' control that shows committees are a request-saving trade-off rather than a safety improvement over mechanically gated voting, and they openly document truncation bias (98/99 abstentions in the 600-token pilot coming from colluders) and paired committee draws.",
+    "Substantial empirical scale for a 3-day sprint (32,830 completed main-sweep responses plus 32,831 near-miss responses across two model families) at very low cost, accompanied by an offline reproduction script and complete data archive."
+  ],
+  "concerns": [
+    {
+      "id": "C1",
+      "severity": "major",
+      "category": "validity",
+      "location": "Page 2\u20134 (PDF p. 3\u20135), Section 3.1 & Section 3.4; Page 6 (PDF p. 7), Section 4.3",
+      "issue": "The paper motivates the auditor committee by splitting 'what can be checked mechanically ... from what must be judged (is this release safe?)', yet the 12 invalid target cases in the benchmark ('build-only, wrong-artifact and wrong-run receipts') and the near-miss cases ('two-character digest change or issuer capitalization') are syntactic field mismatches on structured receipts that could trivially be checked mechanically by the kernel itself.",
+      "why_it_matters": "Because the auditor task reduces to exact string/field matching rather than ambiguous semantic judgment, honest LLM auditors make virtually zero errors (0/746 in main sweeps), preventing an empirical test of correlated honest errors (Knight & Leveson, 1986) under G3 and blurring the paper's own design principle that mechanical checks belong in the kernel.",
+      "suggested_fix": "Explicitly acknowledge in Section 3.1 and Section 3.4 that in this benchmark, semantic judgment is proxied by structured receipt-field inspection (which a production kernel would check mechanically) in order to establish a clean ground-truth baseline, and add a small box or appendix figure showing an exact example of a valid receipt, a target invalid receipt, and the voter/auditor prompt."
+    },
+    {
+      "id": "C2",
+      "severity": "major",
+      "category": "statistics",
+      "location": "Page 5\u20136 (PDF p. 6\u20137), Table 1 & Figure 1; Page 12 (PDF p. 13), Appendix C, Table 3",
+      "issue": "In Figure 1 (Auditor 1-of-1 and Committee 2-of-3) and Table 3, observed capture rates drop sharply from 30% collusion (33.3% capture for DS 1-of-1) to 40% collusion (16.7% capture). While Section 4.2 notes that realized seat draws were favorable overall (12/60 vs. 18/60 expected), Figure 1 only plots the theoretical a-priori G3 curve and omits the realized G2 seat bound per colluder share, which comes from a single seed (only 12 independent committee draws) at each colluder share.",
+      "why_it_matters": "Without seeing the realized G2 seat bound at each share in Figure 1 or Table 3, a reader naturally misinterprets the dip at 40% collusion as non-monotonic LLM behavioral resistance rather than small-sample seed variance from drawing only 12 committees per share.",
+      "suggested_fix": "Plot the realized seat bound (G2) as a step line or open marker on each panel of Figure 1, and add the realized G2 seat bound count (out of 24) alongside the observed DS / GPT counts in every cell of Table 3."
+    },
+    {
+      "id": "C3",
+      "severity": "major",
+      "category": "confound",
+      "location": "Page 3\u20134 (PDF p. 4\u20135), Section 3.4; Page 5 (PDF p. 6), Section 4.2",
+      "issue": "Section 3.4 states that for each case the kernel seats one committee of seven, and that with a visible board, auditors attest after the 50-agent vote and 'see the final tally and recent comments'. However, the text never specifies how the 1-of-1, 2-of-3, and 3-of-5 regimes are constructed from the 7-seat committee, and Table 1 and Figure 1 pool visible-board and hidden-board runs when evaluating 'standalone' committee regimes.",
+      "why_it_matters": "First, slicing prefixes of size 1, 3, and 5 from the same 7-seat draw creates strong statistical dependence across regimes within each run. Second, in the visible-board half of the pooled data, the committee is not actually standalone because auditors observe the 50-agent swarm vote tally and comments before attesting.",
+      "suggested_fix": "Clarify in Section 3.4 that 1-of-1, 2-of-3, and 3-of-5 take the first 1, 3, and 5 seats of the seated 7-member committee. In Section 4.2 or Appendix C, report whether capture counts differ between the visible-board and hidden-board conditions so the reader can verify that seeing the 50-agent tally did not confound the standalone committee results."
+    },
+    {
+      "id": "C4",
+      "severity": "minor",
+      "category": "figures",
+      "location": "Page 6 (PDF p. 7), Figure 1; Page 12 (PDF p. 13), Appendix C, Table 3",
+      "issue": "Figure 1's caption states that it plots 'the committee regimes that were ever captured', and Table 3 summarizes unsafe releases by colluder share, but both omit 'Committee 3-of-5' even though Table 1 shows Committee 3-of-5 was captured 23/120 times (DS) and 20/120 times (GPT).",
+      "why_it_matters": "Omitting one of the four captured regimes makes Figure 1's caption inaccurate and hides the regime that actually had the highest pooled capture count for DeepSeek (23/120).",
+      "suggested_fix": "Add a column for '3-of-5' to Table 3, and either add a fourth panel (or 2x2 grid) to Figure 1 to include Committee 3-of-5 or revise Figure 1's caption to state that 3-of-5 is omitted for space and tabulated in Table 3."
+    },
+    {
+      "id": "C5",
+      "severity": "minor",
+      "category": "citations",
+      "location": "Page 1, 2, 8, 9 (PDF p. 2, 3, 9, 10), Section 1, Section 2, Section 3.1, and References",
+      "issue": "Several citations and bibliography entries are malformed: (1) arXiv:2603.25100 is cited in-text and in the bibliography by a fragment of its title ('From Logic Monopoly, 2026') rather than its author(s); (2) SQLite is cited as '(SQLite)' with no year due to '\\bibitem[SQLite()]{sqlite}'; and (3) Hammond et al. (2025), Greenblatt et al. (2024), and Motwani et al. (2024) print literal 'et al.' in the References list while other multi-author entries list all authors.",
+      "why_it_matters": "Citing a paper by its title instead of its authors and mixing bibliography styles detracts from the publication-grade polish of the manuscript.",
+      "suggested_fix": "Replace 'From Logic Monopoly (2026)' with the actual author surname(s) of arXiv:2603.25100, add a year or 'n.d.' to the SQLite citation ('\\bibitem[SQLite(2026)]{sqlite}'), and standardize author lists in the bibliography."
+    },
+    {
+      "id": "C6",
+      "severity": "minor",
+      "category": "requirements",
+      "location": "Title Page (PDF p. 1)",
+      "issue": "On the title page, the first author ('Alejandro Castellanos') has an empty affiliation field ('\\authorcell{Alejandro Castellanos}{}') next to 'Ignatius Pio Binawan / University of Toronto', with 'With Apart Research' centered beneath both.",
+      "why_it_matters": "The hackathon submission guidelines require author names and affiliations; leaving one author's affiliation blank looks like an unintentional omission.",
+      "suggested_fix": "Add Alejandro Castellanos's affiliation (e.g., institution, company, or 'Independent Researcher') inside the second argument of '\\authorcell{Alejandro Castellanos}{...}'."
+    },
+    {
+      "id": "C7",
+      "severity": "minor",
+      "category": "headings",
+      "location": "Page 7 (PDF p. 8), Section 5; Page 10\u201313 (PDF p. 11\u201314), Appendices A\u2013C",
+      "issue": "Heading hierarchy and prose integration are inconsistent in the back matter: Section 5 switches to unnumbered '\\subsection*' while Sections 3\u20134 use numbered '\\subsection'; Appendix A uses unnumbered '\\subsection*' while Appendices B and C use bold run-in '\\head{B.1 ...}'; and B.2 ('B.2 Verification results. Table 2.') and C.2 ('C.2 Honest error on near-miss releases. Table 4.') consist of two-word sentence fragments.",
+      "why_it_matters": "Two-word paragraphs reading only 'Table 2.' and 'Table 4.' look like placeholder notes rather than finished academic prose.",
+      "suggested_fix": "Replace the fragments in B.2 and C.2 with complete sentences (or fold the table references into B.1 and C.1) and use a consistent subsection style across all appendices."
+    },
+    {
+      "id": "C8",
+      "severity": "minor",
+      "category": "readability",
+      "location": "Page 8 (PDF p. 9), Code and Data; Page 11\u201314 (PDF p. 12\u201315), Appendices B.3, C.1, D, and LLM Usage Statement",
+      "issue": "The report weaves internal post-hoc audit and revision logs ('this revision corrects presentation, statistics and provenance... 2026-11-09 audit... Missing fields do not mean zero attempts, zero truncation or zero cost... round 1 ended with three weak rejects and one reject') throughout the manuscript.",
+      "why_it_matters": "While methodological transparency is commendable, phrasing limitations as defensive responses to an internal automated review process interrupts the scientific narrative and confuses readers who have only seen this final manuscript.",
+      "suggested_fix": "State the provenance limitations and methodological facts directly and concisely in Appendix A/D without framing them around internal revision timestamps ('2026-11-09 correction') or automated review rounds."
+    }
+  ],
+  "readability_examples": [
+    {
+      "location": "Page 3 (PDF p. 4), Section 3.4, paragraph 1",
+      "original": "Each run has 24 cases: 8 valid, plus invalid build-only, wrong-artifact and wrong-run receipts (authentic signatures, wrong claim or binding) and forged receipts (plausible fields, bad signature). The cell's targets are the 12 invalid cases that honest agents could spot. The 4 forged cases are not targets; they test what crowds cannot check.",
+      "suggested_rewrite": "Each run evaluates 24 release cases: 8 valid receipts, 4 forged-signature receipts (plausible fields but an invalid HMAC that voters cannot verify without the key), and 12 target receipts with authentic signatures but invalid contents (4 build-only claims, 4 wrong-artifact bindings, and 4 wrong-run bindings). Colluders are instructed to push only these 12 target cases, which honest agents can detect by inspecting the receipt fields."
+    },
+    {
+      "location": "Page 3\u20134 (PDF p. 4\u20135), Section 3.4, paragraph 2",
+      "original": "For every case the kernel seats a committee of seven, shared across conditions so that comparisons are paired. Committee members audit with the same rule; colluders on the committee are told to sign targets.",
+      "suggested_rewrite": "For every case, the kernel draws one random committee of seven auditors (shared across board conditions and models for paired comparison) and evaluates smaller committee regimes (1-of-1, 2-of-3, 3-of-5) using the first m seated auditors of that draw."
+    },
+    {
+      "location": "Page 12 (PDF p. 13), Appendix C.1",
+      "original": "Medians average the middle two values for even sample sizes; the gpt-oss honest-auditor token count excludes one unanswered audit, whereas the safety denominator (0 signatures in 746 honest target seats) includes it.",
+      "suggested_rewrite": "Sample sizes reflect all completed responses (excluding one unanswered gpt-oss audit from token medians, though it is retained as a non-signature in the 0/746 safety count)."
+    }
+  ],
+  "verdict": "accept",
+  "confidence": 5
+}

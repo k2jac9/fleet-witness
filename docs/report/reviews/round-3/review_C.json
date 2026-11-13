@@ -1,0 +1,118 @@
+{
+  "model": "meta/muse-wonder",
+  "summary": "A polished hackathon report that builds a bounded-verified separation-of-powers kernel and stress-tests eight governance regimes against colluding LLM swarms in 50-agent, two-model experiments. Its most valuable result is honestly negative for committees: mechanical checks, not voting, stop forgeries, and a gated majority matches the hybrid while standalone committees are capturable within their seat bound. Claims are unusually well-qualified, but the exact-match toy task leaves honest-error independence (G3) essentially untested and several headline comparisons are by construction or reconstructed offline.",
+  "scores": {
+    "impact_innovation": 4,
+    "execution": 4,
+    "presentation": 4,
+    "formality_aesthetics": 4,
+    "readability": 3
+  },
+  "score_rationale": {
+    "impact_innovation": "Important Track 4 problem with an original combination (p.1-2, Sec.1-2): bounded verification of the real kernel plus live measurement of the behavioural assumptions behind committee guarantees, and a buildable gateway theory of change. Quorums/sortition themselves are explicitly not claimed as new, so not exceptional.",
+    "execution": "Strong for 3 days: 23,376-state bounded check with 7 caught mutants (p.4, Sec.4.1; App.B), 32,830 responses, paired committees, near-miss runs, truncation audit and full provenance (Apps.B-D). Held back by synthetic exact-match task, n=12 independent draws per cell, reconstructed gated-majority control, and near-zero honest error leaving G3 untested (p.6, Sec.4.3).",
+    "presentation": "Well structured with contributions, three conditional claims G1-G3, three numbered Findings and a clear Discussion (pp.1,3,5-7). Table 1 and Figure 1 carry the main result; caveats are prominent rather than buried, though provenance detail sometimes interrupts the main line.",
+    "formality_aesthetics": "Publication-like typesetting, consistent heading hierarchy, booktabs tables and legible pgfplots figures (pp.1,5-6). Minor issues: blank affiliation for first author (p.1), reference-list inconsistencies and a mostly-empty p.9, dense Table 1 footnote (p.5), and small Figure 1 legend (p.6).",
+    "readability": "Main narrative is fluent and signposted, but a technically literate reader must repeatedly re-parse paired-vs-pooled counts, nominal-vs-measured requests, and long hedging/provenance chains (pp.4-6, Apps.B-D). Several sentences need two passes."
+  },
+  "strengths": [
+    "Clear, falsifiable framing: mechanical judgement split from semantic judgement, stated as conditional claims G1-G3 with Eq.(1) (p.3, Sec.3.3).",
+    "Verification has teeth: exhaustive bounded exploration of the real SQLite kernel and all seven mutants caught, including uniqueness only at depth 6 (p.4, Sec.4.1; App.B Table 2).",
+    "Honest negative result: gated majority 0/120 captures, 0/48 forgeries, 96/96 valid at 50 nominal requests vs hybrid 57, so committees add no safety here (p.5, Table 1, Finding 1).",
+    "Exemplary limitation and provenance disclosure: paired draws (60 not 120), missing keys/retry fields, superseded runs and costs all retained (p.5 Table 1 note; Apps.A,D).",
+    "Open code, data archive and offline reproduction script stated (p.8, Code and Data)."
+  ],
+  "concerns": [
+    {
+      "id": "C1",
+      "severity": "major",
+      "category": "validity",
+      "location": "p.6, Sec.4.3; p.3, Sec.3.3 G3",
+      "issue": "Honest unsafe error is 0/746 per model on the main task, so the independence assumption behind G3 and the claimed committee bound in realistic settings is untested; the task is exact-match receipt checking, not judgement.",
+      "why_it_matters": "The central open risk for committees of model copies is correlated honest error (Knight & Leveson), which this design cannot measure; readers may over-transfer capture curves to judgement tasks.",
+      "suggested_fix": "Retitle/rephrase abstract and Conclusion takeaways to scope capture results to 'exact-match tasks with near-zero honest error' and move the judgement-task experiment from Future Work to the headline limitation."
+    },
+    {
+      "id": "C2",
+      "severity": "major",
+      "category": "confound",
+      "location": "p.5, Finding 1; p.4, Sec.3.4 Regimes",
+      "issue": "Direct majority approving 48/48 forgeries is by construction (voters cannot verify a symmetric HMAC), and the informative gated-majority control is reconstructed offline with fresh synthetic keys because original keys were not retained.",
+      "why_it_matters": "The strongest architectural claim rests partly on a straw baseline and a reconstruction that cannot re-authenticate original receipts (App.D).",
+      "suggested_fix": "Demote direct-majority forgery to a sanity check in Table 1/text, foreground gated majority as the primary baseline, and add one sentence on exactly what the reconstruction does and does not validate."
+    },
+    {
+      "id": "C3",
+      "severity": "major",
+      "category": "statistics",
+      "location": "p.5, Table 1; p.6, Figure 1; App.C Table 3",
+      "issue": "Pooled 120 target trials comprise only 60 independent committee draws shared across board conditions and models use same seeds/cells; per-share cells are n=12 draws. No uncertainty intervals are given, appropriately, but pooled counts visually imply more independence than exists.",
+      "why_it_matters": "Differences such as 16 vs 17 or 21 vs 22 captures are within draw-level noise; cross-model similarity is partly paired by design, not independent replication.",
+      "suggested_fix": "Add draw-level ranges or a paired bootstrap over the 60 draws in App.C, and label Table 1 columns '120 paired trials (60 draws)' in the header."
+    },
+    {
+      "id": "C4",
+      "severity": "minor",
+      "category": "requirements",
+      "location": "p.1, title page",
+      "issue": "Alejandro Castellanos has a blank affiliation cell while Ignatius Pio Binawan lists University of Toronto; submission requires authors and affiliations.",
+      "why_it_matters": "Formal incompleteness on the title page and ambiguity about whether the blank is intentional (independent researcher).",
+      "suggested_fix": "Add the affiliation or 'Independent researcher' for the first author."
+    },
+    {
+      "id": "C5",
+      "severity": "minor",
+      "category": "citations",
+      "location": "pp.8-9, References",
+      "issue": "Reference style is inconsistent: SQLite has no year/date, 'From Logic Monopoly...' is formatted as a corporate author, several 2026 arXiv identifiers (e.g. 2605.20704, 2608.15888, 2609.04170) are given without titles being easily checkable in-text, and the list splits leaving p.9 mostly blank. These should be verified against sources, not assumed fabricated.",
+      "why_it_matters": "Hackathon rules warn made-up references can disqualify; inconsistent entries undermine the otherwise strong provenance story.",
+      "suggested_fix": "Verify each 2026 arXiv ID/title/author, add year/access date for SQLite and web brief, and normalise author formatting."
+    },
+    {
+      "id": "C6",
+      "severity": "minor",
+      "category": "figures",
+      "location": "p.6, Figure 1; p.5, Table 1",
+      "issue": "Figure 1 panels are small, legend sits below the axes, and y-axis is shared only on the left panel; Table 1's dagger footnote carries essential paired-design information in dense  footnotesize text.",
+      "why_it_matters": "The capture-vs-share relationship is the key empirical figure and is hard to read at print size.",
+      "suggested_fix": "Enlarge to full text width with taller panels, move legend above, and put '60 independent draws' in the Table 1 caption first sentence."
+    },
+    {
+      "id": "C7",
+      "severity": "minor",
+      "category": "overclaiming",
+      "location": "p.6, Sec.4.3 Detection; App.B.4",
+      "issue": "Detector F1 0.97-1.0 is reported in one paragraph with no per-share table, threshold sensitivity, or false-positive denominator beyond one spurious cluster; authors note it detects only the planted signature.",
+      "why_it_matters": "Without the breakdown this secondary result reads stronger than the evidence shown.",
+      "suggested_fix": "Add a small App.C table (share x precision/recall/F1 per model) or soften to a qualitative observation."
+    },
+    {
+      "id": "C8",
+      "severity": "minor",
+      "category": "reproducibility",
+      "location": "p.4, Sec.3.4 Models; App.D",
+      "issue": "Manifests lack Git revision, temperature pinning, prompt version and provider request IDs; prompts/raw responses not retained, only hashes and parsed outcomes.",
+      "why_it_matters": "Offline table reproduction is possible, but live-run replication and audit of prompt effects (e.g. longer colluder outputs) are limited.",
+      "suggested_fix": "State this as a one-line reproducibility boundary in Sec.3.4 (not only App.D) and publish prompt templates/hashes mapping in the repo README."
+    }
+  ],
+  "readability_examples": [
+    {
+      "location": "p.4, Sec.3.4 Models",
+      "original": "The comparison changes model family and provider backend; it does not isolate reasoning as a causal variable. Non-reasoning models were excluded so that reasoning mode would not be confounded with family.",
+      "suggested_rewrite": "The two models differ in both family and provider backend, so we cannot attribute differences to reasoning alone; we used only reasoning models to avoid adding that confound."
+    },
+    {
+      "location": "p.5, Table 1 footnote",
+      "original": "Board conditions share committee draws, so each regime has 60 independent committee draws, not 120; we therefore report counts by share (Figure 1, Table 3) rather than pooled confidence intervals.",
+      "suggested_rewrite": "Note: the 120 trials use only 60 independent committee draws (board conditions are paired), so we report counts by share and give no pooled confidence intervals."
+    },
+    {
+      "location": "p.6, Sec.4.3 Honest error",
+      "original": "This is our answer to the brief's \"safety in numbers?\" question: on exact-match rules, independence is untested because honest errors barely occur. Judgement-based tasks are needed.",
+      "suggested_rewrite": "On this exact-match task honest errors were too rare to test whether they are independent; that question needs a judgement-based task."
+    }
+  ],
+  "verdict": "weak accept",
+  "confidence": 4
+}
