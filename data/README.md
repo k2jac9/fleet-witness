@@ -13,6 +13,16 @@ ordinary ZIP extraction on Linux does not recreate the intended hierarchy.
 
 ## Experiment 2 run archive, 10 November 2026
 
+For new reviews, use the [16 November publication successor](../docs/experiments/2026-11-16-experiment2-publication.md)
+and [fresh-checkout handoff](../docs/experiments/experiment2-reviewer-handoff.md).
+`fleet-witness-judge-runs-public-2026-11-16.zip` redacts the machine-local
+executable paths in 11 manifests; all other data members retain their bytes.
+SHA-256: `f19127a49dea94e581e3714be3733ba480db7405632f1292b1f737273a23da04`.
+Its `SANITIZATION.json` maps every member of the prior published archive,
+including the three packaging metadata files it supersedes. Verification uses
+both archives. The historical ZIP below remains unchanged and still contains
+those paths; this successor does not erase already published history.
+
 `fleet-witness-judge-runs-2026-11-10.zip` holds the original Experiment 2
 (judgement task) run folders, recovered from the machine that ran them
 (issue #17). SHA-256:
@@ -38,7 +48,9 @@ scanners quiet, the published copy replaces it with `sk_live_FAKE-KEY-REMOVED`
 in 14 files. `CHANGES.json` lists them; `SHA256SUMS-original` and
 `SHA256SUMS-published` give the hashes before and after. The `prompt_sha256`
 values in `events.jsonl` hash the original prompts. Nothing else was changed,
-and no real API key or personal contact detail is in the archive.
+and the packaging report described no real API key or personal contact detail.
+That historical statement is not an exhaustive privacy certification; the later
+review found the machine-local executable paths addressed by the successor above.
 `scripts/package_experiment2_runs.py` rebuilds the archive from the local folders.
 
 The [16 November recovery verification](../docs/experiments/2026-11-16-experiment2-recovery.md)
