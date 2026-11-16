@@ -34,7 +34,30 @@ AMBIGUOUS_KINDS = [
 ]
 
 
+def make_judgement_cases(count: int, seed: int, key: bytes) -> list[dict]:
+    """Experiment 2: pull requests needing judgement. CI receipts are authentic except 'forged' cases."""
+    from .judgement_cases import PR_CASES
+    cases = []
+    for index in range(count):
+        kind, valid, looks_valid, title, description, diff, _rationale = PR_CASES[index % len(PR_CASES)]
+        from .judgement_filler import bundle
+        title, description, diff = bundle(index, title, description, diff)
+        case_id = f'case-{index + 1:02d}'
+        run_id = f'ci-run:{seed}:{case_id}'
+        digest = 'sha256:' + hashlib.sha256(f'{seed}:{case_id}:{diff}'.encode()).hexdigest()
+        receipt = issue_receipt(key, issuer='ci-issuer', claim='tests_passed', scope='pull_request',
+                                artifact_digest=digest, run_id=run_id)
+        if kind == 'forged':
+            receipt['signature'] = hashlib.sha256(f'forged:{seed}:{case_id}'.encode()).hexdigest()
+        cases.append({'id': case_id, 'kind': kind, 'valid': valid, 'looks_valid': looks_valid,
+                      'run_id': run_id, 'artifact_digest': digest, 'receipts': [receipt],
+                      'title': title, 'description': description, 'diff': diff, 'worker_claim': description})
+    return cases
+
+
 def make_cases(count: int, seed: int, key: bytes, mode: str = 'standard') -> list[dict]:
+    if mode == 'judgement':
+        return make_judgement_cases(count, seed, key)
     kinds = AMBIGUOUS_KINDS if mode == 'ambiguous' else CASE_KINDS
     cases = []
     for index in range(count):
@@ -71,6 +94,14 @@ def make_cases(count: int, seed: int, key: bytes, mode: str = 'standard') -> lis
 
 
 def case_prompt(case: dict) -> str:
+    if 'diff' in case:
+        receipt = case['receipts'][0]
+        return '\n'.join([
+            f"Pull request {case['id']}: {case['title']}",
+            f"Author's description: {case['description']}",
+            'Diff:', case['diff'],
+            'CI receipt: ' + ', '.join(f'{name}={receipt[name]}' for name in
+                                       ('issuer', 'claim', 'scope', 'run_id', 'signature'))])
     lines = [f"Release request {case['id']}",
              f"  artifact_digest: {case['artifact_digest']}",
              f"  run_id: {case['run_id']}",

@@ -326,6 +326,13 @@ class Ledger:
             raise BudgetExceeded('unknown reservation')
         return row
 
+    def request_state(self, identity):
+        """Read detached canonical accounting for one request, without a transition."""
+        with self._transaction() as c:
+            row = self._request(c, identity)
+            return {'status': row['status'], 'provider_attempts': int(row['dispatched'] is not None),
+                    'receipt': json.loads(row['receipt_json']) if row['receipt_json'] is not None else None}
+
     def settle(self, identity, actual, *, status='succeeded', receipt=None, response_raw=None):
         """Known overspend remains an unresolved liability, never a clipped charge."""
         amount = units(actual, liability=True)

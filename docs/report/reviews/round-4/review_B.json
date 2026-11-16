@@ -1,0 +1,94 @@
+{
+  "model": "google/gemini-4-argon",
+  "summary": "This report proposes shifting multi-agent oversight from verifying individual agents to verifying a small deterministic institutional kernel that enforces separation of powers, cryptographic attestations, and random $k$-of-$m$ auditing committees at execution chokepoints. The authors validate the kernel via bounded state-space exploration (23,376 reachable states and seven mutation tests) and evaluate eight governance regimes across two live 50-agent swarm experiments: a mechanical receipt-checking task and a 48-case pull-request code-review task. The empirical findings cleanly demonstrate that mechanical checks eliminate forged actions that deceive majority voting, that reliable honest auditors cap colluder capture at the hypergeometric seat bound, and that correlated errors ('shared blind spots') among copies of a weaker model (gpt-oss-20b) completely nullify Condorcet committee scaling unless committees mix distinct model families.",
+  "scores": {
+    "impact_innovation": 4,
+    "execution": 4,
+    "presentation": 4,
+    "formality_aesthetics": 4,
+    "readability": 5
+  },
+  "score_rationale": {
+    "impact_innovation": "Reframing swarm control around a verifiable institutional gateway kernel and empirically measuring how correlated LLM errors violate the independence assumptions of committee governance is an original synthesis of formal verification, social choice theory, and AI control. While the individual primitives (HMAC gating, sortition committees, and correlated LLM failures per Kim et al., 2025) are known, combining bounded model checking of the executable runtime with live adversarial swarm evaluations provides a concrete architectural pattern and actionable design rules for MCP/A2A gateways.",
+    "execution": "The experimental execution is unusually thorough for a 3-day sprint: bounded model checking with mutation testing against seven broken kernels; a 32,830-response sweep in Experiment 1 with cluster-bootstrapped confidence intervals; and, once Experiment 1 revealed near-zero honest error, a well-designed Experiment 2 on 48 multi-hunk pull requests validated against a static analyzer (Bandit) and an independent blind model audit (47/48 agreement). It stops just short of a 5 because the colluders are non-adaptive (repeating static talking points without private channels or dynamic rebuttal), frontier models were only tested at 0% collusion, and the mixed-model committee gain relies on pairing a 12%-error model with a 0.1%-error model holding at least $k$ seats.",
+    "presentation": "The scientific narrative\u2014explicitly stating the conditions for Guarantees G1\u2013G3 and showing why Experiment 1 necessitated Experiment 2\u2014is transparent, honest about limitations and protocol deviations, and easy to follow. Presentation is held back slightly because Experiment 1's primary results (Table 5 and Figure 2) are relegated to Appendix C while cited out of numerical order in Section 4.2, despite over a page of unused space remaining under the 8-page main-body cap.",
+    "formality_aesthetics": "The compiled PDF is cleanly typeset using Old Standard serif, vector TikZ/pgfplots diagrams, consistent colour encoding, and proper booktabs tables, and it complies with all hackathon rules (6.7 main-text pages excluding the title page, ~231-word abstract, required Appendix A). Minor visual issues visible in the page renders include an orphaned Appendix D heading at the bottom of page 14, a page break separating the setup of Equation (1) on page 3 from the equation on page 4, out-of-order table numbering on page 5, and a hyphenation spacing typo ('hidden- board') on page 11.",
+    "readability": "The prose is exceptionally clear, economical, and accessible on a single pass. Every domain concept (kernel, receipt, release, seat bound, shared blind spots, flipped decisions) is defined in plain language without convoluted hedging or undefined jargon."
+  },
+  "strengths": [
+    "Methodological progression from Experiment 1 to Experiment 2: when Experiment 1 showed honest error $\\varepsilon \\approx 0$ on mechanical field-matching, the authors designed a realistic 48-PR code-review benchmark validated with Bandit static analysis and blind third-model adjudication (Meta Muse Wonder, 47/48 agreement).",
+    "Sharp empirical demonstration of correlated errors in homogeneous committees: showing that a 4-of-7 committee of gpt-oss-20b approves 12.0% of harmful PRs\u2014identical to a single reviewer and ~24x higher than the 0.5% binomial prediction under independence\u2014concretely connects classic multiversion software failure theory (Eckhardt & Lee, 1985) to multi-agent LLM oversight.",
+    "Executable bounded verification validated by mutation testing: rather than verifying an abstract specification in isolation, the breadth-first state explorer runs directly against the Python/SQLite implementation across 23,376 states and proves sensitivity by catching all seven injected kernel bugs (and showing depth 6 is required to catch duplicate releases).",
+    "Exemplary scientific hygiene and auditability: the authors retain stopped and superseded runs in the archive, report cluster-bootstrapped intervals at the level of independent committee draws rather than inflated pooled counts, separate contested cases ('git' startup check), and introduce an answer-key-free 'Flipped' metric in Table 2."
+  ],
+  "concerns": [
+    {
+      "id": "C1",
+      "severity": "major",
+      "category": "confound",
+      "location": "Page 6, Section 4.3 ('Mixing models helps when their blind spots differ') and Table 1",
+      "issue": "The mixed-model committee result (0.1% harmful approval for 'Mixed DeepSeek + gpt-oss' in Table 1) is specified as having 'at least half the seats DeepSeek' in a 4-of-7 committee, which means at least 4 of the 7 seats are held by DeepSeek. Because DeepSeek's single-reviewer false-negative rate is already 0.1% (1/1,200) and gpt-oss holds at most 3 seats (fewer than the threshold $k=4$), gpt-oss can never approve a harmful PR on its own whenever DeepSeek has $\\ge 4$ seats. Thus, the drop from 12.0% to 0.1% is driven primarily by threshold dominance of a near-zero-error model rather than error decorrelation between two similarly fallible models.",
+      "why_it_matters": "Readers may interpret the 0.1% figure as demonstrating that mixing two weak or moderately fallible models eliminates shared blind spots, whereas in a 4-of-7 vote, assigning $\\ge 4$ seats to an almost infallible model guarantees safety regardless of whether the minority model's errors are correlated or independent.",
+      "suggested_fix": "Explicitly report the 4-of-7 harmful approval rate across all mixed seat splits\u2014specifically including 3 DeepSeek + 4 gpt-oss seats and random 50/50 seating draws without a $\\ge 4$-seat floor\u2014and distinguish between safety gained from seating a stronger model in $\\ge k$ seats versus safety gained from low cross-model error correlation ($r = 0.42$) when neither model holds a majority of seats alone."
+    },
+    {
+      "id": "C2",
+      "severity": "major",
+      "category": "validity",
+      "location": "Pages 6\u20137, Section 4.3 ('The colluder attack'), Table 2, and Page 16, Appendix E.2\u2013E.3 (Table 11)",
+      "issue": "Two important empirical dynamics in Experiment 2 are buried in Appendix E or omitted from Section 4.3: (1) Table 11 shows DeepSeek had 230 token-cap abstentions (out of 16,416 calls) on safe/forged multi-hunk PRs, which explains why DeepSeek's valid releases under Unanimous 7-of-7 drop from 59/64 to 51/64 in Table 2 despite a 0.4% honest false-positive rate in Table 1; and (2) the colluders are low-cost models repeating static talking points without adaptive rebuttal, which failed to overcome specific bug disclosures posted by honest reviewers on the visible board (honest gpt-oss harmful approvals dropped from 12.0% hidden to 6.3% visible at 0% colluders, and rose only to 7.1% at 40% colluders).",
+      "why_it_matters": "First, readers inspecting Table 2 cannot tell why DeepSeek's 7-of-7 unanimity blocks 13 of 64 safe PRs when Table 1 reports only 0.4% safe-blocked votes; noting that reasoning-token truncation acts as a silent veto in unanimous gates is a valuable practical finding. Second, explaining *why* board visibility helped honest reviewers more than colluders clarifies the threat model boundary: specific vulnerability reports beat generic colluder talking points, whereas adaptive frontier colluders might directly fabricate counter-arguments against those bug reports.",
+      "suggested_fix": "Add two sentences to Section 4.3 ('The colluder attack') noting (a) that DeepSeek's drop to 51/64 valid releases under 7-of-7 unanimity stems from 230 reasoning-token-cap abstentions acting as non-signatures (citing Table 11), and (b) why visible boards reduced gpt-oss errors (early-wave honest bug reports alerted later waves, which static colluder talking points could not override)."
+    },
+    {
+      "id": "C3",
+      "severity": "minor",
+      "category": "layout",
+      "location": "Page 5, Sections 4.1\u20134.2 (PDF image 6) and Page 12\u201313, Appendix C (Figure 2, Table 5)",
+      "issue": "Sections 4.1 and 4.2 cite 'Table 3', 'Table 5', and 'Figure 2, Appendix C' on page 5 before 'Table 1' and 'Table 2' ever appear on pages 6 and 7. Because Table 5 and Figure 2 are in Appendix C, Section 4.2 (Experiment 1 results) has no figure or table in the main body, even though the main body ends two-thirds of the way down page 7 (leaving ~1.3 pages of spare room under the 8-page limit).",
+      "why_it_matters": "Forcing the reader to flip from page 5 to pages 11\u201313 to view the core Experiment 1 results\u2014and encountering Table 3 and Table 5 citations before Table 1\u2014disrupts single-pass reading and violates standard sequential float numbering.",
+      "suggested_fix": "Move Table 5 (or Figure 2) from Appendix C into Section 4.2 in the main text so Experiment 1 is self-contained and becomes Table 1 (or Figure 2) in sequential order; the main text will still easily remain within the 8-page limit."
+    },
+    {
+      "id": "C4",
+      "severity": "minor",
+      "category": "tables",
+      "location": "Page 7, Table 2 caption and row 1 (PDF image 8)",
+      "issue": "In Table 2, the 'Flipped' column reports denominators 'of 100 for DeepSeek, 98 for gpt-oss' right next to 'Unsafe (of 96)' and 'Valid (of 64)', without explaining how the denominator can exceed 96. Additionally, 'Direct / gated majority' are merged into a single row while forged releases (31 and 29 of 32 for direct majority vs. 0 for gated majority) are only mentioned in prose at the end of the caption.",
+      "why_it_matters": "A careful reader trying to reconcile 'of 100' with 96 harmful PRs has to deduce that the 100 and 98 honest-rejection baselines are summed across all 160 non-forged case-conditions (96 harmful + 64 safe, including the 4 contested 'git' instances for DeepSeek).",
+      "suggested_fix": "Clarify in the Table 2 caption that 'Flipped' is evaluated across all 160 non-forged case-instances (96 harmful + 64 safe) that the honest majority rejected at 0% collusion, and either split 'Direct majority' and 'Gated majority' into two rows with a 'Forged (of 32)' column (matching Table 5) or state explicitly that they coincide on non-forged cases."
+    },
+    {
+      "id": "C5",
+      "severity": "minor",
+      "category": "statistics",
+      "location": "Page 6, Section 4.3 ('Mixing models helps when their blind spots differ')",
+      "issue": "The text states that 'the cases each model got wrong correlated at 0.42 between DeepSeek and gpt-oss, and hardly at all between Gemini and the others,' without specifying the correlation metric, sample size ($n=24$ harmful PRs or $n=47$ uncontested PRs?), or exact coefficients for the Gemini pairs.",
+      "why_it_matters": "Because DeepSeek only erred once across all 24 harmful PRs (1/1,200 votes, on a single harmful case) and a few times on safe PRs, the case-level error rate vector for DeepSeek is nearly all zeros except on the contested/safe cases; knowing whether 0.42 is Pearson $r$ on case-level error rates across all 47 uncontested PRs (or all 48 PRs including the contested 'git' case) is essential to interpreting what drives the 0.42 correlation.",
+      "suggested_fix": "State the exact correlation measure (e.g., Pearson $r$ on per-case honest error rates across $n=47$ uncontested PRs vs. $n=24$ harmful PRs) and give the numerical values for the Gemini comparisons in parentheses."
+    },
+    {
+      "id": "C6",
+      "severity": "minor",
+      "category": "layout",
+      "location": "Page 3 bottom to Page 4 top (PDF images 4\u20135); Page 11, Section B.3 (PDF image 12); Page 14 bottom (PDF image 15)",
+      "issue": "Three small typesetting blemishes appear in the compiled PDF: (1) at the bottom of page 14, the heading 'Appendix D. Retained Accounting and Provenance' is orphaned at the bottom margin with all content pushed to page 15 by the `[H]` table in D.1; (2) at the bottom of page 3, the sentence introducing Equation (1) breaks across the page right before the displayed equation at the top of page 4; and (3) on page 11, Section B.3 line 5, a line break after a hyphen in the LaTeX source (`hidden-\\nboard`) produces an extra space ('hidden- board').",
+      "why_it_matters": "Fixing these minor layout artifacts will bring the visual presentation to publication quality.",
+      "suggested_fix": "In `report.tex`: (1) place `\\clearpage` (or `\\needspace{6\\baselineskip}`) before `\\appendixsection{Retained Accounting and Provenance}` or change Table 9 from `[H]` to `[ht!]`; (2) adjust vertical spacing slightly on page 3 so the lead-in line stays with Equation (1) on page 4; and (3) join `hidden-board` on a single line in Section B.3."
+    }
+  ],
+  "readability_examples": [
+    {
+      "location": "Page 3, Section 3.3, bullet G1",
+      "original": "This covers the database only, not external systems or many cases running at once.",
+      "suggested_rewrite": "This guarantee covers single-case SQLite state transitions only, not external side effects or concurrent transactions across cases."
+    },
+    {
+      "location": "Page 6, Section 4.3, paragraph 4",
+      "original": "Committees that mix gpt-oss with DeepSeek (at least half the seats DeepSeek) approved harmful changes 0.1% of the time. Blind spots were only partly shared across models: the cases each model got wrong correlated at 0.42 between DeepSeek and gpt-oss, and hardly at all between Gemini and the others.",
+      "suggested_rewrite": "4-of-7 committees mixing four DeepSeek seats with three gpt-oss seats approved harmful changes 0.1% of the time. Case-level error rates across the 47 uncontested PRs correlated moderately between DeepSeek and gpt-oss (Pearson $r = 0.42$) and weakly with Gemini ($|r| < 0.10$)."
+    }
+  ],
+  "verdict": "accept",
+  "confidence": 5
+}

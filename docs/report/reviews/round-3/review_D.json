@@ -1,0 +1,128 @@
+{
+  "model": "xiaomi/mimo-v2.6-pro",
+  "summary": "A hackathon report proposing a separation-of-powers 'institution kernel' (proposer/committee/executive with mechanical checks), verified by bounded exhaustive exploration with mutation testing, then stress-tested with two reasoning-model families (32,830 responses) against instructed colluding cells across eight governance regimes. The empirical finding is honestly negative for the authors' own design: mechanical checks (not committees) stop forgeries, a mechanically gated majority matches or beats committees, and committee capture stays inside the seat bound. Requirements are essentially met (abstract ~216 words, required dual-use appendix, code/data links, reproducible tables), with minor template/citation polish issues and an ambiguous page count.",
+  "scores": {
+    "impact_innovation": 4,
+    "execution": 4,
+    "presentation": 4,
+    "formality_aesthetics": 4,
+    "readability": 4
+  },
+  "score_rationale": {
+    "impact_innovation": "Addresses an important, timely problem (oversight of colluding agent swarms) with an original framing \u2014 verifying an institutional kernel rather than agents, and explicitly measuring the behavioural assumptions (honest error, correlation, colluder compliance) behind the probabilistic bound. The novelty claim is carefully scoped against Byzantine quorums, threshold signatures and Algorand, and the 'verify the institution' framing plus the closed-form capture-vs-seats trade-off is something others can build on; not quite a new direction, so 4 rather than 5.",
+    "execution": "Unusually ambitious for three days: bounded exhaustive exploration of the real SQLite-backed implementation (23,376 states, 105,708 transitions) with seven mutant kernels and a depth-bound sensitivity note (uniqueness mutant only caught at depth 6), plus a two-model, 50-agent live stress test with paired committees, a sealed-ground-truth detector, a truncation audit and a retained-run accounting table. Limitations are unusually candid (bounded not proof, same-team specification, planted colluders, paired small cells, no significance claims, offline gated-majority control with synthetic keys). Not a 5 because per-share n=12 targets is small, the G3 independence assumption is untested by design of the task, and the key comparison rests on an admittedly offline reconstruction.",
+    "presentation": "Well organised: clear contributions list, conditional guarantees (G1\u2013G3) stated before results, findings labelled and matched to tables/figures, and a conclusion that stays within the evidence. Table 1 is informative and Figure 1 legible, but Table 1's caption carries heavy methodological caveats better placed in text, and the detector specification is buried in Appendix B.4 while its headline F1 appears in the main text.",
+    "formality_aesthetics": "Polished, professional typesetting: consistent heading style, clean booktabs tables, legible labelled figures with colourblind-distinguishable marks and captions. Deductions for: one author with no affiliation listed and the ambiguous 'With Apart Research' line (p.1), inconsistent reference formatting (author-less 'From Logic Monopoly (2026)', 'SQLite()' with empty year, mixed 'et al.' vs full author lists, p.8\u20139), a nearly empty page after the references (PDF p.10), and appendix headings run in as bolded 'B.1' paragraphs rather than a consistent subsection hierarchy (p.11\u201313).",
+    "readability": "Generally fluent and one-pass readable for a technical reader; the conditional-claim structure (G1\u2013G3) and 'Finding 1/2/3' scaffolding help a lot. A few dense method sentences and one logically odd justification about excluding non-reasoning models slow the reader, and some long caveat chains in \u00a73.4 and \u00a74.3 require re-reading."
+  },
+  "strengths": [
+    "Exceptional honesty: the headline result undercuts the authors' own committee design (Finding 1, p.5: 'a committee adds no safety over a mechanically gated majority'), and G3's independence assumption is explicitly labelled untested (Abstract; \u00a73.3, p.3).",
+    "Verification is done on the real implementation, not an abstract model, and mutation testing with seven broken variants plus the depth-5/depth-6 uniqueness result (\u00a74.1, p.4; Table 2, p.11) shows the checker has teeth and why bounds matter.",
+    "Good separation of architectural guarantees (G1), conditional seat bound (G2) and planning estimate (G3), including the caveat that imperfect colluder compliance lowers capture while correlated honest error raises it (Eq. 1, p.3).",
+    "Reproducibility support is strong for a hackathon: public repo, published run archive including superseded and pilot runs, offline table-reproduction script, and an honest provenance appendix (Appendix D, p.13\u201314) admitting missing retry metadata, missing signing keys and non-deterministic inference.",
+    "Required Limitations and Dual-Use / Ethical appendix is present and substantive (Appendix A, p.10\u201311), including a dual-use assessment of the capture curves and detector, plus a candid LLM Usage Statement (p.14).",
+    "Statistical restraint: no significance claims with n=12 cells, explicit note that board conditions share committee draws (60 not 120 independent draws, Table 1 footnote, p.6), and clear wording that the colluder token-length effect is an association, not a deception cost (\u00a74.3, p.7; Fig. 2 caption, p.13)."
+  ],
+  "concerns": [
+    {
+      "id": "C1",
+      "severity": "minor",
+      "category": "requirements",
+      "location": "Page 8 (PDF p.9) and title page (PDF p.1)",
+      "issue": "Non-reference, non-appendix content ('Code and Data', 'Author Contributions') sits on the page after the Conclusion, and the unnumbered title page carries the abstract; counting the title page, non-reference content spans roughly 9 pages, marginally over the 8-page cap. Whether these sections count as body is ambiguous.",
+      "why_it_matters": "The 8-page cap is a hard submission requirement and is checked on screening; an ambiguous over-length risks an otherwise strong submission being flagged.",
+      "suggested_fix": "Move 'Code and Data' and 'Author Contributions' into a short appendix (they are meta-information) and state explicitly on the title page that the body is pages 1\u20137 plus the title page."
+    },
+    {
+      "id": "C2",
+      "severity": "minor",
+      "category": "requirements",
+      "location": "Page 1 (title page), author block",
+      "issue": "Alejandro Castellanos has no affiliation printed (the \\authorcell second argument is empty), and 'With Apart Research' is ambiguous as to whether it is an affiliation, a sponsor or a hosting lab.",
+      "why_it_matters": "Author names and affiliations are required; a missing affiliation is a screening nit that costs credibility.",
+      "suggested_fix": "Add the affiliation for A.C. and replace 'With Apart Research' with an explicit line such as 'Apart Research Swarm Alignment Sprint, November 2026' or an affiliation footnote."
+    },
+    {
+      "id": "C3",
+      "severity": "minor",
+      "category": "citations",
+      "location": "Pages 8\u20139 (References); page 2\u20133 (in-text citations)",
+      "issue": "Reference formatting is inconsistent: 'From Logic Monopoly ... (2026)' has no author and renders in text as a title-as-author (p.2, p.3), 'SQLite()' has an empty year, and author lists alternate between 'et al.' (Greenblatt, Motwani, Hammond) and full lists (Kekatos, Gilad). Several 2026 arXiv entries (e.g. 2603.25100, 2605.20704, 2606.04104, 2607.23532, 2608.15888, 2609.04170) should be verified for correctness before publication.",
+      "why_it_matters": "Inconsistent citation style and unverifiable entries undermine trust in the related-work positioning, and made-up references are disqualifying under the hackathon rules.",
+      "suggested_fix": "Normalise all entries to one author-year format, give the 'From Logic Monopoly' preprint an author or label it explicitly as an anonymous preprint, add a year to SQLite, and re-check every arXiv ID resolves."
+    },
+    {
+      "id": "C4",
+      "severity": "minor",
+      "category": "validity",
+      "location": "Page 5, \u00a73.4 'Regimes' and Appendix D (p.13\u201314)",
+      "issue": "The gated-majority baseline \u2014 the decisive comparator in Finding 1 \u2014 is an offline reconstruction executed with fresh synthetic receipts and keys because original signing keys were not retained, so it cannot re-authenticate the original receipts.",
+      "why_it_matters": "The paper's central conclusion (mechanical checks beat committees) leans on this control; if the reconstruction diverged from the original signing path, the comparison could shift.",
+      "suggested_fix": "State the reconstruction's equivalence argument once in the main text (\u00a73.4) and, if feasible, add a one-line sanity check that the reconstructed kernel rejects a tampered receipt identically to the live path; the existing Appendix D caveat is good but should be surfaced earlier."
+    },
+    {
+      "id": "C5",
+      "severity": "minor",
+      "category": "confound",
+      "location": "Page 5, \u00a73.4 'Models'; page 6, Finding 1",
+      "issue": "The sentence 'Non-reasoning models were excluded so that reasoning mode would not be confounded with family' is logically odd: comparing two reasoning models across families controls family within a fixed reasoning mode, but does not address reasoning as a variable, which the preceding sentence already admits.",
+      "why_it_matters": "Readers may mis-read this as evidence about reasoning models; it is a sampling choice, not a deconfound.",
+      "suggested_fix": "Rewrite to: 'Both models use reasoning mode, so reasoning is held constant; this design cannot separate reasoning effects from family effects, and does not speak to non-reasoning models.'"
+    },
+    {
+      "id": "C6",
+      "severity": "minor",
+      "category": "statistics",
+      "location": "Page 6, Table 1 and Figure 1 (page 7)",
+      "issue": "Table 1 pools 120 target trials per regime from only 60 independent committee draws, and Figure 1 shows n=24 points per share; the text reports 'about 1.8 SD low' realised seat draws and comparison to the G3 curve without intervals.",
+      "why_it_matters": "Pooled counts invite over-reading of small per-share differences (e.g. 3-of-5 showing 23 vs 20 captures), and the favourable seat realisation means observed points sit below the theoretical curve for a reason unrelated to the mechanism.",
+      "suggested_fix": "Keep the current no-significance-claim stance, but add to the Figure 1 caption one sentence stating that binomial intervals with n=24 would be wide (roughly \u00b120 points), so per-share deviations from the curve are uninformative; the existing Table 1 footnote already does most of this work."
+    },
+    {
+      "id": "C7",
+      "severity": "minor",
+      "category": "formality",
+      "location": "Pages 10\u201313, Appendices B\u2013C",
+      "issue": "Appendix subheads are run-in bolded paragraphs ('B.1 Bounded-check world', 'C.1 Output length by role') while the main body uses numbered subsections (3.1, 4.1), and Table 2 (p.11) gives step counts for four mutants but not for 'skip seat check', 'count duplicates' or 'skip audit'.",
+      "why_it_matters": "Inconsistent hierarchy and partially filled table cells look unfinished and slow scanning.",
+      "suggested_fix": "Convert run-in appendix heads to \\subsection and fill the missing shortest-counterexample step counts in Table 2, or write 'n/a' where no step count was recorded."
+    },
+    {
+      "id": "C8",
+      "severity": "minor",
+      "category": "layout",
+      "location": "PDF page 10 (end of References)",
+      "issue": "The final reference page is roughly 80% blank because the bibliography ends near the top, leaving an almost empty page before the appendices.",
+      "why_it_matters": "Wasted whitespace in a submission where the body sits at the page limit looks careless and can be miscounted against the cap.",
+      "suggested_fix": "Either let the appendix start on that page (\\clearpage only before Appendix A, allowing References and Appendix A to share if appropriate) or shrink the bibliography block spacing so the references end on page 8."
+    },
+    {
+      "id": "C9",
+      "severity": "minor",
+      "category": "readability",
+      "location": "Page 7, \u00a74.3 'Honest error is near zero' and Table 4 (p.13)",
+      "issue": "Multiple denominators appear in one paragraph (0/746 per model, twice in 108 case-conditions, 508 honest seats, 8/492 refusals) and the near-miss table uses n=756 seats, so the reader must reconcile units (seats vs case-conditions vs committees) to follow the argument.",
+      "why_it_matters": "The honest-error estimate is the pivot of the whole 'independence untested' conclusion; confusing denominators invites misreading of the key negative result.",
+      "suggested_fix": "Add one parenthetical unit gloss at the first use in \u00a74.3: 'seats = auditor slots; case-conditions = 108 runs \u00d7 cases; committees = 1-of-1 capture events', matching the labels used in Table 4."
+    }
+  ],
+  "readability_examples": [
+    {
+      "location": "Page 5, \u00a73.4 'Models'",
+      "original": "Non-reasoning models were excluded so that reasoning mode would not be confounded with family.",
+      "suggested_rewrite": "Both models run in reasoning mode, so reasoning is held constant; the design cannot separate reasoning effects from family effects, and says nothing about non-reasoning models."
+    },
+    {
+      "location": "Page 6, Finding 2",
+      "original": "Realized seat draws were also favourable: 12 of 60 independent draws were capturable for 1-of-1 versus 18 expected (about 1.8 SD low), so points sit below G3's curve in Figure 1.",
+      "suggested_rewrite": "The realised seat draws were also favourable: 12 of 60 independent draws were capturable for 1-of-1, versus 18 expected (about 1.8 SD low). This explains why the observed points in Figure 1 sit below the G3 curve; it is not evidence that committees outperform the model."
+    },
+    {
+      "location": "Page 5, \u00a73.4 'Output caps and blue team'",
+      "original": "Truncation is not neutral (in a 600-token pilot, 98 of 99 abstentions came from colluders), so caps are kept non-binding by retrying truncated responses at larger caps; no final output in the retained main records reaches 2,000 tokens (Appendix B).",
+      "suggested_rewrite": "Truncation is not neutral: in a 600-token pilot, 98 of 99 abstentions came from colluders. We therefore kept caps non-binding by retrying truncated responses at larger caps; no final output in the retained main records reaches 2,000 tokens (Appendix B)."
+    }
+  ],
+  "verdict": "accept",
+  "confidence": 4
+}

@@ -1,0 +1,197 @@
+{
+  "model": "openai/gpt-6.1-sol",
+  "summary": "The report implements a committee-based release kernel, checks its actual implementation within a small bounded state space, and evaluates instructed colluders using two model families (PDF pp. 3\u20137, \u00a7\u00a73\u20134). Its strongest features are mutation testing, explicit conditional guarantees, and the candid finding that a mechanically gated majority matches the hybrid while avoiding committee capture in this dataset (PDF pp. 4\u20136, Table 1). As a three-day project it is competent and promising, but novelty is primarily integrative, semantic oversight remains largely untested, historical provenance limits reproducibility, and submission-length compliance needs correction or clarification (PDF pp. 7\u20139 and 15).",
+  "scores": {
+    "impact_innovation": 3,
+    "execution": 3,
+    "presentation": 3,
+    "formality_aesthetics": 4,
+    "readability": 4
+  },
+  "score_rationale": {
+    "impact_innovation": "The gateway-enforced oversight problem is important, and combining implementation-level bounded checking with an LLM committee harness is a useful hackathon contribution (PDF pp. 2\u20134, \u00a7\u00a71\u20133). However, quorum authorization, random committees, mechanical reference checks, and the capture formula are established ideas, as the report acknowledges; the experiments do not yet establish a new mechanism or validate oversight on genuinely judgment-dependent decisions (PDF pp. 2\u20133, \u00a72; p. 7, \u00a74.3).",
+    "execution": "Competent for three days: exploration of the real SQLite-backed kernel, seven detected mutants, two model families, paired seating, and an informative gated-majority control provide interpretable evidence (PDF pp. 4\u20136 and 12, \u00a7\u00a73.2\u20134.2, Table 2). Stronger execution is prevented by the narrow verification world, nearly error-free exact-match task, small independent committee samples, incomplete historical execution records, and uncertain truncation/retry provenance (PDF pp. 7, 11\u201315).",
+    "presentation": "The numbered contributions, conditional G1\u2013G3 claims, and explicitly labeled findings make the main argument accessible (PDF pp. 2, 4 and 6). However, the receipt-versus-attestation distinction needs a worked example, Table 1 mixes sampling ranges without saying so, Figure 1 omits a captured regime despite its caption, and the separate title page creates an apparent page-limit problem (PDF pp. 1, 3\u20134, 6\u20137 and 9).",
+    "formality_aesthetics": "The supplied images show polished typography, restrained colors, consistent main heading hierarchy, readable plots, and generally professional booktabs tables (PDF pp. 2\u20138 and 12\u201314). Minor weaknesses include crowded Table 1 headers, floats interrupting sentences, incomplete bibliography metadata, and occasionally rhetorical wording about prior work (PDF pp. 2, 5\u20137, 9\u201310 and 13\u201314).",
+    "readability": "The central architectural lesson and negative committee result are easy to follow, and limitations are usually stated directly rather than hidden (PDF pp. 6\u20138). Some methods and near-miss paragraphs pack too many distinctions into one passage, several acronyms are introduced without expansion, and later references to 'the guarantee' blur the carefully separated G1\u2013G3 claims (PDF pp. 2\u20135, 7\u20138)."
+  },
+  "strengths": [
+    "The verification operates on cloned states of the actual implementation rather than only an abstract protocol model, and mutation testing demonstrates sensitivity to deliberately removed checks (PDF pp. 4\u20135 and 12, \u00a7\u00a73.2 and 4.1, Appendix B, Table 2).",
+    "G1, G2 and G3 distinguish bounded mechanical assurance, a conditional seat bound, and a probabilistic model with an explicit independence assumption; this is unusually helpful claim discipline for a hackathon report (PDF p. 4, \u00a73.3).",
+    "The reconstructed gated-majority control directly addresses the major forgery-baseline confound, and the authors explicitly acknowledge that committees add no safety over that control here (PDF pp. 5\u20136, \u00a73.4 and Finding 1, Table 1).",
+    "The report does not disguise unfavorable findings: committee capture, model-dependent unanimity failures, weak herding evidence, prompt-length confounding, and detector dependence on the planted signature are all disclosed (PDF pp. 6\u20138, Findings 2\u20133 and \u00a74.3).",
+    "Repository and archive paths, an offline table-reproduction command, retained superseded runs, and a detailed account of missing provenance provide a useful basis for follow-up auditing, although they do not establish complete reproducibility (PDF pp. 9 and 13\u201315, Code and Data, Appendices B\u2013D).",
+    "The abstract is within the required 150\u2013250-word range, and the required Limitations and Dual-Use / Ethical Considerations appendix is present and substantive (PDF pp. 1 and 11\u201312)."
+  ],
+  "concerns": [
+    {
+      "id": "C1",
+      "severity": "major",
+      "category": "requirements",
+      "location": "PDF pp. 1\u20139; title page, main text, Code and Data, Author Contributions",
+      "issue": "The manuscript appears to exceed the eight-page limit when the separate title/abstract page is counted. PDF pp. 1\u20138 already contain eight non-reference pages, while additional non-reference content appears on PDF p. 9 before References. Resetting the printed numbering does not create a stated exemption for the title page.",
+      "why_it_matters": "The supplied requirements exclude references and appendices, but do not exclude a separate title page.",
+      "suggested_fix": "Integrate the title and abstract into the first main-text page and move detailed artifact accounting and contributions into an appendix, or obtain explicit confirmation that the title page is exempt. Recompile so all non-reference, non-appendix material fits within eight physical pages."
+    },
+    {
+      "id": "C2",
+      "severity": "minor",
+      "category": "requirements",
+      "location": "PDF p. 1, author block",
+      "issue": "Alejandro Castellanos has no stated affiliation. The separate 'With Apart Research' line does not clearly identify an individual affiliation or the organization's role.",
+      "why_it_matters": "Author names and affiliations are required, and ambiguous organizational attribution can confuse readers.",
+      "suggested_fix": "Add the author's affiliation, or explicitly state 'Independent researcher' if appropriate, and identify Apart Research as organizer or affiliation only as applicable."
+    },
+    {
+      "id": "C3",
+      "severity": "minor",
+      "category": "requirements",
+      "location": "PDF p. 9, Corrections and Author Contributions; PDF p. 15, LLM Usage Statement",
+      "issue": "The report describes a 2026-11-09 audit and correction, but does not give submission/version timestamps or identify which offline analyses and controls were completed before the deadline. A November 9 calendar date alone does not establish lateness because the deadline is November 8 AoE.",
+      "why_it_matters": "Only sprint work is eligible, and the guidelines require replacement submissions before the deadline. Eligibility cannot be determined from dates without timezones.",
+      "suggested_fix": "Provide the submitted commit/PDF hash and timestamp with timezone, and briefly distinguish pre-deadline implementation and analysis from later corrections. Clarify when the reconstructed gated-majority control was added."
+    },
+    {
+      "id": "C4",
+      "severity": "major",
+      "category": "validity",
+      "location": "PDF pp. 3\u20134, \u00a7\u00a73.1 and 3.4; PDF p. 7, \u00a74.3",
+      "issue": "The benchmark delegates exact receipt rules to agents, while the kernel separately checks integrity and binding. The distinction between receipt-to-claim validity and attestation-to-release binding is not demonstrated concretely, and the supposedly semantic target rules appear mechanically decidable.",
+      "why_it_matters": "The experiment supports authorization and instructed-adversary testing, but offers limited evidence about the harder semantic judgments used to motivate institutional oversight. Without an example, readers may also mistake captured targets for failures of a mechanically enforced binding invariant.",
+      "suggested_fix": "Add one worked release and a small table mapping each invalid case type to the exact violated rule, what the model sees, and what the kernel checks. Add a deterministic receipt-rule baseline using the existing cases, and explicitly delimit the findings to this exact-match benchmark."
+    },
+    {
+      "id": "C5",
+      "severity": "major",
+      "category": "reproducibility",
+      "location": "PDF p. 2, contribution 5; PDF pp. 14\u201315, Appendix D",
+      "issue": "The contribution claims 'complete logs', but Appendix D says historical records omit full prompts, raw responses, executable revision, prompt version, provider request IDs, and most retry metadata. The current runner's temperature setting is also not pinned by the historical manifests.",
+      "why_it_matters": "Offline recomputation of archived decisions is different from reproducing the original experiment or auditing the exact historical model inputs and parsing behavior.",
+      "suggested_fix": "Replace 'complete logs' with an accurate description of retained logical records. Pin the current analysis commit and environment, publish recoverable prompt templates and case-generation recipes, and clearly separate verified historical metadata from current defaults or reconstructed settings."
+    },
+    {
+      "id": "C6",
+      "severity": "major",
+      "category": "confound",
+      "location": "PDF p. 5, \u00a73.4, Output caps; PDF pp. 12\u201313, Appendix B.3; PDF pp. 13\u201315, Appendices C.3 and D",
+      "issue": "The main text says output caps are kept non-binding through retries, while the appendices acknowledge that this treatment cannot be verified for most historical records. The one documented whole-run replacement also changes a 4-of-7 capture from one to zero.",
+      "why_it_matters": "The pilot demonstrates that truncation disproportionately suppresses colluder responses, so missing attempt-level information directly affects interpretation of compliance and capture rates. Final outputs below the cap do not establish that earlier attempts were unaffected.",
+      "suggested_fix": "Qualify the main-text claim to match the retained evidence. Show a compact sensitivity table using both the original and replacement run, report observable cap/finish-reason information where available, and explicitly state which conclusions are unchanged."
+    },
+    {
+      "id": "C7",
+      "severity": "major",
+      "category": "overclaiming",
+      "location": "PDF p. 1, abstract opening; PDF p. 2, Theory of change; PDF p. 4, \u00a73.2; PDF p. 8, The open risk",
+      "issue": "Several global statements outrun the otherwise careful conditional framing: per-agent monitoring categorically 'does not scale', gateway guarantees are said to hold 'regardless of swarm size or model', and \u00a73.2 says 'every reachable state' despite a depth bound. The discussion then refers to 'the guarantee' as requiring independence, although independence belongs specifically to G3 rather than G1 or G2.",
+      "why_it_matters": "These formulations can turn bounded implementation evidence and conditional probability calculations into an apparent general safety or scalability result.",
+      "suggested_fix": "Use 'all states reachable within the stated depth and action/world bounds'; frame gateway scaling as a proposed architectural property rather than a demonstrated theorem; soften the unsupported categorical opening; and name G1, G2 or G3 whenever discussing assumptions."
+    },
+    {
+      "id": "C8",
+      "severity": "minor",
+      "category": "validity",
+      "location": "PDF p. 4, \u00a73.2, S2; PDF pp. 1 and 5, abstract and \u00a74.1",
+      "issue": "S2 checks that an eligible execution attempt succeeds. This is immediate execution correctness or availability, not temporal liveness showing that a pending eligible release eventually executes under a scheduling or fairness assumption.",
+      "why_it_matters": "In formal methods, liveness has a stronger meaning than the property actually stated and boundedly checked here. It is also distinct from the empirical valid-release acceptance metric.",
+      "suggested_fix": "Rename S2 to 'eligible-execution success' and distinguish it from end-to-end release availability. If retaining 'liveness', explicitly state the restricted meaning and that eventual progress is not established."
+    },
+    {
+      "id": "C9",
+      "severity": "minor",
+      "category": "statistics",
+      "location": "PDF pp. 5\u20137, \u00a73.4, Table 1 note, Figure 1 and Finding 2",
+      "issue": "Acknowledging paired committee draws is correct, but omitting pooled confidence intervals does not communicate the uncertainty in the small per-share samples. The phrase 'matched the gated majority's safety at 10%' is stronger than observing zero captures in twelve independent committee draws. The selection rule for deriving smaller committees from seven retained attestations is also unspecified.",
+      "why_it_matters": "Shared draws and reused responses constrain both uncertainty estimates and comparisons among quorum sizes; zero observed failures is not evidence of safety equivalence.",
+      "suggested_fix": "Replace 'matched safety' with 'also had zero observed captures'. Specify whether smaller committees use a preselected random prefix or another rule, identify all shared sampling units, and add draw-level uncertainty or exact random-seating reference ranges appropriate to that design."
+    },
+    {
+      "id": "C10",
+      "severity": "minor",
+      "category": "tables",
+      "location": "PDF p. 6, Table 1 caption and denominators",
+      "issue": "The caption says outcomes are pooled over 10\u201350% collusion, but 96 valid and 48 forged trials correspond to all six shares including 0%: 6 \u00d7 2 \u00d7 8 and 6 \u00d7 2 \u00d7 4. Restricting those columns to five nonzero shares would instead give 80 and 40. The 120 target denominator does use only nonzero shares.",
+      "why_it_matters": "The table mixes sampling ranges without disclosure, making its counts harder to audit and its pooled comparison easy to misread.",
+      "suggested_fix": "State the sampling range separately for each column group, or recompute all groups over the same shares. Retain a clear explanation of why zero-collusion targets are excluded if that choice remains."
+    },
+    {
+      "id": "C11",
+      "severity": "minor",
+      "category": "figures",
+      "location": "PDF p. 7, Figure 1 caption; PDF p. 6, Table 1",
+      "issue": "Figure 1 says it shows 'the committee regimes that were ever captured', but 3-of-5 is omitted despite 23 and 20 captures in Table 1. The plot also emphasizes G3 curves while the report's strongest supported capture claim concerns realized G2 seat opportunities.",
+      "why_it_matters": "The caption inaccurately suggests exhaustive coverage, and readers cannot directly inspect the principal seat-bound comparison from the figure.",
+      "suggested_fix": "Change the caption to 'selected committee regimes' or include 3-of-5. If space permits, add realized G2 opportunity markers or a compact companion panel, clearly distinguished from G3's full-compliance planning curve."
+    },
+    {
+      "id": "C12",
+      "severity": "minor",
+      "category": "citations",
+      "location": "PDF pp. 2\u20133, \u00a7\u00a71\u20132; PDF pp. 9\u201310, References",
+      "issue": "The closest institutional paper is cited using a shortened title as though it were an author, without named authors or an explanation of unavailable metadata. Several classic references omit volume, issue or page information. The recent-work descriptions and categorical 'None studies' statement are central to the novelty argument but cannot be independently checked from the supplied materials.",
+      "why_it_matters": "Incomplete attribution weakens professionalism and makes the novelty boundary harder to verify; inaccurate bibliographic details would also create a submission risk.",
+      "suggested_fix": "Verify the listed works and their characterizations, fill in author and publication metadata where available, and use a consistent title-based format only when genuinely necessary. Narrow the exclusivity claim to the verified comparison set."
+    },
+    {
+      "id": "C13",
+      "severity": "minor",
+      "category": "layout",
+      "location": "PDF pp. 5\u20137, Table 1 and Figure 1 placement; PDF pp. 13\u201314, Appendix C",
+      "issue": "Floats interrupt sentences across pages: the Table 1 introduction resumes with 'targets give 120 target trials per regime' after the table, Finding 3 resumes below Figure 1, and Appendix C.3 is split by a figure and table. Table 1's grouped headers are also tightly packed.",
+      "why_it_matters": "These interruptions make a polished-looking paper harder to read continuously and can detach qualifications from the claims they modify.",
+      "suggested_fix": "Move floats to paragraph boundaries, adjust placement or use float barriers selectively, and simplify Table 1 headers or move detailed denominator explanations into a note."
+    },
+    {
+      "id": "C14",
+      "severity": "minor",
+      "category": "readability",
+      "location": "PDF pp. 2\u20135, \u00a7\u00a71\u20133; PDF p. 7, \u00a74.3; PDF p. 8, Discussion",
+      "issue": "MCP, A2A, HMAC and TF-IDF are introduced without expansion, while the terms receipt, evidence, release and attestation require readers to infer distinct objects. The near-miss paragraph and the committee trade-off sentence combine results, qualifications and implications in long passages.",
+      "why_it_matters": "A technically literate reader can follow the headline but may not recover the exact workflow or evidential scope on one pass.",
+      "suggested_fix": "Expand acronyms at first use, define the four workflow objects in one compact example, and split the near-miss discussion into observed errors, dependence evidence and implications."
+    },
+    {
+      "id": "C15",
+      "severity": "minor",
+      "category": "formality",
+      "location": "PDF p. 2, Introduction and contribution 2; PDF p. 6, Finding 3",
+      "issue": "Phrases such as 'it implements nothing, measures nothing', 'the checker has teeth', and 'two things no constitution allows' are more rhetorical than necessary. 'Unanimity buys safety with liveness' also obscures that availability is being sacrificed.",
+      "why_it_matters": "Neutral comparative language is more professional and avoids overstating either the deficiencies of prior work or the implications of the experiment.",
+      "suggested_fix": "Use factual descriptions of what prior work evaluates, replace idioms with the property demonstrated, and label Finding 3 as an observed safety\u2013availability trade-off."
+    }
+  ],
+  "readability_examples": [
+    {
+      "location": "PDF p. 1, Abstract",
+      "original": "Per-agent alignment and monitoring do not scale to swarms, and a colluding subgroup is designed to defeat both.",
+      "suggested_rewrite": "Per-agent safety measures may miss failures caused by coordination among agents."
+    },
+    {
+      "location": "PDF p. 2, Introduction",
+      "original": "but as a design paper: it implements nothing, measures nothing, and defers its proofs.",
+      "suggested_rewrite": "The proposal is conceptual and does not report an implementation, empirical evaluation or completed proofs."
+    },
+    {
+      "location": "PDF p. 4, \u00a73.2",
+      "original": "We explore every reachable state of the real kernel",
+      "suggested_rewrite": "We explore every state reachable within the specified world, action set and search-depth bound using the actual kernel implementation."
+    },
+    {
+      "location": "PDF p. 6, Finding 3",
+      "original": "unanimity buys safety with liveness, at a model-dependent price.",
+      "suggested_rewrite": "Unanimity prevented observed captures but reduced valid-release acceptance for one model."
+    },
+    {
+      "location": "PDF p. 8, Discussion",
+      "original": "Judgement can then come from a full vote or from a random committee, which could use about seven times fewer requests but is less safe, with captures bounded by its seat draws",
+      "suggested_rewrite": "Judgment can come from a full vote or a random committee. A standalone 4-of-7 committee would use seven rather than fifty requests per decision, but it released some unsafe targets in this experiment. Under G2's assumptions, capture requires at least four colluder seats."
+    },
+    {
+      "location": "PDF p. 8, The open risk",
+      "original": "The guarantee also assumes unpredictable seating, uncompromised keys and kernel-routed actions, which our adversary did not attack, and independent honest errors, which we could not test.",
+      "suggested_rewrite": "The threat model assumes protected keys and mandatory kernel routing. G3 additionally assumes unpredictable random seating and independent honest errors. We did not attack the infrastructure assumptions or adequately test error independence."
+    }
+  ],
+  "verdict": "borderline",
+  "confidence": 4
+}

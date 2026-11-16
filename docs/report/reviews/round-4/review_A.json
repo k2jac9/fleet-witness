@@ -1,0 +1,160 @@
+{
+  "model": "openai/gpt-6.1-sol",
+  "summary": "The report combines a small enforcement kernel, bounded implementation testing with mutation checks, and live-agent evaluations of collusion and reviewer errors (\u00a7\u00a73\u20134). This is a useful hackathon prototype, but the evidence supports narrower conclusions than the claims about model diversity, committee safety, and verified deployment (\u00a7\u00a74.3\u20136). The manuscript is professionally presented and unusually transparent about limitations, although several methodological ambiguities and one direct results contradiction need correction (Table 2; Appendices A, D\u2013E).",
+  "scores": {
+    "impact_innovation": 3,
+    "execution": 3,
+    "presentation": 4,
+    "formality_aesthetics": 4,
+    "readability": 4
+  },
+  "score_rationale": {
+    "impact_innovation": "The institutional-enforcement framing addresses an important oversight problem and yields an extensible prototype (\u00a71, PDF p. 2). However, trusted enforcement, random committees, bounded checking, and correlated ensemble errors are established ingredients acknowledged in \u00a72 (PDF p. 3); the contribution is their integration and evaluation rather than a clearly established new mechanism. The diversity recommendation also needs a stronger-model control before it supports a distinctive intervention (\u00a74.3, Table 1).",
+    "execution": "Competent for three days: the real-code checker explores 23,376 bounded states, detects seven mutations, and is supplemented by paired committee analyses and a more demanding second task (\u00a7\u00a73.2, 4.1; Tables 3 and 6). Execution falls short of strong validation because historical prompts and source revisions are unavailable, mixed-model comparisons confound diversity with reviewer quality, and the unanimity narrative contradicts Table 2 (\u00a74.3; Appendix D.1).",
+    "presentation": "The problem, kernel, experiments, results, and limitations are easy to locate, and Figure 1 explains the architecture effectively (\u00a7\u00a71\u20135, PDF pp. 2\u20138). The approximately 235-word abstract, authors and affiliations, eight pages through the conclusion including the title page, and required ethical appendix satisfy the visible core requirements (PDF pp. 1\u20138, 10\u201311). Some important protocol distinctions and reconstructed-control qualifications remain buried in the appendices (Appendices D\u2013E).",
+    "formality_aesthetics": "The page images show consistent typography, restrained colour, coherent heading hierarchy, readable tables, and consistent author\u2013year citations (PDF pp. 1\u201318). Minor weaknesses include compressed Figure 2 panels, several disruptive page breaks, and the stranded Appendix D heading (PDF pp. 4\u20135, 13, 15\u201316). Exact fidelity to the linked official template cannot be independently established from the supplied materials.",
+    "readability": "The prose generally uses direct sentences, concrete examples, and helpful run-in headings (\u00a7\u00a71, 3.5, 4.3). A technically literate reader can follow the main story on one pass, but inconsistent statements about independence, safety, and the meaning of 'flipped' require rereading and reconciliation with the tables (\u00a7\u00a73.3, 3.5, 4.3\u20135; Table 2)."
+  },
+  "strengths": [
+    "The separation between mechanically checkable authorization conditions and semantic safety judgments is explicit and useful; Figure 1 and \u00a73.1 make clear what the kernel does and does not decide (PDF pp. 3\u20134).",
+    "The checker operates on the implementation rather than only an abstract model, and mutation testing demonstrates that the checks can expose missing safeguards. Reporting the mutation missed at depth five is particularly informative (\u00a7\u00a73.2, 4.1; Table 3, PDF p. 12).",
+    "The gated-majority comparison correctly isolates the contribution of automatic checks, and the authors explicitly acknowledge that committees add no safety on Experiment 1 (\u00a74.2, PDF p. 6; Table 5, PDF p. 14).",
+    "Experiment 2 moves beyond field matching, includes risky-looking safe cases, and exposes concentrated reviewer errors rather than reporting only aggregate accuracy (\u00a73.5; Table 1, PDF pp. 5\u20137).",
+    "The paired, draw-level bootstrap respects important dependencies in Experiment 1, while the wide case-level interval for gpt-oss committee errors communicates substantial uncertainty (Tables 1 and 6, PDF pp. 7 and 14).",
+    "The report candidly discloses stopped runs, prompt changes, missing metadata, trusted-host assumptions, synthetic tasks, and extensive AI assistance instead of concealing these limitations (Appendices A, B.3, D\u2013E; LLM Usage Statement)."
+  ],
+  "concerns": [
+    {
+      "id": "C1",
+      "severity": "major",
+      "category": "confound",
+      "location": "PDF pp. 1, 7\u20138; Abstract, \u00a74.3, Table 1, \u00a76",
+      "issue": "The mixed-model result does not isolate a benefit from diversity. DeepSeek already has approximately 0.1% individual harmful approvals and 0% estimated homogeneous 4-of-7 approvals, whereas gpt-oss has 12%. Replacing at least half the weaker model's seats with the much stronger model can explain the improvement without invoking complementary blind spots. The conclusion that committee safety depends on diversity is also inconsistent with the strong homogeneous DeepSeek result.",
+      "why_it_matters": "The recommendation to diversify committees is one of the headline contributions, but the demonstrated intervention is currently 'add a stronger reviewer,' not necessarily 'add a different model.'",
+      "suggested_fix": "Use the existing reviews to report all-gpt-oss, all-DeepSeek, and each explicitly specified mixed composition under the same threshold, alongside individual accuracy and available cost information. Describe the mixed result as an improvement over homogeneous gpt-oss, not evidence that diversity itself caused the improvement, and narrow the abstract and conclusion accordingly."
+    },
+    {
+      "id": "C2",
+      "severity": "major",
+      "category": "overclaiming",
+      "location": "PDF p. 7, \u00a74.3, 'The colluder attack'; PDF p. 8, Table 2",
+      "issue": "The sentence 'Unanimity kept gpt-oss safe' directly contradicts Table 2, which reports five unsafe releases for gpt-oss under 7-of-7. The zero appears in the 'Flipped' column, not the 'Unsafe' column.",
+      "why_it_matters": "This conflates resistance to overturning an honest reference decision with actual safety, materially misreporting a central safety\u2013utility trade-off.",
+      "suggested_fix": "Replace the sentence with: 'Unanimity produced no releases that overturned the honest reference rejection, but still released 5 of 96 harmful changes and blocked 46 of 64 valid changes.' Check nearby summaries for the same conflation."
+    },
+    {
+      "id": "C3",
+      "severity": "major",
+      "category": "validity",
+      "location": "PDF pp. 3\u20136, \u00a7\u00a72, 3.3, 3.5; PDF pp. 8 and 10, \u00a75 and Appendix A.1",
+      "issue": "Several theoretical statements need qualification. Independence alone is insufficient for the Condorcet improvement claim without an appropriate competence assumption. Independence is not necessary for a committee to be safe. G2 requires honest auditors not to approve bad releases, but does not require independence; \u00a75 incorrectly attributes independence to both G2 and G3. Predictable seating can invalidate the hypergeometric probability model without invalidating the realized-seat implication in G2. Positive error dependence also does not increase every threshold-tail probability in general.",
+      "why_it_matters": "The paper presents conditional guarantees as a central contribution, so their assumptions must remain consistent across the methods, discussion, and limitations.",
+      "suggested_fix": "Add a short assumption table for G1\u2013G3. Replace the independence-as-necessity statement with an explanation that dependence can undermine gains predicted by the pooled independent-error model. Separate the realized-seat bound from the random-seating probability calculation, and qualify the Condorcet and correlation statements."
+    },
+    {
+      "id": "C4",
+      "severity": "major",
+      "category": "validity",
+      "location": "PDF pp. 7\u20138; \u00a74.3, 'The colluder attack', and Table 2",
+      "issue": "The 'Flipped' reference decision is insufficiently defined. It is unclear whether it is obtained by removing colluder votes from the same run, replaying a rule using honest agents, or comparing against a separate zero-colluder run. If honest agents already saw colluder comments, removing colluder votes does not recover what those agents would have decided without colluders. The denominator also exceeds the 96 harmful cases and therefore includes additional case types that are not identified.",
+      "why_it_matters": "The claim that colluders flipped only three decisions is interpretable as direct voting pivotality under one definition, but not necessarily as a causal estimate of the colluders' total influence.",
+      "suggested_fix": "Define the reference algorithm, case universe, treatment of abstentions, and denominator explicitly in the caption or methods. If the calculation removes colluder votes from an exposed run, rename it 'overturned honest-vote reference' and state that it does not measure persuasion through the board. Separate seat capture, direct vote effects, and board effects in the interpretation."
+    },
+    {
+      "id": "C5",
+      "severity": "major",
+      "category": "reproducibility",
+      "location": "PDF pp. 11 and 16; Appendix A.1, Appendix D.1, Table 9",
+      "issue": "The archive lacks historical full prompts, raw responses, executable source revisions, pinned temperatures, and original receipt bodies. In addition, the gated-majority control was reconstructed offline with fresh receipts and keys, rather than re-verifying the original signed artifacts. These limitations are disclosed well, but the main results do not foreground the distinction between reproducing analysis and reproducing the experiment.",
+      "why_it_matters": "Readers can potentially regenerate tables but cannot fully audit historical input construction, parsing, signature handling, or model-call conditions. The evidence for the reconstructed control is narrower than a preserved end-to-end execution trace.",
+      "suggested_fix": "Add a concise main-text reproducibility qualification and label the gated-majority result as an offline replay control. Publish the current commit, environment, exact prompt templates, model endpoint identifiers, and decoding configuration for future runs, explicitly distinguishing these from unrecoverable historical settings."
+    },
+    {
+      "id": "C6",
+      "severity": "minor",
+      "category": "statistics",
+      "location": "PDF pp. 6\u20137; \u00a73.5, 'Shared blind spots', \u00a74.3, and Table 1",
+      "issue": "The committee estimates and dependence interpretation need a more precise estimand. Comparing the average case-specific committee probability with a binomial calculation using one pooled error rate detects heterogeneity across cases, even when calls are independent conditional on the case. That is operationally relevant, but it does not separately identify within-case dependence. The mixed estimate lacks an interval, and the 0.42 correlation is reported without its metric or case universe.",
+      "why_it_matters": "The reported 12% versus approximately 0.5% comparison is informative, but readers need to know exactly which independence model it rejects and what uncertainty the estimates include.",
+      "suggested_fix": "Give the finite-population committee formula, identify the review pool, and describe the comparison as a pooled-iid baseline. State that case difficulty can generate the observed marginal correlation. Add a case-bootstrap interval for each mixed composition and define the correlation statistic and included cases. Label analytically enumerated committee probabilities as estimates from recorded reviews rather than additional observed committee trials."
+    },
+    {
+      "id": "C7",
+      "severity": "minor",
+      "category": "overclaiming",
+      "location": "PDF pp. 1\u20132 and 8; Abstract, \u00a71, \u00a76",
+      "issue": "The abstract and deployment narrative use 'verified code' and broad safety language more strongly than the bounded checker establishes. Likewise, 'more copies of the same model add no safety' and 'adding a different model fixed this' generalize beyond one small synthetic benchmark and the tested committee rules. The main methods are more appropriately qualified.",
+      "why_it_matters": "Readers who see only the abstract or conclusion may infer a general implementation proof, deployment containment guarantee, or universal ensemble result that was not tested.",
+      "suggested_fix": "Use 'bounded-tested kernel' or 'exhaustively tested within a six-action small-world bound.' Qualify the ensemble conclusion with 'for gpt-oss on these cases.' Present gateway enforcement as a deployment proposal requiring complete mediation, protected keys, and additional testing, not as an already validated deployment guarantee."
+    },
+    {
+      "id": "C8",
+      "severity": "minor",
+      "category": "validity",
+      "location": "PDF pp. 7\u20138 and 17; \u00a74.3, Tables 1\u20132, Appendix E.1",
+      "issue": "The contested safe case was excluded after inspecting model disagreements, while other disagreements were adjudicated as reviewer errors. The process is disclosed, but it remains outcome-informed, and the independent model also disagreed on a separate case. Table 1 excludes the contested safe case, whereas Table 2's 64 valid cases appear to retain all 16 safe cases across four conditions.",
+      "why_it_matters": "With so few cases, adjudication and inclusion choices can noticeably change false-rejection rates and make the utility metrics across tables non-comparable.",
+      "suggested_fix": "Report safe-case results both including and excluding the contested case, explain its inclusion in Table 2, and state how the independent label disagreement was resolved. Where feasible, add executable checks or a brief human-written behavioral justification for the few harmful cases driving the gpt-oss result."
+    },
+    {
+      "id": "C9",
+      "severity": "minor",
+      "category": "reproducibility",
+      "location": "PDF pp. 5\u20137 and 17; \u00a73.5, Table 1, Table 11",
+      "issue": "The honest-judgment protocol says '12 reviewers and a 7-seat committee per case' for four models, but Table 1 uses 50 votes per case for DeepSeek and gpt-oss. The exact seven-seat mixed composition is unspecified, and the handling of abstentions in committee enumeration and majority denominators is not sufficiently explicit.",
+      "why_it_matters": "The different sampling pools and abstention rules affect the committee probabilities and prevent straightforward independent implementation from the methods alone.",
+      "suggested_fix": "Add a compact protocol table listing reviewers, separate auditors, board condition, colluder share, token cap, and repetitions for each model and phase. Specify whether committee estimates use reviewer votes or auditor attestations, give each mixed composition, and define abstention handling for every rule."
+    },
+    {
+      "id": "C10",
+      "severity": "minor",
+      "category": "related-work",
+      "location": "PDF p. 3; \u00a72, especially 'Agent institutions and verified systems' and the final novelty claim",
+      "issue": "The related-work section acknowledges most constituent ideas, but the novelty claim rests on a broad assertion that prior systems do not combine implementation checking and live colluding-agent evaluation. The differences from the cited verification-gate and runtime-governance systems are described only at a high level.",
+      "why_it_matters": "The rubric requires demonstrated novelty for a score of four or five; integration alone may be useful, but its original contribution needs a precise boundary.",
+      "suggested_fix": "Add a small comparison against the closest already cited systems, using verified source details: trusted enforcement boundary, committee adversary, implementation checking, and live semantic-error evaluation. State explicitly which mechanisms are reused and which experimental or engineering contribution is new."
+    },
+    {
+      "id": "C11",
+      "severity": "minor",
+      "category": "layout",
+      "location": "PDF pp. 2\u20135, 7\u20138, and 15\u201316",
+      "issue": "Several page breaks interrupt logical units: the first contribution is split across PDF pp. 2\u20133, the G3 introduction and equation are separated across pp. 4\u20135, a top-of-page table interrupts the discussion sentence across pp. 7\u20138, and 'Appendix D' is stranded at the bottom of p. 15 without any following content.",
+      "why_it_matters": "These are noticeable typesetting defects in an otherwise polished report and make readers reconstruct sentences or section boundaries across pages.",
+      "suggested_fix": "Use needspace or equivalent page-break controls before the contributions list, G3 equation block, and appendix headings. Adjust float placement around Table 2 so the discussion paragraph is not split by an intervening table."
+    },
+    {
+      "id": "C12",
+      "severity": "minor",
+      "category": "figures",
+      "location": "PDF p. 13; Figure 2",
+      "issue": "The four small panels compress the labels and nearly overlap several observations at zero. The 50% endpoint is not a labelled major tick, and the plot does not show the substantial draw-level uncertainty associated with only 12 committee draws per share. The caption does correctly disclose the paired structure.",
+      "why_it_matters": "The figure is readable with attention, but visually precise points can encourage stronger interpretations of differences from the theoretical curve than the sample supports.",
+      "suggested_fix": "Consider a two-by-two layout with larger text, label 50% explicitly, and add draw-level uncertainty intervals or a clear note that intervals are omitted and available separately. Preserve the existing marker-shape distinctions for grayscale readability."
+    }
+  ],
+  "readability_examples": [
+    {
+      "location": "PDF p. 6; \u00a73.5, 'Shared blind spots'",
+      "original": "A random committee is safe only if honest reviewers make independent mistakes",
+      "suggested_rewrite": "Committee gains predicted by an independent-error model can disappear when reviewers tend to miss the same cases."
+    },
+    {
+      "location": "PDF p. 7; \u00a74.3, 'The colluder attack'",
+      "original": "Unanimity kept gpt-oss safe but blocked 46 of 64 valid changes.",
+      "suggested_rewrite": "Unanimity overturned no honest reference rejections, but still released 5 of 96 harmful changes and blocked 46 of 64 valid changes."
+    },
+    {
+      "location": "PDF p. 8; \u00a75, 'Limitations'",
+      "original": "G2 and G3 assume reliable, independent honest reviewers, which the small model was not.",
+      "suggested_rewrite": "G2 assumes that honest auditors never approve harmful releases. G3 additionally models honest errors as independent; gpt-oss did not satisfy this pooled-error model."
+    },
+    {
+      "location": "PDF p. 8; \u00a76",
+      "original": "adding a different model fixed this",
+      "suggested_rewrite": "Replacing some gpt-oss reviewers with the more accurate DeepSeek model reduced the estimated harmful-approval rate on these cases."
+    }
+  ],
+  "verdict": "weak accept",
+  "confidence": 4
+}

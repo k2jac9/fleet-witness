@@ -1,0 +1,287 @@
+{
+  "model": "meta/muse-wonder",
+  "judgements": [
+    {
+      "concern_ref": "A.C1",
+      "stance": "agree",
+      "reason": "Printed pages 1-7 plus Code and Data/Author Contributions on printed p.8 and the separate title page make the 8-page non-reference count ambiguous under the stated exclusion."
+    },
+    {
+      "concern_ref": "A.C2",
+      "stance": "agree",
+      "reason": "The title page shows a blank affiliation for Alejandro Castellanos and an ambiguous 'With Apart Research' line."
+    },
+    {
+      "concern_ref": "A.C3",
+      "stance": "agree",
+      "reason": "The manuscript dates the audit/correction to 2026-11-09 without timezone, submission hash, or a pre-/post-deadline split, while correctly noting AoE makes the date alone inconclusive."
+    },
+    {
+      "concern_ref": "A.C4",
+      "stance": "agree",
+      "reason": "Sections 3.1/3.4 delegate exact receipt-field rules to auditors while the kernel checks integrity/binding, with no worked receipt-versus-attestation example, so semantic judgement is barely tested."
+    },
+    {
+      "concern_ref": "A.C5",
+      "stance": "agree",
+      "reason": "Contribution 5 claims 'complete logs' whereas Appendix D states prompts, raw responses, revision, prompt version, provider IDs and most retry metadata were not retained."
+    },
+    {
+      "concern_ref": "A.C6",
+      "stance": "agree",
+      "reason": "Section 3.4 presents caps as kept non-binding, but Appendices B.3/C.3/D admit this is unverifiable for most records and the replacement run changed one 4-of-7 cell from one capture to zero."
+    },
+    {
+      "concern_ref": "A.C7",
+      "stance": "agree",
+      "reason": "The abstract, Theory of change, Section 3.2 and 'The open risk' use categorical or singular 'guarantee'/'every reachable state' wording beyond the bounded, G1-G3-conditional claims."
+    },
+    {
+      "concern_ref": "A.C8",
+      "stance": "agree",
+      "reason": "S2 as stated checks that an eligible execution attempt succeeds, which is not temporal liveness under a fairness/scheduling assumption."
+    },
+    {
+      "concern_ref": "A.C9",
+      "stance": "agree",
+      "reason": "Finding 2's 'matched the gated majority's safety at 10%' rests on zero captures in 12 draws, and the rule for deriving 1/3/5-seat regimes from the 7-seat draw is never specified."
+    },
+    {
+      "concern_ref": "A.C10",
+      "stance": "agree",
+      "reason": "Table 1's caption says pooled over 10-50%, but 96 valid and 48 forged equal 6 shares x 2 boards x 8/4 cases including 0%, unlike the 120 nonzero-share targets."
+    },
+    {
+      "concern_ref": "A.C11",
+      "stance": "agree",
+      "reason": "Figure 1's caption says 'ever captured' yet omits 3-of-5, which Table 1 reports captured 23/20 times, and plots only the G3 curve rather than realized G2 opportunity."
+    },
+    {
+      "concern_ref": "A.C12",
+      "stance": "agree",
+      "reason": "The closest work is cited as the title fragment 'From Logic Monopoly (2026)' without authors and several classic/recent entries have incomplete or unverifiable metadata."
+    },
+    {
+      "concern_ref": "A.C13",
+      "stance": "agree",
+      "reason": "In the page images Table 1 interrupts the 120-trials sentence and Figure 1 interrupts Finding 3, detaching qualifications from claims."
+    },
+    {
+      "concern_ref": "A.C14",
+      "stance": "agree",
+      "reason": "MCP, A2A, HMAC and TF-IDF appear without first-use expansion and receipt/evidence/release/attestation are not defined in one concrete workflow example."
+    },
+    {
+      "concern_ref": "A.C15",
+      "stance": "agree",
+      "reason": "Phrases such as 'it implements nothing, measures nothing', 'the checker has teeth' and 'unanimity buys safety with liveness' occur verbatim and are more rhetorical than the surrounding careful prose."
+    },
+    {
+      "concern_ref": "B.C1",
+      "stance": "agree",
+      "reason": "The target and near-miss invalid cases are syntactic receipt-field mismatches and honest error is 0/746, leaving G3's correlated-error assumption untested as Sections 3.1/4.3 effectively concede."
+    },
+    {
+      "concern_ref": "B.C2",
+      "stance": "agree",
+      "reason": "Figure 1 plots only the a-priori G3 curve and Table 3 lacks per-share realized G2 seat bounds, so the 30%-to-40% dip from only 12 draws per share is easily misread as behaviour."
+    },
+    {
+      "concern_ref": "B.C3",
+      "stance": "agree",
+      "reason": "Section 3.4 never states how 1-of-1, 2-of-3 and 3-of-5 are sliced from the seated seven, and pooled committee results include visible-board auditors who saw the 50-agent tally and comments."
+    },
+    {
+      "concern_ref": "B.C4",
+      "stance": "agree",
+      "reason": "Figure 1 and Table 3 omit 3-of-5 despite Table 1 showing it captured 23/120 (DS) and 20/120 (GPT), making the 'ever captured' caption inaccurate."
+    },
+    {
+      "concern_ref": "B.C5",
+      "stance": "agree",
+      "reason": "References show title-as-author for arXiv:2603.25100, '(SQLite)' with no year, and literal 'et al.' for some entries but full author lists for others."
+    },
+    {
+      "concern_ref": "B.C6",
+      "stance": "agree",
+      "reason": "The title page's authorcell for Alejandro Castellanos is empty beside the University of Toronto affiliation for the second author."
+    },
+    {
+      "concern_ref": "B.C7",
+      "stance": "agree",
+      "reason": "Appendix B.2 and C.2 consist only of 'Table 2.'/'Table 4.' fragments and heading styles differ between main text, Section 5 and Appendices A-C."
+    },
+    {
+      "concern_ref": "B.C8",
+      "stance": "agree",
+      "reason": "Code and Data, Appendix D and the LLM Usage Statement frame facts around a 2026-11-09 correction and internal AI-review rounds, interrupting the scientific narrative."
+    },
+    {
+      "concern_ref": "D.C1",
+      "stance": "agree",
+      "reason": "Code and Data and Author Contributions sit after the Conclusion on printed p.8 in addition to the unnumbered title page, so whether non-reference material exceeds eight pages is genuinely ambiguous."
+    },
+    {
+      "concern_ref": "D.C2",
+      "stance": "agree",
+      "reason": "Printed p.1 lists no affiliation for Alejandro Castellanos and leaves 'With Apart Research' ambiguous as affiliation, sponsor or host."
+    },
+    {
+      "concern_ref": "D.C3",
+      "stance": "agree",
+      "reason": "References mix title-as-author, empty-year SQLite and inconsistent author lists, and the several 2026 arXiv identifiers require verification rather than assumption."
+    },
+    {
+      "concern_ref": "D.C4",
+      "stance": "agree",
+      "reason": "Appendix D confirms the decisive gated-majority control was reconstructed with fresh synthetic receipts/keys and cannot re-authenticate the original receipts."
+    },
+    {
+      "concern_ref": "D.C5",
+      "stance": "agree",
+      "reason": "The sentence excluding non-reasoning models 'so that reasoning mode would not be confounded with family' misstates a design that merely holds reasoning mode constant across two families/backends."
+    },
+    {
+      "concern_ref": "D.C6",
+      "stance": "agree",
+      "reason": "Table 1 pools 120 trials from 60 independent draws and Figure 1 uses n=24 per share without intervals, inviting over-reading of small differences such as 23 vs 20."
+    },
+    {
+      "concern_ref": "D.C7",
+      "stance": "agree",
+      "reason": "Appendices B-C use run-in bold heads unlike numbered main subsections, and Table 2 omits shortest-counterexample step counts for three mutants."
+    },
+    {
+      "concern_ref": "D.C8",
+      "stance": "agree",
+      "reason": "PDF p.10 (printed p.9) is mostly blank after the final references before the appendices."
+    },
+    {
+      "concern_ref": "D.C9",
+      "stance": "agree",
+      "reason": "Section 4.3 mixes seats, case-conditions, committees and refusals (0/746, 2/108, 508, 8/492) without a unit gloss, obscuring the key honest-error result."
+    }
+  ],
+  "revised_own_concerns": [
+    {
+      "id": "C1",
+      "severity": "major",
+      "issue": "Honest unsafe error is 0/746 per model on the main exact-match receipt task, so G3's independence assumption and committee performance on genuine judgement tasks remain untested (p.6 Sec.4.3; p.3 Sec.3.3).",
+      "suggested_fix": "Scope abstract/conclusion capture claims to exact-match tasks with near-zero honest error and promote the judgement-task limitation from Future Work to the headline limitations."
+    },
+    {
+      "id": "C2",
+      "severity": "major",
+      "issue": "Direct majority approving 48/48 forgeries is by construction because voters cannot verify a symmetric HMAC, while the informative gated-majority control is reconstructed offline with fresh synthetic keys (p.5 Finding 1; App.D).",
+      "suggested_fix": "Demote direct-majority forgery to a sanity check, foreground gated majority as the primary baseline, and state in Sec.3.4 exactly what the reconstruction does and does not validate."
+    },
+    {
+      "id": "C3",
+      "severity": "major",
+      "issue": "Pooled 120 target trials comprise only 60 independent committee draws shared across board conditions/models, per-share cells are n=12 draws, and no draw-level uncertainty is shown (p.5 Table 1; p.6 Fig.1; App.C).",
+      "suggested_fix": "Label Table 1 as '120 paired trials (60 draws)', add draw-level ranges or a paired bootstrap over the 60 draws in Appendix C, and avoid 'matched safety' phrasing for zero-in-12 cells."
+    },
+    {
+      "id": "C4",
+      "severity": "minor",
+      "issue": "Alejandro Castellanos has a blank affiliation on p.1 while the second author lists University of Toronto and 'With Apart Research' is ambiguous.",
+      "suggested_fix": "Add the affiliation or 'Independent researcher' and clarify Apart Research's role."
+    },
+    {
+      "id": "C5",
+      "severity": "minor",
+      "issue": "Reference style is inconsistent: SQLite has no year, 'From Logic Monopoly...' is a title-as-author, author lists mix 'et al.' with full lists, and several 2026 arXiv IDs need verification (pp.8-9).",
+      "suggested_fix": "Verify each 2026 arXiv ID/title/author, add year/access date for SQLite and web sources, and normalise author formatting."
+    },
+    {
+      "id": "C6",
+      "severity": "minor",
+      "issue": "Figure 1 panels are small with the legend below the axes, and Table 1's dagger footnote carries essential paired-design information in dense footnotesize text (pp.5-6).",
+      "suggested_fix": "Enlarge Figure 1 to full width with taller panels and legend above, and put '60 independent draws' in Table 1's caption first sentence."
+    },
+    {
+      "id": "C7",
+      "severity": "minor",
+      "issue": "Detector F1 0.97-1.0 is reported in one paragraph with no per-share precision/recall table, threshold sensitivity, or false-positive denominator beyond one spurious cluster (p.6; App.B.4).",
+      "suggested_fix": "Add a small Appendix C share-by-model precision/recall/F1 table or soften the claim to a qualitative observation about the planted signature."
+    },
+    {
+      "id": "C8",
+      "severity": "minor",
+      "issue": "Manifests lack Git revision, pinned temperature in historical records, prompt version and provider request IDs, and prompts/raw responses were not retained, only hashes and parsed outcomes (p.4 Sec.3.4; App.D).",
+      "suggested_fix": "State this reproducibility boundary in Sec.3.4, not only Appendix D, and publish prompt templates/hash mapping in the repository README."
+    }
+  ],
+  "withdrawn": [],
+  "new_concerns": [
+    {
+      "id": "N1",
+      "severity": "major",
+      "category": "requirements",
+      "issue": "Page-limit compliance is ambiguous: printed pp.1-7 are main text, Code and Data/Author Contributions occupy printed p.8 before References, and a separate unnumbered title page precedes them, so non-reference/non-appendix material may exceed 8 physical pages.",
+      "suggested_fix": "Move Code and Data/Author Contributions to an appendix or integrate the title page into p.1 and recompile so all counted material fits within eight pages, or document an explicit title-page exemption."
+    },
+    {
+      "id": "N2",
+      "severity": "minor",
+      "category": "tables",
+      "issue": "Table 1's caption claims pooling over 10-50% for all columns, but Valid (96) and Forged (48) denominators include the 0% share (6x2x8 and 6x2x4) while Unsafe (120) excludes it.",
+      "suggested_fix": "State the sampling range separately per column group or recompute all groups over the same shares."
+    },
+    {
+      "id": "N3",
+      "severity": "minor",
+      "category": "figures",
+      "issue": "Figure 1 and Table 3 omit the captured 3-of-5 regime (23/20 captures) despite Figure 1's 'ever captured' caption, and neither displays the realized per-share G2 seat bound that explains the non-monotonic 40% dip.",
+      "suggested_fix": "Add 3-of-5 to Table 3 and Figure 1 or retitle the caption 'selected regimes', and plot realized G2 opportunity as distinct markers/step line per share."
+    },
+    {
+      "id": "N4",
+      "severity": "major",
+      "category": "methods",
+      "issue": "The construction of 1-of-1/2-of-3/3-of-5 from the single 7-seat draw is unspecified, creating unknown cross-regime dependence, and pooled 'standalone' committee results include visible-board auditors exposed to the swarm tally/comments.",
+      "suggested_fix": "State the slicing rule (e.g. first m seats) in Sec.3.4 and report capture counts split by visible vs hidden board in Appendix C."
+    },
+    {
+      "id": "N5",
+      "severity": "major",
+      "category": "confound",
+      "issue": "The main-text claim that output caps were kept non-binding by retries cannot be verified for 30,096 of 32,832 main records lacking retry fields, and the one documented whole-run replacement changed a 4-of-7 capture from one to zero (Apps.B.3/C.3/D).",
+      "suggested_fix": "Qualify Sec.3.4 to match retained evidence and add a compact original-vs-replacement sensitivity table stating which conclusions are unchanged."
+    },
+    {
+      "id": "N6",
+      "severity": "minor",
+      "category": "validity",
+      "issue": "Contribution 5's 'complete logs' contradicts Appendix D's missing prompts/raw responses/revision/request IDs, S2 is misnamed 'liveness', and isolated phrases ('every reachable state', 'regardless of swarm size or model', singular 'the guarantee') overstate the bounded G1-G3 claims.",
+      "suggested_fix": "Replace 'complete logs' with 'retained logical records', rename S2 'eligible-execution success', and qualify each global phrase with its depth/world bound and the specific G-claim."
+    },
+    {
+      "id": "N7",
+      "severity": "minor",
+      "category": "formality",
+      "issue": "Back-matter polish lapses: Appendix B.2/C.2 are two-word fragments ('Table 2.'/'Table 4.'), appendix heading styles are inconsistent, Table 2 lacks step counts for three mutants, and printed p.9 is mostly blank.",
+      "suggested_fix": "Fold those fragments into complete sentences, use consistent subsection styles, fill or mark 'n/a' for missing step counts, and remove the near-empty reference page."
+    }
+  ],
+  "rebuttals": [
+    {
+      "to": "B",
+      "about": "B.C3",
+      "response": "I agree the slicing rule is unspecified; I do not treat the suggested first-m-seats prefix as established fact, only as the clarification the authors must supply."
+    },
+    {
+      "to": "A",
+      "about": "A.C1",
+      "response": "I agree this needs correction or explicit exemption rather than asserting a proven violation, because the guidelines exclude references/appendices but are silent on the template's separate title page."
+    }
+  ],
+  "updated_scores": {
+    "impact_innovation": 4,
+    "execution": 4,
+    "presentation": 4,
+    "formality_aesthetics": 4,
+    "readability": 3
+  },
+  "updated_verdict": "weak accept"
+}

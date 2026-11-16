@@ -1,0 +1,118 @@
+{
+  "model": "meta/muse-wonder",
+  "summary": "A polished hackathon report that builds a small checks-and-balances kernel, bounded-tests it against seven mutants, and attacks it with 50-agent populations including planted colluders. Its strongest finding is empirical: gpt-oss-20b committees inherit the single reviewer's 12% harmful-approval rate because errors cluster on the same pull requests, while mixed-model committees fall to 0.1%. Claims are mostly carefully qualified, though the judgement-task result rests on few error cases and synthetic, AI-authored labels.",
+  "scores": {
+    "impact_innovation": 4,
+    "execution": 4,
+    "presentation": 4,
+    "formality_aesthetics": 4,
+    "readability": 4
+  },
+  "score_rationale": {
+    "impact_innovation": "Important Track 4 problem with an original, buildable framing: verify the institution at MCP/A2A-style chokepoints rather than each agent (p.1, Sec.1). It extends Ruan (2026) from proposal to implemented, mutant-tested kernel plus live colluder attacks and a Condorcet/correlated-error measurement. Not 5 because the mechanisms (random committees, k-of-m, HMAC gating) are established and transfer beyond the synthetic release task is asserted, not shown.",
+    "execution": "Strong for 3 days: 23,376-state bounded check with 7/7 mutants caught (p.5, Table 3 p.11), 32,830 Exp.1 responses, seat-bound/G3 analysis with draw-level bootstrap (App.C), Bandit baseline, blind label check 47/48, retained archive and offline reproduction scripts (p.8). Not 5 because Exp.2's headline rests on 7/24 gpt-oss error cases with a wide interval [0.4,26.1] (Table 1, p.6), frontier models are never tested under collusion, and colluders are instructed with no private channel or adaptation (App.A).",
+    "presentation": "Well structured with run-in finding heads, a clear Now/Next/Long-term theory of change (p.1), Figure 1 kernel diagram (p.3), and main results in Tables 1-2 (pp.6-7). Appendices carry provenance, costs and robustness rather than burying them. Minor drag: eight decision rules, G1-G3/S1-S4 and many denominators must be held in mind, and key Exp.1 tables/Figure 2 appear only in Appendix C (pp.12-13).",
+    "formality_aesthetics": "Publication-like typesetting: consistent serif body, grey heading hierarchy, booktabs tables, captioned figures, centred page numbers and a formal title page with authors/affiliations (p.i). Minor issues: main-text references to Tables 3 and 5 before Tables 1-2 appear, unnumbered 'Code and Data'/'Author Contributions' between References and appendices (pp.8-9), small type in Figure 2 (p.12), and the centred 'With Apart Research' block on the title page is non-standard.",
+    "readability": "Unusually plain and fluent for formal-methods plus LLM material; terms such as release, receipt and signing are defined in Figure 1's caption and Sec.3.1. Penalised only for dense numeric passages and regime lists (Sec.3.4, Sec.4.3) that require re-reading, and occasional compressed provenance detail in Appendices D-E."
+  },
+  "strengths": [
+    "Bounded exhaustive testing of the real kernel plus seven deliberately broken mutants, with the depth-5 miss for the uniqueness mutant honestly reported (p.5, App.B).",
+    "Clean separation of mechanically checkable guarantees (G1) from judgement, making the gated-majority control the fair comparison and showing committees added nothing on the checklist task (pp.3-5).",
+    "Shared-blind-spot measurement connects Condorcet/Eckhardt-Lee/Kim et al. to AI code review: same-model 2-of-3, 3-of-5 and 4-of-7 all ~12% vs 0.5% independent prediction for 4-of-7, mitigated by model mixing (p.6, Table 1).",
+    "Exceptional provenance for a hackathon: retained superseded/truncated runs, prompt-change disclosure, costs, abstentions, what cannot be reproduced, and offline table-reproduction scripts (pp.8, 14-16).",
+    "Required Limitations and Dual-Use/Ethical appendix is substantive, including seating predictability, HMAC/trusted-host limits and attacker use of capture curves (App.A, pp.9-10)."
+  ],
+  "concerns": [
+    {
+      "id": "C1",
+      "severity": "major",
+      "category": "statistics",
+      "location": "p.6, Sec.4.3 and Table 1; App.A.1",
+      "issue": "The headline 12.0% committee rate and '22 times more than independent' rest on gpt-oss errors on only 7 of 24 harmful cases, 3 with majority approval; the reported 4-of-7 interval is [0.4, 26.1], and no interval is given for the 0.42 cross-model error correlation or the 0.1% mixed-committee estimate.",
+      "why_it_matters": "A few cases drive the central diversity conclusion, so readers cannot tell how stable the 22x ratio or mixing benefit is.",
+      "suggested_fix": "Add case-resampled 95% intervals for the observed/independent ratio, the 0.42 correlation and the mixed 0.1% estimate, and state 'based on 7 error cases' next to the abstract-level claim."
+    },
+    {
+      "id": "C2",
+      "severity": "major",
+      "category": "validity",
+      "location": "p.4, Sec.3.5; App.E.1",
+      "issue": "All 48 pull requests and labels were written by Claude (the agent family excluded for that reason), checked blind by only one other model (47/48), with post-hoc adjudication of disagreements by reading reviewer reasons; the contested git case shows labels encode debatable policy.",
+      "why_it_matters": "Label or difficulty artefacts from one model family could manufacture or exaggerate shared blind spots, especially for the 3 majority-error cases.",
+      "suggested_fix": "Have a human or a second independent labeller adjudicate at least the 7 gpt-oss error cases and the contested case blind, and report per-difficulty error counts in the main text."
+    },
+    {
+      "id": "C3",
+      "severity": "major",
+      "category": "confound",
+      "location": "p.4 Sec.3.5, p.6 Sec.4.3, App.E.2",
+      "issue": "Frontier models GPT-6.1 Sol and Gemini 4 Argon are tested only as honest reviewers with 12 votes/case, while the colluder attack uses only DeepSeek and gpt-oss; a prompt was also changed and all Exp.2 runs re-run after frontier reviewers rejected safe changes for missing definitions.",
+      "why_it_matters": "'Frontier reviewers never approved a harmful change' does not establish frontier committees resist collusion or persuasion, and the prompt change could differentially help models.",
+      "suggested_fix": "Scope the frontier claim explicitly to honest review in Sec.4.3/Conclusion, and if time permits run one frontier 20%-colluder cell; otherwise add this as a headline limitation, not only App.A."
+    },
+    {
+      "id": "C4",
+      "severity": "minor",
+      "category": "overclaiming",
+      "location": "Title page abstract; p.7 Conclusion",
+      "issue": "Phrases such as 'put every check a program can do into verified code' and 'a small, verifiable institution' sit uneasily with the paper's own correct qualification that this is bounded testing to depth 6 in a 1-case/3-seat world, with kernel and specification written by the same team (p.3, Sec.3.2).",
+      "why_it_matters": "Casual readers may read 'verified' as a proof for deployed, concurrent, multi-case kernels.",
+      "suggested_fix": "Replace 'verified code' in the abstract conclusion with 'bounded-tested code (23,376 states, depth 6)' and keep 'verifiable' defined as in Sec.3.2."
+    },
+    {
+      "id": "C5",
+      "severity": "minor",
+      "category": "reproducibility",
+      "location": "p.8 Code and Data; App.D.1 Table 9",
+      "issue": "The archive commendably lists non-recoverable items, but Exp.1 lacks exact code revision, temperature, full prompts/raw responses and most retry records, and the gated-majority result was rebuilt with fresh receipts/keys rather than re-verified from originals.",
+      "why_it_matters": "Live-model results cannot be exactly rerun; only table recomputation from retained parsed records is fully reproducible.",
+      "suggested_fix": "State this distinction in the main Code and Data bullet ('tables reproducible offline; live runs not exactly rerunnable') rather than only in Appendix D."
+    },
+    {
+      "id": "C6",
+      "severity": "minor",
+      "category": "citations",
+      "location": "pp.7-8 References",
+      "issue": "Many 2026 references are given only as arXiv identifiers (e.g. Ruan 2603.25100, Paglieri 2609.04170, Muruaga 2608.15888) with no titles checked against venue/version in the text, and reference style mixes URLs, arXiv links and journal formats.",
+      "why_it_matters": "Given the hackathon's warning that made-up references can disqualify, unverifiable future-dated citations weaken trust; related-work suggestions should be verified before adding any.",
+      "suggested_fix": "Verify each 2026 arXiv ID resolves to the cited title/authors, add DOIs/venues where available, and normalise author-initial and journal formatting."
+    },
+    {
+      "id": "C7",
+      "severity": "minor",
+      "category": "figures",
+      "location": "p.12, Figure 2 (Appendix C)",
+      "issue": "The four capture-rate panels are small, axis labels and legend are hard to read at print size, and this main-evidence figure is in the appendix while the main text cites it on p.5.",
+      "why_it_matters": "The seat-bound claim (no point above its diamond) is central and should be checkable without enlarging the PDF.",
+      "suggested_fix": "Move a single 4-of-7 panel (or a 2x2 larger version) into Sec.4.2 and keep the full grid in Appendix C."
+    },
+    {
+      "id": "C8",
+      "severity": "minor",
+      "category": "requirements",
+      "location": "Whole PDF, pp.i-17",
+      "issue": "Compliance is otherwise good: abstract is ~231 words, authors/affiliations on title page, required Appendix A present, and main text ends on p.7 before References, within the 8-page limit excluding references/appendices. However 'Code and Data' and 'Author Contributions' on pp.8-9 are unnumbered back matter after References, blurring where the 8-page count ends.",
+      "why_it_matters": "Judges applying the page limit mechanically could miscount the submission.",
+      "suggested_fix": "Label pp.8-9 explicitly as 'Back matter (excluded from page limit)' or move Code/Data before References."
+    }
+  ],
+  "readability_examples": [
+    {
+      "location": "p.4, Sec.3.4",
+      "original": "The same votes and signatures are then judged under eight decision rules: direct majority; gated majority (majority plus the kernel's checks); committees of 1-of-1, 2-of-3, 3-of-5, 4-of-7 and 7-of-7; and a hybrid (majority and 4-of-7).",
+      "suggested_rewrite": "We reuse the same votes and signatures under eight rules: (1) direct majority, (2) gated majority (majority plus kernel checks), (3-7) k-of-m committees from 1-of-1 to 7-of-7, and (8) hybrid (majority AND 4-of-7)."
+    },
+    {
+      "location": "p.6, Sec.4.3 'The colluder attack'",
+      "original": "But comparing each decision with what the honest agents decided on their own (no answer key needed) shows that colluders flipped only 3 of 98 honest rejections.",
+      "suggested_rewrite": "To separate collusion from honest error, we also count 'flips': harmful cases that honest agents alone rejected but the full population released. Colluders caused only 3 such flips out of 98 honest rejections."
+    },
+    {
+      "location": "p.15, App.D.2",
+      "original": "Retry and cut-off fields are missing from 30,096 of 32,832 Experiment 1 records (only the DeepSeek 30% re-run has them, all with zero retries), and missing fields do not mean zero retries.",
+      "suggested_rewrite": "For 30,096 of 32,832 Exp.1 records we cannot tell whether a retry or cut-off occurred, because those fields were not saved; only the DeepSeek 30% re-run saved them (all zero)."
+    }
+  ],
+  "verdict": "accept",
+  "confidence": 4
+}

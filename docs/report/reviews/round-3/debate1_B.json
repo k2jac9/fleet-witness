@@ -1,0 +1,237 @@
+{
+  "model": "google/gemini-4-argon",
+  "judgements": [
+    {
+      "concern_ref": "A.C1",
+      "stance": "agree",
+      "reason": "Counting the unnumbered title page (PDF p. 1), the seven numbered body pages (PDF pp. 2-8), and the non-reference 'Code and Data' and 'Author Contributions' sections on PDF p. 9 places the non-reference, non-appendix content slightly over eight physical pages."
+    },
+    {
+      "concern_ref": "A.C2",
+      "stance": "agree",
+      "reason": "On the title page (PDF p. 1), '\\authorcell{Alejandro Castellanos}{}' leaves the first author's affiliation blank and 'With Apart Research' does not clarify whether Apart Research is an affiliation or the hackathon host."
+    },
+    {
+      "concern_ref": "A.C3",
+      "stance": "agree",
+      "reason": "The manuscript refers to a '2026-11-09' audit and correction (PDF p. 9, 'Code and Data' and 'Author Contributions'; PDF p. 15, 'LLM Usage Statement') without stating timestamps or timezones relative to the November 8, 11:59 PM AoE deadline."
+    },
+    {
+      "concern_ref": "A.C4",
+      "stance": "agree",
+      "reason": "In Section 3.1 and Section 3.4 (PDF pp. 3-4), the 12 target invalid cases (build-only, wrong-artifact, wrong-run) are deterministic field mismatches that could be checked mechanically, and the paper provides no concrete example contrasting receipt inspection with attestation binding."
+    },
+    {
+      "concern_ref": "A.C5",
+      "stance": "agree",
+      "reason": "Contribution 5 (PDF p. 2) claims 'complete logs', whereas Appendix D (PDF p. 15) explicitly states that retained records store parsed outcomes, reasons, and short prompt hashes rather than full prompts, raw responses, executable git revisions, or retry arrays."
+    },
+    {
+      "concern_ref": "A.C6",
+      "stance": "agree",
+      "reason": "Section 3.4 (PDF p. 5) states unconditionally that 'caps are kept non-binding by retrying truncated responses at larger caps', while Appendices B.3, C.3, and D (PDF pp. 13-15) acknowledge that 30,096 of 32,832 main records lack retry metadata and that replacing the truncated DeepSeek 30% run changed 4-of-7 hidden capture from 1 to 0."
+    },
+    {
+      "concern_ref": "A.C7",
+      "stance": "agree",
+      "reason": "Phrases such as 'We explore every reachable state of the real kernel' in Section 3.2 (PDF p. 4) and 'The guarantee also assumes... independent honest errors' in Section 5 (PDF p. 8) blur the boundaries between bounded mechanical check G1, seat bound G2, and probabilistic estimate G3."
+    },
+    {
+      "concern_ref": "A.C8",
+      "stance": "agree",
+      "reason": "In Section 3.2 (PDF p. 4), invariant S2 ('an eligible execution attempt succeeds') verifies immediate step-level execution success rather than temporal liveness under fairness assumptions."
+    },
+    {
+      "concern_ref": "A.C9",
+      "stance": "agree",
+      "reason": "Finding 2 (PDF p. 6) claims the 4-of-7 committee 'matched the gated majority's safety at 10%' based on zero captures across only 12 independent draws, and Section 3.4 (PDF p. 5) omits the rule used to subset 1, 3, and 5 seats from the 7-seat committee draw."
+    },
+    {
+      "concern_ref": "A.C10",
+      "stance": "agree",
+      "reason": "Table 1's caption (PDF p. 6) states that outcomes are pooled over colluder shares 10-50% (which yields the 120 target trials), but the 96 valid and 48 forged trials actually pool across all six shares 0-50% (6 shares x 2 conditions x 8 valid or 4 forged cases)."
+    },
+    {
+      "concern_ref": "A.C11",
+      "stance": "agree",
+      "reason": "Figure 1's caption (PDF p. 7) claims to show 'the committee regimes that were ever captured', but omits Committee 3-of-5 (which had 23 DS and 20 GPT captures in Table 1) and plots only the theoretical G3 curve without the realized G2 seat bound."
+    },
+    {
+      "concern_ref": "A.C12",
+      "stance": "agree",
+      "reason": "The paper cites arXiv:2603.25100 by a title fragment ('From Logic Monopoly, 2026') on PDF pp. 2, 3, and 9 instead of author names and omits volume/page numbers for several classic references on PDF pp. 9-10."
+    },
+    {
+      "concern_ref": "A.C13",
+      "stance": "agree",
+      "reason": "Table 1 (PDF p. 6), Figure 1 (PDF p. 7), and Figure 2/Table 4 (PDF p. 14) are placed mid-sentence, splitting prose across page boundaries."
+    },
+    {
+      "concern_ref": "A.C14",
+      "stance": "agree",
+      "reason": "Acronyms such as MCP, A2A, HMAC, and TF-IDF appear without expansion on PDF pp. 2, 3, and 5, and the distinction between receipt, evidence, proposal, and attestation in Section 3.1 (PDF p. 3) is compressed without a schematic or definition list."
+    },
+    {
+      "concern_ref": "A.C15",
+      "stance": "agree",
+      "reason": "Colloquialisms such as 'implements nothing, measures nothing', 'two things no constitution allows', and 'the checker has teeth' on PDF p. 2, as well as 'buys safety with liveness' for availability on PDF p. 6, are overly rhetorical."
+    },
+    {
+      "concern_ref": "C.C1",
+      "stance": "agree",
+      "reason": "As reported in Section 4.3 (PDF p. 7), honest auditor error on the main exact-match receipt task is 0/746 per model, leaving the correlated honest-error independence assumption of G3 empirically untested."
+    },
+    {
+      "concern_ref": "C.C2",
+      "stance": "agree",
+      "reason": "Section 3.4 (PDF p. 5), Finding 1 (PDF p. 6), and Appendix D (PDF p. 15) confirm that direct-majority forgery approval (48/48) holds by construction because voters lack the symmetric HMAC key, and that the gated-majority control is reconstructed offline with fresh synthetic keys."
+    },
+    {
+      "concern_ref": "C.C3",
+      "stance": "agree",
+      "reason": "Table 1's footnote (PDF p. 6) notes that the 120 pooled target trials come from only 60 independent committee draws (12 per share) shared across board conditions and models, so small count differences between regimes and models reflect paired draw noise."
+    },
+    {
+      "concern_ref": "C.C4",
+      "stance": "agree",
+      "reason": "The title page (PDF p. 1) leaves Alejandro Castellanos's affiliation empty while listing University of Toronto for Ignatius Pio Binawan."
+    },
+    {
+      "concern_ref": "C.C5",
+      "stance": "agree",
+      "reason": "On PDF pp. 9-10, SQLite lacks a year, arXiv:2603.25100 is cited by title fragment, author lists mix 'et al.' with full lists, and PDF p. 10 is left roughly 80% blank after the last five reference items."
+    },
+    {
+      "concern_ref": "C.C6",
+      "stance": "agree",
+      "reason": "In Figure 1 (PDF p. 7), the three subplots are compact with small markers, and Table 1 (PDF p. 6) buries the essential '60 independent committee draws, not 120' design caveat in a dense footnote rather than the main caption or column header."
+    },
+    {
+      "concern_ref": "C.C7",
+      "stance": "agree",
+      "reason": "Section 4.3 (PDF p. 7) summarizes public-log collusion detection as 'F1 of 0.97-1.0 at every share' in a single paragraph without providing a per-share precision/recall/F1 table in Appendix B.4 or Appendix C."
+    },
+    {
+      "concern_ref": "C.C8",
+      "stance": "agree",
+      "reason": "Historical manifests lack git commit hashes, pinned temperature, prompt versions, and provider request IDs, and event records omit full prompts and raw responses, a limitation currently deferred to Appendix A (PDF p. 11) and Appendix D (PDF p. 15) rather than stated in Section 3.4."
+    },
+    {
+      "concern_ref": "D.C1",
+      "stance": "agree",
+      "reason": "Because the unnumbered title page (PDF p. 1) is followed by seven numbered pages (PDF pp. 2-8) plus 'Code and Data' and 'Author Contributions' on PDF p. 9, moving those two meta-sections to an appendix avoids any ambiguity regarding the 8-page main-body cap."
+    },
+    {
+      "concern_ref": "D.C2",
+      "stance": "agree",
+      "reason": "The first author's affiliation argument in '\\authorcell{Alejandro Castellanos}{}' on PDF p. 1 is empty, and 'With Apart Research' is ambiguous."
+    },
+    {
+      "concern_ref": "D.C3",
+      "stance": "agree",
+      "reason": "The bibliography (PDF pp. 9-10) formats 'From Logic Monopoly (2026)' without authors, leaves 'SQLite()' without a year, and alternates between literal 'et al.' and full author lists."
+    },
+    {
+      "concern_ref": "D.C4",
+      "stance": "agree",
+      "reason": "Section 3.4 (PDF p. 5) and Appendix D (PDF p. 15) explain that the gated-majority control uses fresh synthetic receipts and keys offline because original signing keys were not retained, warranting a clear equivalence explanation in Section 3.4."
+    },
+    {
+      "concern_ref": "D.C5",
+      "stance": "agree",
+      "reason": "In Section 3.4 (PDF p. 5), the sentence 'Non-reasoning models were excluded so that reasoning mode would not be confounded with family' is awkwardly phrased when the design simply holds reasoning mode constant across two model families."
+    },
+    {
+      "concern_ref": "D.C6",
+      "stance": "agree",
+      "reason": "Table 1 (PDF p. 6) pools 120 paired target trials from 60 independent draws and Figure 1 (PDF p. 7) plots n=24 paired trials (12 draws) per point without showing the realized G2 seat bound or noting the width of draw-level intervals."
+    },
+    {
+      "concern_ref": "D.C7",
+      "stance": "agree",
+      "reason": "Appendices B and C (PDF pp. 12-13) use bold run-in '\\head{B.1 ...}' paragraphs instead of '\\subsection', and Table 2 (PDF p. 12) omits shortest-counterexample step counts for three of the seven mutants ('skip seat check', 'count duplicates', and 'skip audit')."
+    },
+    {
+      "concern_ref": "D.C8",
+      "stance": "agree",
+      "reason": "PDF p. 10 (numbered page 9) contains only the final five bibliography entries at the top and is otherwise blank due to the '\\clearpage' before Appendix A."
+    },
+    {
+      "concern_ref": "D.C9",
+      "stance": "agree",
+      "reason": "Section 4.3 (PDF p. 7), Appendix A (PDF p. 11), and Table 4 (PDF p. 14) switch between denominators (0/746 target seats, 2/108 case-conditions, 1/508 honest seats at 30% collusion, 8/492 valid seats, and n=756 near-miss seats) without an explicit unit gloss."
+    }
+  ],
+  "revised_own_concerns": [
+    {
+      "id": "C1",
+      "severity": "major",
+      "issue": "The paper motivates the auditor committee by splitting 'what can be checked mechanically ... from what must be judged (is this release safe?)' (PDF p. 2-3, Section 1 & Section 3.1), yet the 12 invalid target cases in the benchmark ('build-only, wrong-artifact and wrong-run receipts', Section 3.4, PDF p. 4) and the near-miss cases ('two-character digest change or issuer capitalization', Section 4.3, PDF p. 7) are syntactic field mismatches on structured receipts that are mechanically decidable. Because the task reduces to exact field matching rather than ambiguous semantic judgment, honest LLM auditors make virtually zero errors (0/746 in main sweeps), leaving correlated honest errors (Knight & Leveson, 1986) under G3 empirically untested; moreover, the text never shows a concrete example distinguishing a worker receipt from an auditor attestation.",
+      "suggested_fix": "Explicitly scope the abstract, Section 3.1, Section 3.4, and Conclusion to state that this benchmark proxies judgment with structured receipt-field inspection to establish a clean ground-truth baseline, and add a compact worked example (or small table) showing an exact valid receipt, each invalid target rule, what the model sees in its prompt, and what the kernel checks mechanically."
+    },
+    {
+      "id": "C2",
+      "severity": "major",
+      "issue": "In Figure 1 (PDF p. 7) and Table 3 (PDF p. 13), observed capture rates drop non-monotonically from 30% collusion (33.3% capture for DS 1-of-1) to 40% collusion (16.7% capture) because each colluder share uses a single seed (only 12 independent committee draws per share, 60 total across 10-50%), yet Figure 1 plots only the theoretical a-priori G3 curve and omits the realized G2 seat bound per share. In addition, Table 1's caption (PDF p. 6) states that outcomes are pooled over colluder shares 10-50% (which matches the 120 target trials), whereas the 96 valid and 48 forged trials actually pool across all six shares 0-50% (6 shares x 2 conditions x 8 valid or 4 forged cases).",
+      "suggested_fix": "Plot the realized G2 seat-bound opportunity rate at each share on Figure 1, add the realized G2 seat bound count (out of 24) to every cell of Table 3, state the 60-independent-draw pairing directly in Table 1's main caption/headers, and clarify in Table 1's caption that Valid (96) and Forged (48) pool over 0-50% collusion while Targets (120) pool over 10-50%."
+    },
+    {
+      "id": "C3",
+      "severity": "major",
+      "issue": "Several experimental controls and data-provenance boundaries in Section 3.4 (PDF pp. 4-5) need clearer qualification in the main text: (1) Section 3.4 does not specify how 1-of-1, 2-of-3, and 3-of-5 committees are subsetted from the single 7-seat draw, and Table 1/Figure 1 pool visible-board runs (where auditors see the 50-agent vote tally and comments before attesting) with hidden-board runs when evaluating 'standalone' committees; (2) the decisive gated-majority baseline is an offline reconstruction using fresh synthetic keys because original signing keys were not retained (Appendix D, PDF p. 15); and (3) Section 3.4 states unconditionally that output caps are kept non-binding via retries and Contribution 5 (PDF p. 2) claims 'complete logs', whereas Appendices B.3, C.3, and D (PDF pp. 12-15) disclose that 30,096/32,832 main records lack retry metadata, raw prompts/responses were not stored, and replacing the truncated DeepSeek 30% run changed 4-of-7 hidden capture from 1 to 0.",
+      "suggested_fix": "In Section 3.4, specify the seat-subsetting rule (e.g., first m seats of the 7-seat draw), report in Appendix C whether visible-board and hidden-board capture counts differ, explain why the synthetic-key reconstruction of gated majority is mechanically equivalent to live execution, replace 'complete logs' in Contribution 5 with 'structured decision logs', and qualify the non-binding output cap claim in Section 3.4 with the retry-metadata caveat and 1-to-0 replacement sensitivity from Appendix B.3."
+    },
+    {
+      "id": "C4",
+      "severity": "minor",
+      "issue": "Figure 1's caption (PDF p. 7) states that it plots 'the committee regimes that were ever captured', and Table 3 (PDF p. 13) tabulates unsafe releases by colluder share, but both omit 'Committee 3-of-5' even though Table 1 (PDF p. 6) shows Committee 3-of-5 was captured 23/120 times (DS) and 20/120 times (GPT). Furthermore, Section 4.3 (PDF p. 7) reports detector F1 of 0.97-1.0 across shares without a corresponding per-share precision/recall/F1 breakdown in Appendix B.4 or C.",
+      "suggested_fix": "Add a '3-of-5' column to Table 3, either add a fourth panel for Committee 3-of-5 to Figure 1 or revise Figure 1's caption to say 'selected committee regimes', and include a compact per-share precision/recall/F1 table for the public-log detector in Appendix B.4 or C."
+    },
+    {
+      "id": "C5",
+      "severity": "minor",
+      "issue": "Several citations and bibliography entries (PDF pp. 2, 3, 9, 10) are inconsistently formatted: (1) arXiv:2603.25100 is cited in-text and in the bibliography by a fragment of its title ('From Logic Monopoly, 2026') rather than its author(s); (2) SQLite is cited as '(SQLite)' with no year due to '\\bibitem[SQLite()]{sqlite}'; (3) Hammond et al. (2025), Greenblatt et al. (2024), and Motwani et al. (2024) print literal 'et al.' in References while other multi-author entries list all authors; and (4) classic entries omit volume/page numbers and recent 2026 arXiv preprints should be verified for exact author/title metadata.",
+      "suggested_fix": "Replace 'From Logic Monopoly (2026)' with the actual author surname(s) of arXiv:2603.25100, add a year to the SQLite citation, standardize author lists and publication details in the bibliography, and verify all 2026 arXiv identifiers."
+    },
+    {
+      "id": "C6",
+      "severity": "minor",
+      "issue": "Two template and submission-requirement polish issues appear on PDF pp. 1, 9, and 10: (1) on the title page (PDF p. 1), the first author ('Alejandro Castellanos') has an empty affiliation field ('\\authorcell{Alejandro Castellanos}{}') and 'With Apart Research' is ambiguous; and (2) counting the separate title page (PDF p. 1) plus the seven numbered body pages (PDF pp. 2-8) plus 'Code and Data' and 'Author Contributions' on PDF p. 9 places non-reference, non-appendix content slightly over eight physical pages, while PDF p. 10 is left 80% blank after the last five references.",
+      "suggested_fix": "Add Alejandro Castellanos's affiliation (or 'Independent Researcher') on the title page, clarify Apart Research's role as hackathon organizer, move 'Code and Data' and 'Author Contributions' into an appendix so all non-reference/non-appendix pages fit cleanly within 8 physical pages, and tighten bibliography spacing so References finish on page 8 without leaving PDF p. 10 mostly blank."
+    },
+    {
+      "id": "C7",
+      "severity": "minor",
+      "issue": "Layout, heading hierarchy, and table completeness have minor defects: (1) Section 5 (PDF p. 8) and Appendix A (PDF p. 11) use unnumbered '\\subsection*' while Appendices B and C (PDF pp. 12-13) use bold run-in '\\head{B.1 ...}' paragraphs; (2) B.2 ('B.2 Verification results. Table 2.') and C.2 ('C.2 Honest error on near-miss releases. Table 4.') consist of two-word sentence fragments; (3) Table 2 (PDF p. 12) omits shortest-counterexample step counts for three of the seven mutants ('skip seat check', 'count duplicates', 'skip audit'); and (4) Table 1 (PDF p. 6), Figure 1 (PDF p. 7), and Figure 2/Table 4 (PDF p. 14) split sentences across pages.",
+      "suggested_fix": "Use a consistent subsection hierarchy across Appendices A-D, replace the two-word fragments in B.2 and C.2 with complete sentences, fill in the shortest-counterexample step counts for all seven mutants in Table 2, and reposition floats to paragraph boundaries so they do not interrupt sentences mid-page."
+    },
+    {
+      "id": "C8",
+      "severity": "minor",
+      "issue": "Several terminology and prose choices slow down the reader: (1) internal audit and AI-review logs ('2026-11-09 correction', 'round 1 ended with three weak rejects and one reject') are woven into the narrative (PDF pp. 9, 15) without submission timestamps; (2) S2 in Section 3.2 (PDF p. 4) is called 'liveness' when it checks immediate step-level execution success, and Finding 3 (PDF p. 6) uses 'liveness' to mean valid-release availability; (3) Section 4.3 (PDF p. 7) shifts between multiple denominators (0/746, 2/108, 1/508, 8/492, and n=756 in Table 4) without a unit gloss; and (4) acronyms (MCP, A2A, HMAC, TF-IDF) are not expanded at first use and Section 3.4's sentence on excluding non-reasoning models (PDF p. 5) is logically convoluted.",
+      "suggested_fix": "State provenance facts directly in Appendix D (and clarify pre-deadline vs. post-audit timestamps cleanly in the corrections note), distinguish step-level execution enabledness (S2) and empirical valid-release acceptance from formal temporal liveness, add parenthetical unit definitions for the denominators in Section 4.3, expand acronyms on first use, and simplify the reasoning-model sentence in Section 3.4."
+    }
+  ],
+  "withdrawn": [],
+  "new_concerns": [],
+  "rebuttals": [
+    {
+      "to": "A",
+      "about": "A.C1",
+      "response": "While moving 'Code and Data' and 'Author Contributions' to the appendix (or folding the cover page into page 1) is a sensible minor cleanup to eliminate any page-count ambiguity, the scientific body itself (Introduction through Conclusion, PDF pp. 2-8, numbered 1-7) is strictly 7 pages after a standard title page, so this is a minor formatting detail rather than a major flaw."
+    },
+    {
+      "to": "A",
+      "about": "A.C5",
+      "response": "We agree that 'complete logs' in Contribution 5 should be reworded to 'structured decision logs' and Section 3.4 should cross-reference the missing retry metadata, but the authors' exhaustive self-audit in Appendix B.3 and Appendix D\u2014retaining the superseded run and documenting every missing manifest field\u2014is a model of scientific honesty for a weekend sprint and supports a 4 rather than a 3 on Execution."
+    }
+  ],
+  "updated_scores": {
+    "impact_innovation": 4,
+    "execution": 4,
+    "presentation": 4,
+    "formality_aesthetics": 4,
+    "readability": 4
+  },
+  "updated_verdict": "accept"
+}

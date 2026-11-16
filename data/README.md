@@ -11,7 +11,56 @@ SHA-256: `c55e8acf07ed8dd3c11bc3dc8f70269adebaac6bfa14727642cca7314d1f821a`.
 Its 153 entries use Windows backslashes. Use the portable extractor below;
 ordinary ZIP extraction on Linux does not recreate the intended hierarchy.
 
-## Contents
+## Experiment 2 run archive, 10 November 2026
+
+For new reviews, use the [16 November publication successor](../docs/experiments/2026-11-16-experiment2-publication.md)
+and [fresh-checkout handoff](../docs/experiments/experiment2-reviewer-handoff.md).
+`fleet-witness-judge-runs-public-2026-11-16.zip` redacts the machine-local
+executable paths in 11 manifests; all other data members retain their bytes.
+SHA-256: `f19127a49dea94e581e3714be3733ba480db7405632f1292b1f737273a23da04`.
+Its `SANITIZATION.json` maps every member of the prior published archive,
+including the three packaging metadata files it supersedes. Verification uses
+both archives. The historical ZIP below remains unchanged and still contains
+those paths; this successor does not erase already published history.
+
+`fleet-witness-judge-runs-2026-11-10.zip` holds the original Experiment 2
+(judgement task) run folders, recovered from the machine that ran them
+(issue #17). SHA-256:
+`56d38f3dfec31a7c1d87773ff1001f792d105502838342546f0e4a4a12d36eb0`.
+It has 80 entries with forward-slash paths under `experiment2-runs/`, and expands
+to about 171 MB.
+
+| Path | What it is |
+| --- | --- |
+| `judge/{deepseek,gptoss}/f00,f20,f40` | Colluder-attack populations (0/20/40% colluders, both boards) and `analysis.json`. |
+| `judge-frontier/{gpt61sol,gemini4argon}/f00` | Honest-only frontier runs. |
+| `judge-v1-stopped/`, `judge-frontier-v1-stopped/` | Runs stopped before the review-policy fix (the disclosed protocol deviation). Partial by design. |
+| `judge-pilot/` | The pilot before filler edits were bundled in. Excluded from results. |
+
+Each complete run folder has `events.jsonl` (every vote and attestation),
+`decisions.json`, `truth.json` (sealed labels, colluders, committees),
+`manifest.json` (calls, errors, abstentions, cost), `institution.sqlite3` and
+`private/requests.jsonl` (the prompts sent and the raw responses).
+
+**One change from the originals.** Case 02's diff contains a synthetic,
+non-working Stripe-style key, which models were asked to spot. To keep secret
+scanners quiet, the published copy replaces it with `sk_live_FAKE-KEY-REMOVED`
+in 14 files. `CHANGES.json` lists them; `SHA256SUMS-original` and
+`SHA256SUMS-published` give the hashes before and after. The `prompt_sha256`
+values in `events.jsonl` hash the original prompts. Nothing else was changed,
+and the packaging report described no real API key or personal contact detail.
+That historical statement is not an exhaustive privacy certification; the later
+review found the machine-local executable paths addressed by the successor above.
+`scripts/package_experiment2_runs.py` rebuilds the archive from the local folders.
+
+The [16 November recovery verification](../docs/experiments/2026-11-16-experiment2-recovery.md)
+records a later check against the recovered files and the remaining gaps.
+`python -B scripts/verify_experiment2_archive.py` checks the ZIP directly without
+extracting it or making model calls. It emits archive/source hashes, prompt and
+receipt checks, accounting, stopped-run omissions and frozen-count comparisons.
+Its scope is separate from the Experiment 1 reproduction commands below.
+
+## Experiment 1 contents
 
 | Path | What it is |
 | --- | --- |

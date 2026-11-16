@@ -108,12 +108,17 @@ def _post(url, key, body, timeout, *, max_response_bytes=1048576, ssl_context=No
         finally:
             connection.close()
 
-    threading.Thread(target=exchange, daemon=True, name='swarm-single-https-attempt').start()
     try:
+        threading.Thread(target=exchange, daemon=True, name='swarm-single-https-attempt').start()
         raw, error = finished.get(timeout=max(.001, deadline - time.monotonic()))
     except queue.Empty:
         cancelled.set()
         raise TransportFailure('deadline_exceeded') from None
+    except BaseException:
+        # A cancelled caller must not leave a still-connecting worker free to
+        # dispatch later. A request already sent remains an unresolved liability.
+        cancelled.set()
+        raise
     if error is not None:
         raise error
     return raw
@@ -168,6 +173,15 @@ def _redact(raw, key):
         # its identity, never the reversible secret-bearing representation.
         return b'[REDACTED unsafe response; sha256=' + hashlib.sha256(raw).hexdigest().encode() + b']'
     return raw.replace(literal, b'[REDACTED]').replace(escaped, b'[REDACTED]')
+
+
+def _attach_cancelled_attempt(error, attempt, status):
+    """Carry accounting without converting cancellation into a recoverable error."""
+    error.attempts = [attempt]
+    error.provider_attempts = attempt['provider_attempts']
+    error.held_usd = attempt['held_usd']
+    error.cost_usd = attempt['cost_usd']
+    error.status = status
 
 
 class ModelClient:
@@ -368,7 +382,20 @@ class ModelClient:
                     'attempt_output_tokens': [tokens_out], 'attempts': [attempt],
                     'provider_attempts': 1, 'held_usd': 0.0, 'status': attempt['status'],
                     **({'response_contract': contract, 'proposal': proposal} if contract else {})}
-        except Exception as error:
+        except BaseException as error:
+            if not isinstance(error, Exception):
+                # A signal can arrive just after a ledger commit, before the
+                # local assignment/return. Recover this exact request's state;
+                # never substitute run totals or invent a hold after settlement.
+                state = self.ledger.request_state(identity)
+                attempt['provider_attempts'] = state['provider_attempts']
+                if state['status'] == 'reserved':
+                    # No dispatch committed: retain the reservation as-is.
+                    _attach_cancelled_attempt(error, attempt, 'interrupted')
+                    raise
+                if state['status'] not in ('reserved', 'dispatched') and state['receipt'] is not None:
+                    _attach_cancelled_attempt(error, state['receipt'], 'interrupted')
+                    raise
             if isinstance(error, TransportFailure):
                 raw = error.raw
                 attempt['http_status'] = error.http_status
@@ -395,6 +422,8 @@ class ModelClient:
                         pass
             elif isinstance(error, (ValueError, TypeError, KeyError, UnicodeError, RecursionError)):
                 code = 'invalid_response'
+            elif not isinstance(error, Exception):
+                code = 'caller_cancelled'
             else:
                 code = 'transport_failure'
             if isinstance(raw, bytes):
@@ -416,6 +445,12 @@ class ModelClient:
                 # Original reservation/dispatch remains authoritative after an atomic
                 # receipt failure. Surface the observed liability without hiding it.
                 attempt['error_code'] = 'receipt_persistence_failure'
+            if not isinstance(error, Exception):
+                # Preserve cancellation control flow and the actual active
+                # attempt. Callers can retain receipts without converting an
+                # interrupt into a recoverable provider error or another call.
+                _attach_cancelled_attempt(error, attempt, status)
+                raise
             raise ProviderError('provider attempt unresolved; operator reconciliation required',
                                 attempts=[attempt], status=status) from None
 

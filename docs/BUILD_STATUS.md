@@ -1,3 +1,192 @@
+# Experiment 2 publication successor — November 16, 2026
+
+PR #20 merged as `e48a75a331b61cfa7f0b861805f485a0e5c47bc5`.
+Its [merged-main workflow](https://github.com/k2jac9/fleet-witness/actions/runs/43839346610)
+passed all twelve pinned runtime lanes: 399 tests per Python lane and five viewer
+tests per Node lane. This supersedes the pending integration statement in the
+dated investigation below without changing that historical checkpoint.
+
+The new [publication successor](experiments/2026-11-16-experiment2-publication.md)
+redacts executable paths in eleven manifests, preserves 66 other data members
+byte-for-byte, and maps all prior members in `SANITIZATION.json`. Original archives,
+aggregates, accepted ADRs and existing verifier assertions remain unchanged.
+The successor comparison and source verifier pass: 14 runs, 41,995 bound recorded
+calls, 46 frozen-count comparisons and no mismatches. Local Python 3.15.2 passes
+all 415 tests (36 focused archive tests); five viewer tests, fleet validation and
+planning, submission verification and runtime freshness also pass. Hosted checks
+and independent review for this successor are reported in its PR separately.
+
+The [human handoff](experiments/experiment2-reviewer-handoff.md) is ready; the actual
+second-person reproduction and source-holder private preservation inventory remain
+pending. Issue #18 remains currently unreproduced with the historical root source
+unknown; its old runtime is unavailable. Both issues remain open.
+
+# Issue 17/18 investigation — November 16, 2026
+
+Started from `2160a55324404d6bf9d35d5c7f7132607bbe590f` after fast-forwarding
+main and verifying all 18 upstream-tracking branches were synchronized.
+Seven local-only branches and both pre-existing dirty worktrees were preserved.
+
+The new [Experiment 2 verification](experiments/2026-11-16-experiment2-recovery.md)
+checks the archive published by PR #19 without extraction or provider calls:
+77 member hashes, 14 reversible sanitized copies, 41,995 prompt/receipt
+bindings across 14 runs and 46 frozen-count comparisons passed. Three stopped
+runs lack completion manifests/decisions/databases; their missing state is
+explicit. Twenty focused verifier tests passed. Original archives, aggregates,
+accepted ADRs and dated corrections remain unchanged.
+
+The [TLS investigation](experiments/2026-11-16-tls-root-diagnosis.md) records zero
+initial roots on Python 3.15.2/OpenSSL 3.5.9, with ordinary and isolated Python
+startup. Six existing transport tests pass in each mode. The historical
+Python 3.12.14 environment and its extra root remain unidentified; production
+transport and existing assertions are unchanged.
+
+The current main CI run also failed its runtime-freshness selection step and
+skipped the matrix. A [metadata-verified refresh](RUNTIME_ADOPTION.md) selects
+Python 3.16.0a2, Node 26.13.1/24.22.3 and Node 27.0.0-alpha.0.1.0, retaining
+the existing stable Node baseline and promised consumers. The freshness
+command and seven runtime-validation tests pass locally. After the owner confirmed
+the temporary storage override, all twelve pinned lanes passed locally: 399 tests
+on each of seven Python runtimes and five viewer tests on each of five Node runtimes.
+The current workstation Python 3.15.2 separately passed all 399 tests. Every Python
+run also passed submission verification, task validation/planning and a scripted
+demo. The [validation receipt](../ci/runtime-validation-20261116.json) records
+runtime, artifact, code and log hashes. This is local NixOS validation, not the
+Ubuntu GitHub workflow or deployment/rollback acceptance.
+
+Both issues remain open because their historical evidence gaps remain. Hosted
+CI and final integration remain pending. Independent review found no remaining code findings
+after the accounting and manifest-validation regressions were fixed; the reviewer
+independently passed all twenty verifier tests and checked the source-bound
+archive receipt. The initial normal storage preflight was refused; the owner
+subsequently confirmed a task-scoped override through 2026-11-17 00:00
+America/Toronto, retaining a 16 GiB reserve, other reservations and the global
+policy. Disk output used admitted 1/6 GiB jobs; generated RAM scratch was separately
+bounded to 1 GiB. The first disk-backed full-suite attempt timed out at 600 seconds.
+Local launcher corrections restored CI's Python alias and Node worker executable;
+all Python lanes were rerun with explicit subprocess identity checks. Failed
+attempts and inherited SQLite ResourceWarnings are retained. No test or production
+TLS assertion was changed to obtain these results.
+No paid request, deployment, external message, new credential or issue closure
+was performed. These observations do not supersede the historical receipts below.
+
+---
+
+# PR 16 research and evidence corrections — November 11, 2026
+
+This correction starts from reviewed PR head
+`c244c8cb43a0b1e6720ef3b3dfb7f9dba4a60e2c` and incorporates current main
+`416cc81f4c4d840089ff1fef59b2dc01184e97ba`. The README insertion conflict was
+resolved by retaining both the Experiment 2 evidence guide and main's walkthrough
+and submission-verifier guide. The containing revision identifies the published
+correction; final hosted checks are attached to [PR 16](https://github.com/k2jac9/fleet-witness/pull/16).
+Earlier PR checks are not evidence for this revision.
+
+## Corrected behavior
+
+The judgement experiment, label checker and text review pipeline now use the
+existing source-bound operator authorization, single-attempt `ModelClient` and
+canonical SQLite ledger. Future paid entrypoints require `--authorization` and
+deliberate `--live`; optional cap flags must match the record. Experiment 2's
+sequential launcher checks one shared model/run envelope with a ceiling of $15,
+including all four models. Mixed calibration/confirmatory purposes fail before
+dispatch. Existing size, token, response and 30-second deadline bounds remain.
+
+Timeouts, missing usage and known overruns retain their attempted-call identities
+and liabilities. Cancellation preserves the original exception and the exact
+request's canonical state: an undispatched reservation stays reserved, a
+dispatched attempt remains held, and committed settlement is not replaced with a
+new hold. A connecting transport is cancelled before it can dispatch later.
+Paid swarm collection runs on the caller thread, retains the interrupted event,
+private receipt and incomplete manifest, and schedules no subsequent request.
+Scripted-mode concurrency and kernel authorization behavior are preserved.
+
+Required review stages reject truncated, empty, malformed, duplicate-key and
+schema-invalid responses. Earlier completed stages and receipts remain available
+when the pipeline fails or becomes partial. Paper review is explicitly text-only;
+PDF/image input is refused rather than treated as a qualified visual review.
+
+The optional Bandit adapter distinguishes clean/findings from tool errors,
+unparseable input and unsupported files, records its version, and reports partial
+coverage. The summary generator calculates exclusions from supplied counts. The
+new independent aggregate verifier checks selected arithmetic without claiming
+to replay unpublished Experiment 2 runs. The [dated evidence correction](report/CORRECTIONS-2026-11-11.md)
+details the corrected scanner denominators, reference comparison, abstention
+claims and incomplete historical numerical audit.
+
+## Observed verification
+
+| Check | Result |
+| --- | --- |
+| Full `python3 -m unittest discover -s tests -v` on the integrated code | 379 tests in 60.912 seconds: 378 passed, one inherited environment failure described below |
+| Independent final review | No remaining blocking findings; 160 targeted tests passed using standard unittest entrypoints |
+| `node --test tests/viewer.test.mjs` | Five passed |
+| `python3 -m scripts.verify_submission` | Passed: 17 members, 160 trials, 80 pairs, 30 effects; existing pilot package unchanged |
+| `python3 scripts/verify_judgement_aggregates.py --dir docs/report/experiment2` | Passed; selected homogeneous/mixed probabilities, vote/attestation totals, coverage and reference arithmetic reproduced |
+| Real Bandit 1.9.4 | Clean snippet, actual B307 finding and syntax failure distinguished; all 48 cases processed with zero tool errors, 37 fully scanned and three partially scanned |
+| PowerShell 7.7.0 launcher with a harmless fake Python executable | Four sequential jobs, shared cap/auth/model set and paths with spaces preserved; second-job failure stops later jobs; missing live flag and cap 16 dispatch no jobs |
+| Fleet validation and planner | Passed; four existing tasks, external budget zero |
+| Edited Markdown local-path audit | 86 targets checked, none unresolved |
+| `git diff --check` against current main | Passed |
+
+Local runtimes were Python 3.12.14 and Node 24.22.1. The one full-suite failure is
+`test_secure_transport.SecureTransportTests.test_actual_tls_pinned_root_hostname_and_environment_controls`:
+the test expects one pinned root, while this host exposes two after loading the
+fixture. The identical failure was reproduced on the original PR and main;
+an otherwise empty client SSL context already contains an environment root.
+The TLS implementation and test assertion were not weakened or suppressed. This
+local run is not a wholly passing suite; the hosted runtime matrix remains a
+separate source-bound check.
+
+Test-first work reproduced the original overspend/receipt, scanner and summary
+failures. Independent review additionally reproduced cancellation receipt loss,
+late dispatch after cancellation, and mixed-purpose preflight. Transition tests
+cover interruption after dispatch or settlement commits. The full integration
+suite exposed a pre-dispatch pilot compatibility regression; its existing
+`reserved` assertion was retained and the implementation corrected before the
+final run. There are 59 added regression tests beyond current main's 320 tests.
+
+The PowerShell archive matched its official SHA-256
+`c89d9c682d2c403dfe726f3df948e359675235a5bd6fab535776de69729ca0cb`.
+The tested launcher SHA-256 is
+`355204aa10a1458940476bf0964360611de6b1b51c8c6c5a53c2f2b92be831e3`.
+The real-scanner check is fresh adapter validation, not a replacement for the
+historical Bandit JSON; its finer coverage records 45 scanned files of 56, five
+unparseable files and six unsupported files.
+
+## Report and preservation
+
+The corrected LaTeX PDF was rebuilt with pdfTeX 1.40.26, shell escape disabled,
+and inspected across all 19 pages. It retains 11-point text and one-inch margins;
+the title plus narrative occupy eight physical pages, with References starting
+on page nine. The abstract contains 244 whitespace-delimited words. Paragraph
+spacing and discussion prose were tightened to retain that boundary, and the
+reference-comparison caption now says explicitly that it is descriptive. Final
+checks found no unresolved references, overfull/underfull boxes or text outside
+the page. The unused EPS helper reports that shell escape is disabled.
+
+- Corrected PDF SHA-256:
+  `a1fd415284dbb31928e5f9fcd2bfa3f23e3a146cc7d2a2ed425bbff80f8692bb`.
+- LaTeX source SHA-256:
+  `cb85beef8daf467fa2dee42e75c08a4a2ba93b3f62af0bcc44cfa92889230b7e`.
+- Existing pilot package SHA-256:
+  `c4a7f54215b85011cf0b5c00a3d063f4d4f3426ae835d43f21566dd6f206e251`.
+
+Seventy-six scoped historical archive, aggregate, review, pre-registration and
+ADR files remain byte-identical to the original PR head. Main's pilot manuscript,
+provenance, submission ZIP and video also remain unchanged. The original paper
+is recoverable from the original PR commit. The regenerated summary and corrected
+paper are dated retrospective presentations, not new observations or evidence
+of an event upload.
+
+No paid model call, real credential inspection, new operational authorization,
+cloud mutation, external message or event submission was performed. Missing raw
+Experiment 2 records remain unavailable; passing arithmetic checks cannot
+authenticate the original collection. Future paid runs still need applicable
+operator qualification, and visual model review remains unqualified.
+
+---
+
 # Local assurance candidate — November 10, 2026
 
 Task `local-assurance-20261110`, local branch `fix/local-assurance-20261110`,
@@ -30,6 +219,8 @@ freshness gates remain separate; a final exact-source review is still required.
 An automated reviewer stopped during the final follow-up after flagging its
 content as a possible cybersecurity risk. Its earlier findings and the local
 regressions for them are retained; that interruption is not a completed review.
+
+---
 
 # Submission finalization — November 9, 2026
 

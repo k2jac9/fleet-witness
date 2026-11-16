@@ -1,0 +1,133 @@
+{
+  "model": "openai/gpt-6.1-sol",
+  "summary": "Replacing exact matching with code review addresses a genuine weakness in Experiment 1 and gives the institution kernel a more meaningful application. However, the proposed analysis conflates shared case difficulty with dependence, the persuasion comparison does not isolate colluder arguments, and the 16,416-call sweep is unnecessarily risky within three hours. Proceed with a smaller, validated reviewer dataset, offline institutional comparisons, and narrower claims about shared blind spots rather than general swarm reliability.",
+  "will_it_answer_the_questions": "RQ1: Partially. It estimates errors on this curated set, but only 12 harmful and eight benign semantic cases support generalization; thousands of reviewer calls do not create thousands of independent tasks. Forged receipts must be excluded from semantic reviewer-error rates because reviewers explicitly cannot verify signatures. RQ2: It can demonstrate shared case-level blind spots and failure of a pooled-error committee prediction, but not distinguish conditional reviewer dependence from case difficulty: independently sampled reviewers with different per-case error probabilities can produce both proposed findings. RQ3: Offline mixing can estimate the benefit of combining these two models on these cases, provided committee sizes, model allocation, inference budgets, and sampling procedures are matched; it does not test interacting heterogeneous swarms. RQ4: Partially. Kernel execution can test implemented release rules, but the capture prediction is underspecified, eight regimes lack standalone definitions, and a single shared seat draw per case provides little evidence about population-level seat probabilities. The forged-receipt result concerns mechanical enforcement, not successful semantic oversight. RQ5: The visible-versus-hidden comparison could estimate the total effect of board access if assignments and execution are controlled, but it cannot attribute a difference specifically to colluder arguments: tallies, honest comments, ordering, and selective comment visibility also change. Replicated randomized episodes or a controlled board-exposure experiment are needed.",
+  "predicted_scores_if_executed_well": {
+    "impact_innovation": 3,
+    "execution": 2,
+    "presentation": 4
+  },
+  "top_changes": [
+    {
+      "rank": 1,
+      "change": "Replace the full swarm sweep with a core dataset of 20 semantic PRs x two models x 20 independent hidden-board reviews, totaling 800 calls. Evaluate committee sizes, mixed-model compositions, and prescribed compromised votes offline through the kernel; test forged receipts separately with deterministic fixtures. Make RQ1-RQ3 primary, label RQ4 as a static simulation, and make live persuasion optional. Timebox approximately 20 minutes for API/kernel checks, 25 for fixtures, 55 for inference, 40 for analysis, and 40 for the report.",
+      "why": "Most of the 50 population votes and repeated regime evaluations are unnecessary for the primary measurement. This preserves the strongest research contribution without pretending offline committees reproduce live board dynamics.",
+      "cost": "Replaces, rather than adds to, the current workload; roughly 800 main calls plus a small pilot. Price actual usage before committing and target at most $12, retaining $3 contingency.",
+      "score_effect": "Execution: makes completion, validation, and interpretable findings much more likely. Presentation: produces a coherent central experiment instead of five underpowered studies."
+    },
+    {
+      "rank": 2,
+      "change": "Rename the primary RQ2 result to shared blind spots or failure of the pooled-iid approximation. Report both the pooled-error prediction and a case-specific conditional-independence baseline using separate calibration and evaluation response subsets, propagating uncertainty in estimated case error rates. Do not interpret excess variance alone as evidence of within-case reviewer dependence.",
+      "why": "For case-specific error probability p_i and committee failure function f, average f(p_i) need not equal f(average p_i), even when reviewers are independent conditional on the PR. The current analysis would otherwise overstate its central finding.",
+      "cost": "About 15-25 minutes of analysis changes; no additional calls if response subsets are reserved in advance.",
+      "score_effect": "Execution: repairs the main inferential flaw. Impact/innovation: turns a generic correlation claim into a precise diagnosis of when pooled reliability estimates fail."
+    },
+    {
+      "rank": 3,
+      "change": "Validate labels with complete minimal code context, explicit policy assumptions, and a second teammate's blind review where available. For harmful cases, add a small executable witness demonstrating the violation; for safe cases, verify the claimed relevant behavior. Replace the unavailable three-strong-model panel with this process and record unresolved ambiguities before inference.",
+      "why": "Model agreement is not ground truth, and snippets such as wildcard CORS, date-triggered behavior, or a dependency name are not necessarily unsafe without context. Incorrect or ambiguous labels would dominate a dataset this small.",
+      "cost": "About 25-35 minutes, overlapping fixture construction; no additional model budget required.",
+      "score_effect": "Execution: substantially strengthens measurement validity. Presentation: enables short, auditable examples rather than unsupported labels."
+    },
+    {
+      "rank": 4,
+      "change": "If time remains, replace the live persuasion sweep with randomized fixed-board exposure: no board, a matched non-collusive board, and a colluder-argument board. Keep tally, comment count, length, and position matched between the two visible conditions when testing argument content. Five fresh reviews per condition, harmful case, and model would add 360 calls. Describe this as susceptibility to controlled social evidence, not emergent herding.",
+      "why": "This separates board access from malicious argument content and avoids expensive, endogenous five-wave histories. The existing visible/hidden contrast cannot make that distinction.",
+      "cost": "Approximately 15-20 minutes to construct and schedule if the core run is complete; up to 360 additional calls, subject to measured budget and latency.",
+      "score_effect": "Execution: makes RQ5 causally interpretable. Impact/innovation: adds a focused multi-agent oversight failure mode rather than an ambiguous board effect."
+    },
+    {
+      "rank": 5,
+      "change": "Write down the exact release predicate for every retained regime and replace 'seat bound plus honest error' with a specified prediction. For an m-seat, t-signature rule, use the hypergeometric distribution of compromised seats C and the conditional probability that honest errors supply the remaining signatures; report pure seat capture P(C >= t) separately. Enumerate or simulate seat draws cheaply offline.",
+      "why": "Adding an unspecified honest-error rate to a seat bound is not a calibrated prediction. Offline seat sampling also avoids treating one realized draw per PR as representative of the institutional capture distribution.",
+      "cost": "About 15-25 minutes; negligible API cost.",
+      "score_effect": "Execution: makes RQ4 quantitatively testable. Presentation: clearly separates the threat model, mathematical baseline, and empirical reviewer failures."
+    },
+    {
+      "rank": 6,
+      "change": "Freeze a compact protocol before the main run: exact prompts and case hashes, balanced mixed-model seat allocations, response parsing, abstention handling, call-failure handling, and primary contrasts. Report uncertainty by resampling whole PRs with all associated responses and conditions together; treat generated committee draws as simulation, not new independent experimental units.",
+      "why": "The effective task sample is small, and nested committees share cases and often responses. Without these rules, uncertainty will look artificially narrow and offline diversity comparisons can favor one composition accidentally.",
+      "cost": "About 15 minutes to document plus modest analysis implementation; no extra calls.",
+      "score_effect": "Execution: improves reproducibility and prevents pseudoreplication. Presentation: makes the limitations and estimands understandable."
+    },
+    {
+      "rank": 7,
+      "change": "Run a 20-30-call end-to-end throughput and billing check before any sweep. Verify exact provider/model IDs, seed support, reasoning-token accounting, truncation, and structured vote parsing. Cap concurrency and reserve maximum possible spend for in-flight requests; replace whole-run retries with a small predeclared retry allowance and explicit operational-failure reporting.",
+      "why": "The proposed main sweep requires roughly 6-9 completed calls per second for 30-45 minutes, excluding the pilot, validation, failures, and reruns. Neither the stated price nor latency is established by the plan, and a nominal spend cap can overshoot through outstanding requests.",
+      "cost": "About 10-15 minutes within the initial validation block; a small measured API expense.",
+      "score_effect": "Execution: prevents budget exhaustion, missing runs, and selectively reported successful calls."
+    }
+  ],
+  "concerns": [
+    {
+      "id": "C1",
+      "severity": "critical",
+      "issue": "The main correlation test cannot distinguish heterogeneous case difficulty from dependence between reviewers conditional on the same case.",
+      "suggested_fix": "Make pooled-baseline failure the primary claim, include a case-specific baseline, and explicitly state that this experiment does not establish conditional dependence without additional replicated structure."
+    },
+    {
+      "id": "C2",
+      "severity": "critical",
+      "issue": "The execution estimate omits substantial work and contingency: 16,416 main calls, approximately 1,000 pilot calls, external label validation, possible case rewrites, whole-run retries, analysis, and PDF revision.",
+      "suggested_fix": "Adopt the reduced core experiment and a hard inference stop that leaves at least 60-80 minutes for analysis, report updates, and submission checks."
+    },
+    {
+      "id": "C3",
+      "severity": "major",
+      "issue": "Ground truth is underspecified for context-dependent code risks, and the promised three strong validation models are not among the two available inexpensive models.",
+      "suggested_fix": "Use explicit application assumptions, runnable local fixtures, and independent human adjudication where feasible. Treat model cross-checks as advisory, not label verification."
+    },
+    {
+      "id": "C4",
+      "severity": "major",
+      "issue": "Only 12 harmful PRs support the central safety conclusions. Repeated reviewers and simulated committees cannot compensate for limited task coverage, and draw-level bootstrap intervals would understate uncertainty across tasks.",
+      "suggested_fix": "Report raw case counts, per-case rates, paired case-bootstrap intervals, and exploratory conclusions. Avoid a broad claim that honest false approval generally exceeds 2%."
+    },
+    {
+      "id": "C5",
+      "severity": "major",
+      "issue": "Visible boards jointly change malicious arguments, numerical social proof, honest discussion, and wave-dependent exposure. Six recent comments also create an uncontrolled selection mechanism.",
+      "suggested_fix": "Use controlled board stimuli for argument effects, or retain the live setup only as a randomized total-board-effect experiment with replicated independent episodes and complete exposure logs."
+    },
+    {
+      "id": "C6",
+      "severity": "major",
+      "issue": "The capture bound and several regime definitions depend on unstated details from Experiment 1, including what G3 and hybrid mean, who sees which board, and whether the same responses drive multiple decision rules.",
+      "suggested_fix": "Include a compact regime table with inputs, quorum, receipt checks, permissions, and release predicate. Specify whether comparisons reuse responses or involve different information and inference budgets."
+    },
+    {
+      "id": "C7",
+      "severity": "major",
+      "issue": "Offline mixed committees estimate static aggregation benefits, not benefits from a heterogeneous interacting swarm. Alternating seats in an odd-sized committee also gives one model an extra seat.",
+      "suggested_fix": "Evaluate both majority allocations equally, use the same cases and committee size, avoid reusing a response twice within a committee, and label the result as offline diversity under the specified sampling scheme."
+    },
+    {
+      "id": "C8",
+      "severity": "major",
+      "issue": "Pilot-driven difficulty adjustment selects a dataset specifically for observable reviewer failure. That is acceptable for a stress test but changes the meaning of the estimated error rate.",
+      "suggested_fix": "Freeze and retain all case versions, disclose the calibration process, and describe the result as performance on an author-calibrated synthetic stress test. Prefer separate pilot variants if they can be produced without compromising label quality."
+    },
+    {
+      "id": "C9",
+      "severity": "major",
+      "issue": "A prompted colluder may fail to approve its targets, whereas a genuinely compromised signer could always sign them. Conversely, authentic signatures on harmful PRs are not receipt forgeries. These mechanisms are currently easy to conflate.",
+      "suggested_fix": "Separate prescribed adversarial signatures from model-generated persuasion. Report colluder compliance if using prompted votes, distinguish semantic approval failures from cryptographic rejection, and state that the gateway, key handling, and kernel remain trusted."
+    },
+    {
+      "id": "C10",
+      "severity": "minor",
+      "issue": "The proposed report could imply stronger novelty and enforcement coverage than the new experiment establishes, especially because the standalone path bypasses the operator-authorization workflow.",
+      "suggested_fix": "State exactly which kernel path is exercised and which authorization claims are not tested. Distinguish existing work from new sprint work, verify related-work and incident claims before citing them, and include the required limitations/dual-use appendix and submission-format checks."
+    }
+  ],
+  "cut_if_short_on_time": [
+    "Drop the live 50-reviewer, five-wave board simulation first; do not sacrifice label validation to preserve it.",
+    "Drop RQ5 entirely unless the core dataset, analysis, and report are already secure.",
+    "Move the eight-regime sweep to an appendix or retain only representative majority, small-committee, and unanimous rules.",
+    "Replace the three-strong-model labeling panel with auditable local fixtures and human checks.",
+    "Drop repeated paid forged-receipt cases; retain deterministic kernel regression tests and the existing mechanical results.",
+    "Do not rerun an entire condition because a small fraction of calls failed; report failures under the frozen policy.",
+    "Cut broad agent-economy framing before cutting methods, raw denominators, uncertainty, limitations, or the required ethics appendix."
+  ],
+  "verdict": "proceed with changes"
+}

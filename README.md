@@ -12,6 +12,8 @@
   <a href="docs/README.md">Browse the docs</a>
 </p>
 
+> **📄 Hackathon report:** [*Verify the Institution, Not the Agents: Checks and Balances for AI Swarms, Tested Against Hidden Colluders*](docs/report/latex/report.pdf) (LaTeX source: [`docs/report/latex/`](docs/report/latex/)). It reports the kernel check, both swarm experiments and, in Appendix F, the live-supervisor pilot. This edition includes a [retrospective correction dated 11 November 2026](docs/report/CORRECTIONS-2026-11-11.md). The [pilot paper](docs/report/latest.pdf) is its companion report. The [recorded submission status](docs/submission/FINAL.md) remains prepared, awaiting upload confirmation; this correction does not establish a submission or replacement upload.
+
 # Fleet Witness
 
 **Swarms can agree. Evidence has to hold.** Fleet Witness is a research testbed for the moment an AI fleet turns a recommendation into an action. Follow a proposal through its evidence, its permission check and its final audit trail. The trusted controller alone can commit a release: a local database record with an audit event in the same transaction.
@@ -32,6 +34,17 @@ A genuine build receipt proves a build happened. A release also needs applicable
 
 Permission can be revoked after a valid approval. An invalid approval stays invalid even when the controller blocks it. Repeating an already committed authorized release is a no-op. These distinctions are the heart of the experiment.
 
+## 🧩 Four studies, one claim
+
+Every study tests the same idea: agents can be wrong or dishonest, but a small verified institution should still hold the line.
+
+| Study | Led by | Question | Where |
+| --- | --- | --- | --- |
+| **Kernel check** | I.P.B. | Do the institution's rules hold in every reachable state of a small world? | [`verify_institution.py`](fleet_witness/verify_institution.py) |
+| **Experiment 1: checklist task** | I.P.B.; corrected by A.C. | Can colluders get forged or invalid releases past majorities and random committees? | [`fleet_witness/swarm/`](fleet_witness/swarm/), [run archive](data/README.md) |
+| **Experiment 2: judgement task** | I.P.B. | When reviewing pull requests needs judgement, do honest AI reviewers make the *same* mistakes, and what does that do to committees? | [plan](docs/report/JUDGEMENT_PLAN.md), [cases](fleet_witness/swarm/judgement_cases.py), [results](docs/report/experiment2/) |
+| **Live-supervisor pilot** | A.C. | Does one live supervisor judge well, and does the controller hold when it does not? | [pilot paper](docs/report/latest.md), [evidence](docs/submission/latest/EVIDENCE.md) |
+
 ## 🔬 The experiment log
 
 ![Separate evidence: 32,830 historical logical responses, 160 requests in the new live-supervisor pilot, and 30 valid local effects in that pilot.](docs/assets/fleet-witness-results.svg)
@@ -40,11 +53,24 @@ Permission can be revoked after a valid approval. An invalid approval stays inva
 | --- | --- | --- |
 | **Bounded institution check** | 23,376 states, 105,708 transitions; all seven injected mutants caught | Agreement with the project specification inside the explored bounds |
 | **Historical swarm study** | 32,830 completed logical responses; two models; 50-agent swarms | A comparison of majority and committee rules on retained, shared outputs; original provider-attempt totals remain unknown |
+| **Judgement experiment (Experiment 2)** | Public aggregates for 48 synthetic pull requests, four reviewer models and 50-agent attacks with DeepSeek v4 Flash and gpt-oss-20b; raw run records are unavailable | Each frontier model recorded 0/288 harmful approvals in votes and 0/168 in attestations. gpt-oss's harmful vote rate was 12%; per-case enumeration gives 12.003% for its 4-of-7 committees and 0.0928% for four DeepSeek plus three gpt-oss seats. Historical collection ran outside the gated workflow; see Appendix E and the [correction note](docs/report/CORRECTIONS-2026-11-11.md) |
 | **New controlled pilot** | 160 requests, 80 pairs, one live supervisor; synthetic workers and reviewers | Raw instructions yielded 18 invalid approvals. Explicit instructions denied every case, including 40 valid ones |
 | **Pilot enforcement** | 30 valid local releases, 28 denied attempts, ten duplicate no-ops | No invalid or revoked attempt produced an effect in this cohort |
 | **Pilot accounting** | $0.2605526 reconciled provider charge; $0.288090 conservative settlement | This cohort's cost only; calibration and historical records are separate |
 
 **The plot twist:** removing unsafe approvals by refusing everything is not useful model judgment. The pilot exposes that failure while showing the controller's enforcement boundary. The new [paper](docs/report/latest.pdf), [public trial table](data/paired-pilot-2026-11-09.json) and [evidence guide](docs/submission/latest/EVIDENCE.md) retain both results. No uncontrolled web swarms were observed.
+
+### Experiment 2 evidence and offline checks
+
+The [153-entry historical archive](data/README.md) contains Experiment 1 runs; it contains no Experiment 2 events. Experiment 2's [published files](docs/report/experiment2/) support checking per-case vote rates, enumerated committee probabilities and sums of reported regime outcomes. They do not recover raw prompts, responses, events, individual decisions or run manifests, or independently establish call counts, costs, abstention causes, collection timing or stopped runs. The retained Bandit rows mark only 40/48 cases as parsed, including 20/24 harmful cases; unsupported or unparsed cases are separate from negative scans.
+
+From the repository root, this standard-library command checks the selected aggregate arithmetic and prints source hashes without modifying the inputs or making model calls:
+
+```sh
+python3 scripts/verify_judgement_aggregates.py --dir docs/report/experiment2
+```
+
+The [correction note](docs/report/CORRECTIONS-2026-11-11.md) identifies the exact calculations and remaining limits. Round 4's historical review manifest says `completed`, but its numerical audit was truncated and empty; that status is not a passed audit or validation of this corrected edition.
 
 ## 🎥 Step inside mission control
 
@@ -87,7 +113,7 @@ The [documentation map](docs/README.md) connects the guides and defines the shar
 | --- | --- |
 | **Research desk** | [Latest manuscript source](docs/report/latest.md), [PDF](docs/report/latest.pdf), [verified references](docs/report/latest.references.json), [provenance](docs/report/latest.provenance.json) |
 | **Submission bay** | [Portable package](docs/submission/latest-submission.zip), [submission guide](docs/SUBMISSION.md), [copy-ready form details](docs/submission/latest/SUBMISSION.md), [three-minute demo script](docs/submission/latest/DEMO.md) |
-| **Archive room** | [Preserved earlier report](docs/report/REPORT.pdf), [corrections and reproduction](docs/report/CORRECTIONS-2026-11-09.md), [historical experiment archive](data/fleet-witness-runs-2026-11-08.zip) |
+| **Archive room** | [Preserved earlier report](docs/report/REPORT.pdf), [Experiment 1 corrections and reproduction](docs/report/CORRECTIONS-2026-11-09.md), [11 November evidence corrections](docs/report/CORRECTIONS-2026-11-11.md), [historical experiment archive](data/fleet-witness-runs-2026-11-08.zip) |
 | **Engine room** | [Architecture](docs/architecture.md), [accepted ADRs](docs/adr/README.md), [contributing](CONTRIBUTING.md), [agent contract](AGENTS.md) |
 | **Flight recorder** | [Observed build status](docs/BUILD_STATUS.md), [current gates](docs/GATES.md), [runtime adoption](docs/RUNTIME_ADOPTION.md) |
 | **Fleet workshop** | [Reviewed task workflow](fleet/README.md), [NixOS workers](docs/NIXOS_FLEET.md), [roadmap](docs/ROADMAP.md) |
