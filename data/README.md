@@ -11,7 +11,37 @@ SHA-256: `c55e8acf07ed8dd3c11bc3dc8f70269adebaac6bfa14727642cca7314d1f821a`.
 Its 153 entries use Windows backslashes. Use the portable extractor below;
 ordinary ZIP extraction on Linux does not recreate the intended hierarchy.
 
-## Contents
+## Experiment 2 run archive, 10 November 2026
+
+`fleet-witness-judge-runs-2026-11-10.zip` holds the original Experiment 2
+(judgement task) run folders, recovered from the machine that ran them
+(issue #17). SHA-256:
+`56d38f3dfec31a7c1d87773ff1001f792d105502838342546f0e4a4a12d36eb0`.
+It has 80 entries with forward-slash paths under `experiment2-runs/`, and expands
+to about 171 MB.
+
+| Path | What it is |
+| --- | --- |
+| `judge/{deepseek,gptoss}/f00,f20,f40` | Colluder-attack populations (0/20/40% colluders, both boards) and `analysis.json`. |
+| `judge-frontier/{gpt61sol,gemini4argon}/f00` | Honest-only frontier runs. |
+| `judge-v1-stopped/`, `judge-frontier-v1-stopped/` | Runs stopped before the review-policy fix (the disclosed protocol deviation). Partial by design. |
+| `judge-pilot/` | The pilot before filler edits were bundled in. Excluded from results. |
+
+Each complete run folder has `events.jsonl` (every vote and attestation),
+`decisions.json`, `truth.json` (sealed labels, colluders, committees),
+`manifest.json` (calls, errors, abstentions, cost), `institution.sqlite3` and
+`private/requests.jsonl` (the prompts sent and the raw responses).
+
+**One change from the originals.** Case 02's diff contains a synthetic,
+non-working Stripe-style key, which models were asked to spot. To keep secret
+scanners quiet, the published copy replaces it with `sk_live_FAKE-KEY-REMOVED`
+in 14 files. `CHANGES.json` lists them; `SHA256SUMS-original` and
+`SHA256SUMS-published` give the hashes before and after. The `prompt_sha256`
+values in `events.jsonl` hash the original prompts. Nothing else was changed,
+and no real API key or personal contact detail is in the archive.
+`scripts/package_experiment2_runs.py` rebuilds the archive from the local folders.
+
+## Experiment 1 contents
 
 | Path | What it is |
 | --- | --- |
