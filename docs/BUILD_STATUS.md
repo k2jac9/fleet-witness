@@ -1,3 +1,54 @@
+# Issue 17/18 investigation — November 16, 2026
+
+Started from `2160a55324404d6bf9d35d5c7f7132607bbe590f` after fast-forwarding
+main and verifying all 18 upstream-tracking branches were synchronized.
+Seven local-only branches and both pre-existing dirty worktrees were preserved.
+
+The new [Experiment 2 verification](experiments/2026-11-16-experiment2-recovery.md)
+checks the archive published by PR #19 without extraction or provider calls:
+77 member hashes, 14 reversible sanitized copies, 41,995 prompt/receipt
+bindings across 14 runs and 46 frozen-count comparisons passed. Three stopped
+runs lack completion manifests/decisions/databases; their missing state is
+explicit. Twenty focused verifier tests passed. Original archives, aggregates,
+accepted ADRs and dated corrections remain unchanged.
+
+The [TLS investigation](experiments/2026-11-16-tls-root-diagnosis.md) records zero
+initial roots on Python 3.15.2/OpenSSL 3.5.9, with ordinary and isolated Python
+startup. Six existing transport tests pass in each mode. The historical
+Python 3.12.14 environment and its extra root remain unidentified; production
+transport and existing assertions are unchanged.
+
+The current main CI run also failed its runtime-freshness selection step and
+skipped the matrix. A [metadata-verified refresh](RUNTIME_ADOPTION.md) selects
+Python 3.16.0a2, Node 26.13.1/24.22.3 and Node 27.0.0-alpha.0.1.0, retaining
+the existing stable Node baseline and promised consumers. The freshness
+command and seven runtime-validation tests pass locally. After the owner confirmed
+the temporary storage override, all twelve pinned lanes passed locally: 399 tests
+on each of seven Python runtimes and five viewer tests on each of five Node runtimes.
+The current workstation Python 3.15.2 separately passed all 399 tests. Every Python
+run also passed submission verification, task validation/planning and a scripted
+demo. The [validation receipt](../ci/runtime-validation-20261116.json) records
+runtime, artifact, code and log hashes. This is local NixOS validation, not the
+Ubuntu GitHub workflow or deployment/rollback acceptance.
+
+Both issues remain open because their historical evidence gaps remain. Hosted
+CI and final integration remain pending. Independent review found no remaining code findings
+after the accounting and manifest-validation regressions were fixed; the reviewer
+independently passed all twenty verifier tests and checked the source-bound
+archive receipt. The initial normal storage preflight was refused; the owner
+subsequently confirmed a task-scoped override through 2026-11-17 00:00
+America/Toronto, retaining a 16 GiB reserve, other reservations and the global
+policy. Disk output used admitted 1/6 GiB jobs; generated RAM scratch was separately
+bounded to 1 GiB. The first disk-backed full-suite attempt timed out at 600 seconds.
+Local launcher corrections restored CI's Python alias and Node worker executable;
+all Python lanes were rerun with explicit subprocess identity checks. Failed
+attempts and inherited SQLite ResourceWarnings are retained. No test or production
+TLS assertion was changed to obtain these results.
+No paid request, deployment, external message, new credential or issue closure
+was performed. These observations do not supersede the historical receipts below.
+
+---
+
 # PR 16 research and evidence corrections — November 11, 2026
 
 This correction starts from reviewed PR head

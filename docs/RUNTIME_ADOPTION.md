@@ -1,23 +1,48 @@
 # Runtime adoption and retained baseline
 
-Owner: Alejandro Castellanos. Repository: k2jac9/fleet-witness. The matrix is
-integrated on `main`. Selections verified 2026-11-08; review due 2026-11-15 and
-before a new runtime activation. These are the recorded selections, not a fresh
-upstream release query. Machine-readable source is
+Owner: Alejandro Castellanos. Repository: k2jac9/fleet-witness. The proposed
+matrix refresh was verified against upstream metadata on 2026-11-16; review is
+due 2026-11-23 and before a new runtime activation. It remains an unqualified
+candidate until its required source-bound CI runs. Machine-readable source is
 [`ci/runtime-matrix.json`](../ci/runtime-matrix.json).
 
 | Runtime | Latest stable | Upcoming, isolated | Previous supported stable | Additional retained checks |
 | --- | --- | --- | --- | --- |
-| Python | 3.15.2 | 3.16.0a1 | 3.14.10 | Promised 3.11.18, 3.12.16, 3.13.18; retained-host compatibility 3.13.17 |
-| Node | 26.13.0 | 27.0.0-alpha.0.0.0 | 24.22.2 | Retained viewer compatibility 24.22.1 |
+| Python | 3.15.2 | 3.16.0a2 | 3.14.10 | Promised 3.11.18, 3.12.16, 3.13.18; retained-host compatibility 3.13.17 |
+| Node | 26.13.1 | 27.0.0-alpha.0.1.0 | 24.22.3 | Retained viewer compatibility 24.22.1 and accepted stable baseline 26.13.0 |
 
 Sources: [Python releases](https://www.python.org/downloads/),
-[Python preview](https://www.python.org/downloads/release/python-3160a1/),
+[Python preview](https://www.python.org/downloads/release/python-3160a2/),
 [GitHub's Python build releases](https://github.com/actions/python-versions/releases),
 [Node releases](https://nodejs.org/dist/index.json), and
 [Node support schedule](https://github.com/nodejs/Release/blob/main/schedule.json).
 Node 25's support ended before this selection, so Node 24 is the previous
 supported line. Python 3.11+ and Node 24 consumers remain supported.
+
+The [16 November selection receipt](../ci/runtime-review-20261116.json) records
+upstream URLs and exact artifact digests. Python stable/previous/consumer pins
+remain unchanged; the upcoming lane advances to alpha 2. Node stable/previous
+advance to the [26.13.1](https://nodejs.org/en/blog/release/v26.13.1) and
+[24.22.3](https://nodejs.org/en/blog/release/v24.22.3) security releases, and
+the isolated preview advances to alpha.0.1.0. Node 26.13.0 remains an explicit
+baseline lane during this bounded migration. No existing supported consumer
+or accepted rollback asset was retired. The entire prior selection is retained
+at `2160a55324404d6bf9d35d5c7f7132607bbe590f:ci/runtime-matrix.json`.
+
+On [main's 16 November run](https://github.com/k2jac9/fleet-witness/actions/runs/43827463350),
+`select` failed with `runtime selections require a fresh upstream review`;
+the runtime matrix was skipped. The previous review expired on 15 November.
+The refresh preserves the freshness gate and archive/identity checks. Its local
+freshness command and seven runtime-validation unit tests pass. Following the
+owner's temporary storage override, all twelve configured lanes passed locally:
+399 tests on each Python runtime and five tests on each Node runtime. Python
+lanes also passed submission verification, task validation/planning and scripted
+demos. The [local validation receipt](../ci/runtime-validation-20261116.json)
+records checked archive hashes, actual executable identities and log hashes.
+These runs used NixOS with explicit retained loader/libraries and bounded tmpfs
+scratch, rather than the workflow's Ubuntu runner. CI's Python alias was restored
+in the local launcher and subprocess identities were checked; initial launcher
+failures remain retained. Hosted CI, promotion and rollback exercise remain pending.
 
 The workflow downloads exact Ubuntu 24.04 x64 Python build artifacts and official
 Linux x64 Node archives, checks their pinned SHA-256 before extraction, and uses

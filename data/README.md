@@ -41,6 +41,13 @@ values in `events.jsonl` hash the original prompts. Nothing else was changed,
 and no real API key or personal contact detail is in the archive.
 `scripts/package_experiment2_runs.py` rebuilds the archive from the local folders.
 
+The [16 November recovery verification](../docs/experiments/2026-11-16-experiment2-recovery.md)
+records a later check against the recovered files and the remaining gaps.
+`python -B scripts/verify_experiment2_archive.py` checks the ZIP directly without
+extracting it or making model calls. It emits archive/source hashes, prompt and
+receipt checks, accounting, stopped-run omissions and frozen-count comparisons.
+Its scope is separate from the Experiment 1 reproduction commands below.
+
 ## Experiment 1 contents
 
 | Path | What it is |
