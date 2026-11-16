@@ -74,7 +74,11 @@ archive runs are identified by the pinned archive and exact hashes of the four
 raw input files at their expected run paths; this preserves recorded outcomes
 and does not authenticate the original model requests or signatures. A partial
 legacy sweep cannot be resumed with the new parser. Start a separate run and
-retain the old one.
+retain the old one. Strict sweep resume also requires the recorded source,
+model/authorization settings and experiment configuration to match, including
+the six recent comments exposed by new sweep fractions. A mismatch stops before
+new calls. Interruption retains an incomplete manifest with the start record's
+source and parser identity.
 
 ## Paid execution remains gated
 

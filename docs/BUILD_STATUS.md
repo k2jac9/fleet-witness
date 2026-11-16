@@ -1,3 +1,26 @@
+# Assurance integration candidate — November 16, 2026
+
+The preserved assurance/provenance work is integrated with main `206fc99` on
+`fix/assurance-integration-20261116`. Code commit
+`4ef98144d8395e4268159c3bac9ff6ad4bde5b43` passed 446 Python tests, five viewer
+tests, fleet/submission/freshness checks and a scripted demo. Independent review
+approved the corrected code after a failing resume-configuration regression and
+68 passing focused tests. All failed attempts remain in the retained packet.
+
+Fresh historical reconstruction passed with unchanged source and inputs. The
+depth-six checker explored 23,376 hybrid states / 105,708 transitions and 27,636
+committee-only states / 120,456 transitions, with no invariant violations; all
+seven deliberately broken variants were caught. These are bounded local checks,
+not historical-signature authentication or new model observations.
+
+The [dated report](experiments/2026-11-16-assurance-integration.md) binds exact
+commands, hashes, limitations and evidence. Hosted candidate results belong to
+the PR; deployment/provider/human-reproduction gates remain separate. Issue #17
+is closed by its owner, with historical evidence limits still documented;
+issue #18's unavailable-host TLS discrepancy remains open.
+
+---
+
 # Experiment 2 publication successor — November 16, 2026
 
 PR #20 merged as `e48a75a331b61cfa7f0b861805f485a0e5c47bc5`.
