@@ -1,3 +1,26 @@
+# Experiment 2 publication successor — November 16, 2026
+
+PR #20 merged as `e48a75a331b61cfa7f0b861805f485a0e5c47bc5`.
+Its [merged-main workflow](https://github.com/k2jac9/fleet-witness/actions/runs/43839346610)
+passed all twelve pinned runtime lanes: 399 tests per Python lane and five viewer
+tests per Node lane. This supersedes the pending integration statement in the
+dated investigation below without changing that historical checkpoint.
+
+The new [publication successor](experiments/2026-11-16-experiment2-publication.md)
+redacts executable paths in eleven manifests, preserves 66 other data members
+byte-for-byte, and maps all prior members in `SANITIZATION.json`. Original archives,
+aggregates, accepted ADRs and existing verifier assertions remain unchanged.
+The successor comparison and source verifier pass: 14 runs, 41,995 bound recorded
+calls, 46 frozen-count comparisons and no mismatches. Local Python 3.15.2 passes
+all 412 tests (33 focused archive tests); five viewer tests, fleet validation and
+planning, submission verification and runtime freshness also pass. Hosted checks
+and independent review for this successor are reported in its PR separately.
+
+The [human handoff](experiments/experiment2-reviewer-handoff.md) is ready; the actual
+second-person reproduction and source-holder private preservation inventory remain
+pending. Issue #18 remains currently unreproduced with the historical root source
+unknown; its old runtime is unavailable. Both issues remain open.
+
 # Issue 17/18 investigation — November 16, 2026
 
 Started from `2160a55324404d6bf9d35d5c7f7132607bbe590f` after fast-forwarding
