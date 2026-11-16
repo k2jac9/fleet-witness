@@ -26,6 +26,13 @@ import sqlite3
 from .evidence import FIELDS, _payload
 
 ATTESTATION_FIELDS = ('auditor', 'claim', 'run_id', 'artifact_digest')
+MAX_ATTESTATION_BYTES = 32768
+
+
+def _signature_format(value):
+    return (isinstance(value, str) and len(value) == 64 and
+            all(char in '0123456789abcdef' for char in value))
+
 
 SCHEMA = '''
 CREATE TABLE IF NOT EXISTS policy (case_id TEXT PRIMARY KEY, allowed INTEGER NOT NULL, version INTEGER NOT NULL);
@@ -109,22 +116,39 @@ class Institution:
 
     # Auditors ---------------------------------------------------------------------
     def submit_attestation(self, case_id: str, attestation: dict):
-        """Anyone may submit anything; validity is decided only at execution time."""
+        """Accept bounded JSON data; validity is decided only at execution time."""
+        try:
+            body = json.dumps(attestation, sort_keys=True, ensure_ascii=True, allow_nan=False)
+        except (TypeError, ValueError, RecursionError):
+            raise ValueError('attestation must be bounded JSON data') from None
+        if len(body.encode('ascii')) > MAX_ATTESTATION_BYTES:
+            raise ValueError('attestation exceeds byte limit')
+        auditor = attestation.get('auditor') if isinstance(attestation, dict) else None
+        try:
+            auditor_text = str(auditor)
+            auditor_text.encode('utf-8')
+        except UnicodeError:
+            auditor_text = '[invalid]'
         with self._tx():
             self.conn.execute('INSERT INTO attestations VALUES(?,?,?)',
-                              (case_id, str(attestation.get('auditor')), json.dumps(attestation, sort_keys=True)))
-            self._audit(case_id, 'attestation_submitted', {'auditor': attestation.get('auditor')})
+                              (case_id, auditor_text, body))
+            self._audit(case_id, 'attestation_submitted', {'auditor': auditor})
 
     # Checks ---------------------------------------------------------------------------
     def _evidence_intact(self, evidence: list) -> bool:
         if 'skip_integrity' in self.mutations:
             return True
+        if not isinstance(evidence, list):
+            return False
         for receipt in evidence:
             if not isinstance(receipt, dict) or set(receipt) != FIELDS | {'signature'}:
                 return False
+            if (not all(isinstance(receipt[name], str) and receipt[name] for name in FIELDS) or
+                    not _signature_format(receipt['signature'])):
+                return False
             expected = hmac.new(self.evidence_key, _payload({n: receipt[n] for n in FIELDS}),
                                 hashlib.sha256).hexdigest()
-            if not hmac.compare_digest(expected, str(receipt['signature'])):
+            if not hmac.compare_digest(expected, receipt['signature']):
                 return False
         return bool(evidence)
 
@@ -133,10 +157,17 @@ class Institution:
         seated = {row[0] for row in self.conn.execute('SELECT auditor FROM seats WHERE case_id=?', (case_id,))}
         seen = []
         for (body,) in self.conn.execute('SELECT body FROM attestations WHERE case_id=?', (case_id,)):
-            attestation = json.loads(body)
+            try:
+                attestation = json.loads(body)
+            except (ValueError, TypeError, RecursionError):
+                continue
+            if (not isinstance(attestation, dict) or set(attestation) != set(ATTESTATION_FIELDS) | {'signature'} or
+                    not all(isinstance(attestation.get(f), str) and attestation[f] for f in ATTESTATION_FIELDS) or
+                    not _signature_format(attestation.get('signature'))):
+                continue
             auditor = attestation.get('auditor')
             key = self.auditor_keys.get(auditor)
-            if key is None or not all(isinstance(attestation.get(f), str) for f in ATTESTATION_FIELDS):
+            if key is None:
                 continue
             if 'skip_seat_check' not in self.mutations and auditor not in seated:
                 continue
@@ -145,7 +176,7 @@ class Institution:
                     or attestation['claim'] != 'release_safe'):
                 continue
             expected = hmac.new(key, _canonical(attestation), hashlib.sha256).hexdigest()
-            if not hmac.compare_digest(expected, str(attestation.get('signature'))):
+            if not hmac.compare_digest(expected, attestation['signature']):
                 continue
             seen.append(auditor)
         return seen if 'count_duplicates' in self.mutations else set(seen)

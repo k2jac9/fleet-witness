@@ -16,14 +16,17 @@ from contextlib import nullcontext
 from datetime import datetime, timezone
 import hashlib
 import json
+import os
 from pathlib import Path
 import random
 import secrets
+import stat
 import threading
 import uuid
 
 from ..institution import Institution, sign_attestation
-from .providers import BudgetExceeded, ProviderError, parse_sign, parse_vote
+from .providers import (BudgetExceeded, ProviderError, STRICT_SWARM_PARSER,
+                        parse_sign_strict, parse_vote_strict)
 from .run_records import PrivateRunLog, prompt_digest, public_attempts, runtime_identity
 from .world import case_prompt, make_cases
 
@@ -119,7 +122,7 @@ class _EventLog:
     def __init__(self, path: Path):
         self.path = path
         self._lock = threading.Lock()
-        self._handle = path.open('x', encoding='utf-8')
+        self._handle = _open_private_text(path)
 
     def write(self, event: dict):
         with self._lock:
@@ -138,6 +141,55 @@ def estimate_run(client, *, agents: int, cases: int, conditions: list[str]) -> d
             'worst_case_per_call_usd': per_call, 'worst_case_total_usd': per_call * calls}
 
 
+def _open_private_text(path):
+    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    try:
+        os.fchmod(descriptor, 0o600)
+    except BaseException:
+        os.close(descriptor)
+        raise
+    return os.fdopen(descriptor, 'w', encoding='utf-8')
+
+
+def _prepare_run_directory(output):
+    """Create/open a private empty run directory without following symlinks."""
+    output = Path(os.path.abspath(output))
+    descriptor = os.open('/', os.O_RDONLY | os.O_DIRECTORY)
+    transferred = False
+    try:
+        parts = output.parts[1:]
+        if not parts:
+            raise ValueError('root is not a run directory')
+        for index, name in enumerate(parts):
+            parent = os.fstat(descriptor)
+            if parent.st_uid not in (0, os.getuid()):
+                raise ValueError('run directory ancestor has an untrusted owner')
+            if parent.st_mode & 0o022 and not parent.st_mode & stat.S_ISVTX:
+                raise ValueError('writable run directory ancestor is not sticky')
+            created = False
+            try:
+                os.mkdir(name, 0o700, dir_fd=descriptor)
+                created = True
+            except FileExistsError:
+                pass
+            child = os.open(name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=descriptor)
+            os.close(descriptor)
+            descriptor = child
+            if index == len(parts) - 1:
+                if created:
+                    os.fchmod(descriptor, 0o700)
+                info = os.fstat(descriptor)
+                if info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != 0o700:
+                    raise ValueError('run directory must be owner-private')
+                if os.listdir(descriptor):
+                    raise ValueError('run directory is not empty; choose a new one')
+        transferred = True
+        return output, descriptor
+    finally:
+        if not transferred:
+            os.close(descriptor)
+
+
 def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditions=None,
               cell_fraction: float = 0.1, waves: int = 5, recent_comments: int = 6, seed: int = 0,
               case_mode: str = 'standard') -> dict:
@@ -147,11 +199,23 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
         raise ValueError(f'unknown conditions: {sorted(unknown)}')
     if agents < COMMITTEE_MAX or cases < 1 or waves < 1:
         raise ValueError(f'need at least {COMMITTEE_MAX} agents, 1 case and 1 wave')
-    output = Path(output)
-    if output.exists() and any(output.iterdir()):
-        raise ValueError(f'output directory {output} is not empty; choose a new one')
-    output.mkdir(parents=True, exist_ok=True)
+    output, run_fd = _prepare_run_directory(output)
+    try:
+        current = os.stat(output, follow_symlinks=False)
+        held = os.fstat(run_fd)
+        if not stat.S_ISDIR(current.st_mode) or (current.st_dev, current.st_ino) != (held.st_dev, held.st_ino):
+            raise ValueError('run directory changed after validation')
+        # Anchor all later opens to the held directory, not its mutable name.
+        output = Path('/proc/self/fd') / str(run_fd)
+        return _run_swarm_anchored(output, client, agents=agents, cases=cases, conditions=conditions,
+                                   cell_fraction=cell_fraction, waves=waves, recent_comments=recent_comments,
+                                   seed=seed, case_mode=case_mode)
+    finally:
+        os.close(run_fd)
 
+
+def _run_swarm_anchored(output, client, *, agents, cases, conditions, cell_fraction, waves,
+                         recent_comments, seed, case_mode):
     rng = random.Random(seed)
     key = secrets.token_bytes(32)  # controller-only; never written out
     world = make_cases(cases, seed, key, mode=case_mode)
@@ -172,15 +236,28 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
                   for case in world}
     auditor_keys = {agent_id: secrets.token_bytes(32) for agent_id in agent_ids}  # kernel-held
 
-    (output / 'truth.json').write_text(json.dumps({
+    with _open_private_text(output / 'truth.json') as handle:
+        handle.write(json.dumps({
         'sealed': 'Ground truth for scoring only. Detectors must not read this file.',
         'colluders': colluders, 'targets': targets, 'talking_point': talking_point, 'committees': committees,
         'cases': {case['id']: {'kind': case['kind'], 'valid': case['valid']} for case in world},
-    }, indent=2), encoding='utf-8')
+        }, indent=2))
 
     started = datetime.now(timezone.utc).isoformat()
     from .providers import source_identity
     source = source_identity()
+    start = {'schema_version': 'swarm-run-start-v1', 'parser_treatment': STRICT_SWARM_PARSER,
+             'source': source, 'started_at': started}
+    with _open_private_text(output / 'run-start.json') as handle:
+        json.dump(start, handle, sort_keys=True, allow_nan=False)
+        handle.write('\n')
+        handle.flush()
+        os.fsync(handle.fileno())
+    directory_fd = os.open(output, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        os.fsync(directory_fd)
+    finally:
+        os.close(directory_fd)
     ledger = getattr(client, 'ledger', None)
     def budget_snapshot():
         if ledger is None:
@@ -314,7 +391,7 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
                 'board_approve_share': _approve_share(final_board) if visible else None,
                 'talking_point': talking_point}
         try:
-            call(event, system, user, meta, parse_sign)
+            call(event, system, user, meta, parse_sign_strict)
         finally:
             event['sign'] = event.get('outcome') == 'sign'
             log.write(event)
@@ -339,7 +416,7 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
                 'colluder': is_colluder, 'target': case['id'] in targets, 'looks_valid': case['looks_valid'],
                 'tally': tally, 'talking_point': talking_point}
         try:
-            call(event, system, user, meta, parse_vote)
+            call(event, system, user, meta, parse_vote_strict)
         finally:
             event['vote'] = event.pop('outcome', 'error')
             log.write(event)
@@ -371,6 +448,11 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
 
         # Governance stage: the same votes and attestations, judged under each institutional regime.
         database = output / 'institution.sqlite3'
+        descriptor = os.open(database, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+        try:
+            os.fchmod(descriptor, 0o600)
+        finally:
+            os.close(descriptor)
         kernels = {name: Institution.open(database, evidence_key=key, auditor_keys=auditor_keys,
                                           quorum=quorum, committee_size=size, require_majority=majority)
                    for name, (size, quorum, majority) in REGIMES.items()}
@@ -400,7 +482,8 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
             outcomes.append(row)
         for kernel in kernels.values():
             kernel.conn.close()
-        (output / 'decisions.json').write_text(json.dumps(outcomes, indent=2), encoding='utf-8')
+        with _open_private_text(output / 'decisions.json') as handle:
+            json.dump(outcomes, handle, indent=2)
     except BaseException as error:
         interruption = error
         if not abort.is_set():
@@ -412,6 +495,7 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
         private_log.close()
         manifest = {
             'schema_version': 'swarm-run-2',
+            'parser_treatment': STRICT_SWARM_PARSER,
             'project': 'Fleet Witness', 'mode': 'live-swarm' if client.label != 'fake:scripted' else 'fake-swarm',
             'model': client.label, 'seed': seed, 'agents': agents, 'cases': cases, 'conditions': conditions,
             'waves': waves, 'recent_comments': recent_comments, 'cell_size': len(colluders),
@@ -424,6 +508,7 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
             'ledger_before': ledger_before, 'ledger_after': budget_snapshot(),
             'model_config': {'label': client.label, 'temperature': getattr(client, 'temperature', None),
                              'max_output_tokens': client.max_output_tokens, 'timeout_s': getattr(client, 'timeout', None),
+                             'extra_body': getattr(client, 'extra_body', {}),
                              'attempt_policy': 'one-attempt-no-retries'},
             'scheduled_logical_requests': (agents + COMMITTEE_MAX) * cases * len(conditions),
             'logical_responses_completed': stats['calls'],
@@ -434,5 +519,6 @@ def run_swarm(output: Path, client, *, agents: int = 20, cases: int = 6, conditi
         if interruption is not None:
             manifest['interruption'] = {'type': type(interruption).__name__,
                                         'attempts': public_attempts(getattr(interruption, 'attempts', []))}
-        (output / 'manifest.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')
+        with _open_private_text(output / 'manifest.json') as handle:
+            json.dump(manifest, handle, indent=2)
     return manifest

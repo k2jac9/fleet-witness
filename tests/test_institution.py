@@ -1,16 +1,26 @@
+import json
+import contextlib
+import io
+import os
 import sqlite3
+import subprocess
+import sys
 import unittest
+from unittest.mock import patch
 
 from fleet_witness.evidence import issue_receipt
 from fleet_witness.institution import Institution, sign_attestation
 from fleet_witness.verify_institution import MUTANTS, capture_probability, check
+from fleet_witness import verify_institution
 
 EKEY = b'evidence'
 KEYS = {name: name.encode() * 4 for name in ('a', 'b', 'c', 'outsider')}
 
 
-def kernel(quorum=2, require_majority=True, intact=True):
-    k = Institution(sqlite3.connect(':memory:', isolation_level=None), evidence_key=EKEY, auditor_keys=KEYS,
+def kernel(test_case, quorum=2, require_majority=True, intact=True):
+    connection = sqlite3.connect(':memory:', isolation_level=None)
+    test_case.addCleanup(connection.close)
+    k = Institution(connection, evidence_key=EKEY, auditor_keys=KEYS,
                     quorum=quorum, committee_size=3, require_majority=require_majority)
     receipt = issue_receipt(EKEY, issuer='i', claim='c', scope='s', artifact_digest='d', run_id='r')
     if not intact:
@@ -73,7 +83,7 @@ class InstitutionTest(unittest.TestCase):
         self.assertEqual(k.conn.execute("SELECT COUNT(*) FROM audit WHERE kind='release'").fetchone()[0], 1)
 
     def test_quorum_of_seated_auditors_authorizes_exactly_once(self):
-        k = kernel()
+        k = kernel(self)
         k.record_proposal('C', 5, 1)
         k.submit_attestation('C', sign_attestation(KEYS['a'], 'a', 'r', 'd'))
         self.assertFalse(k.execute('C', 'x1')['effect'])
@@ -83,7 +93,7 @@ class InstitutionTest(unittest.TestCase):
         self.assertEqual(k.conn.execute('SELECT COUNT(*) FROM releases').fetchone()[0], 1)
 
     def test_outsiders_duplicates_and_misbound_attestations_do_not_count(self):
-        k = kernel()
+        k = kernel(self)
         k.record_proposal('C', 5, 1)
         k.submit_attestation('C', sign_attestation(KEYS['a'], 'a', 'r', 'd'))
         k.submit_attestation('C', sign_attestation(KEYS['a'], 'a', 'r', 'd'))
@@ -94,13 +104,78 @@ class InstitutionTest(unittest.TestCase):
         self.assertFalse(result['effect'])
         self.assertIn('only 1 of 2', result['reason'])
 
+    def test_malformed_attestations_do_not_poison_a_later_valid_quorum(self):
+        k = kernel(self)
+        k.record_proposal('C', 5, 1)
+        valid_a = sign_attestation(KEYS['a'], 'a', 'r', 'd')
+        for value in (
+            ['not-an-object'],
+            {'auditor': ['a']},
+            {**valid_a, 'signature': 'é'},
+            {**valid_a, 'signature': ['bad']},
+            {**valid_a, 'claim': None},
+            {'auditor': 'a'},
+        ):
+            k.submit_attestation('C', value)
+        # Legacy persisted rows may have JSON values the public method would
+        # not itself accept. They must not poison the rest of the case.
+        k.conn.execute('INSERT INTO attestations VALUES(?,?,?)', ('C', 'bad', json.dumps(['bad'])))
+        k.submit_attestation('C', valid_a)
+        denied = k.execute('C', 'invalid-first')
+        self.assertFalse(denied['effect'])
+        self.assertIn('only 1 of 2', denied['reason'])
+        self.assertEqual(k.conn.execute("SELECT COUNT(*) FROM audit WHERE kind='denied'").fetchone()[0], 1)
+        k.submit_attestation('C', sign_attestation(KEYS['b'], 'b', 'r', 'd'))
+        k.conn.execute("CREATE TRIGGER fail_release_audit BEFORE INSERT ON audit WHEN NEW.kind='release' "
+                       "BEGIN SELECT RAISE(ABORT, 'audit failed'); END")
+        with self.assertRaises(sqlite3.IntegrityError):
+            k.execute('C', 'valid-second')
+        self.assertEqual(k.conn.execute('SELECT COUNT(*) FROM releases').fetchone()[0], 0)
+        self.assertEqual(k.conn.execute("SELECT COUNT(*) FROM attempts WHERE id='valid-second'").fetchone()[0], 0)
+        k.conn.execute('DROP TRIGGER fail_release_audit')
+        self.assertTrue(k.execute('C', 'valid-second')['effect'])
+        self.assertFalse(k.execute('C', 'duplicate')['effect'])
+        self.assertEqual(k.conn.execute('SELECT COUNT(*) FROM releases').fetchone()[0], 1)
+        self.assertEqual(k.conn.execute("SELECT COUNT(*) FROM audit WHERE kind='release'").fetchone()[0], 1)
+
+    def test_malformed_evidence_is_an_audited_denial_even_with_a_valid_quorum(self):
+        for signature in ('é', ['bad'], None):
+            with self.subTest(signature=signature):
+                conn = sqlite3.connect(':memory:', isolation_level=None)
+                self.addCleanup(conn.close)
+                k = Institution(conn, evidence_key=EKEY, auditor_keys=KEYS, quorum=2, committee_size=3)
+                receipt = issue_receipt(EKEY, issuer='i', claim='c', scope='s', artifact_digest='d', run_id='r')
+                receipt['signature'] = signature
+                k.open_case('C', 'r', 'd', [receipt], ['a', 'b', 'c'])
+                k.set_policy('C', True)
+                k.record_proposal('C', 5, 1)
+                for name in ('a', 'b'):
+                    k.submit_attestation('C', sign_attestation(KEYS[name], name, 'r', 'd'))
+                self.assertEqual(k.execute('C', 'bad-evidence')['reason'], 'evidence integrity failed')
+                self.assertEqual(conn.execute('SELECT COUNT(*) FROM releases').fetchone()[0], 0)
+                self.assertEqual(conn.execute("SELECT COUNT(*) FROM audit WHERE kind='denied'").fetchone()[0], 1)
+
+    def test_attestation_admission_rejects_oversized_values(self):
+        k = kernel(self)
+        with self.assertRaises(ValueError):
+            k.submit_attestation('C', {'auditor': 'a', 'padding': 'x' * 1_048_576})
+        self.assertEqual(k.conn.execute('SELECT COUNT(*) FROM attestations').fetchone()[0], 0)
+
+    def test_attestation_admission_handles_unpaired_surrogates(self):
+        k = kernel(self)
+        k.record_proposal('C', 5, 1)
+        k.submit_attestation('C', {'auditor': '\ud800'})
+        for name in ('a', 'b'):
+            k.submit_attestation('C', sign_attestation(KEYS[name], name, 'r', 'd'))
+        self.assertTrue(k.execute('C', 'safe')['effect'])
+
     def test_tampered_evidence_and_revoked_policy_block(self):
-        k = kernel(intact=False)
+        k = kernel(self, intact=False)
         k.record_proposal('C', 5, 1)
         for name in ('a', 'b', 'c'):
             k.submit_attestation('C', sign_attestation(KEYS[name], name, 'r', 'd'))
         self.assertEqual(k.execute('C', 'x')['reason'], 'evidence integrity failed')
-        k2 = kernel()
+        k2 = kernel(self)
         k2.record_proposal('C', 5, 1)
         for name in ('a', 'b'):
             k2.submit_attestation('C', sign_attestation(KEYS[name], name, 'r', 'd'))
@@ -108,7 +183,7 @@ class InstitutionTest(unittest.TestCase):
         self.assertFalse(k2.execute('C', 'x')['effect'])
 
     def test_committee_only_mode_does_not_need_majority(self):
-        k = kernel(require_majority=False)
+        k = kernel(self, require_majority=False)
         k.record_proposal('C', 1, 0)
         for name in ('a', 'b'):
             k.submit_attestation('C', sign_attestation(KEYS[name], name, 'r', 'd'))
@@ -116,6 +191,77 @@ class InstitutionTest(unittest.TestCase):
 
 
 class BoundedCheckTest(unittest.TestCase):
+    @staticmethod
+    def result(verified):
+        return {'depth': 1, 'mutations': [], 'distinct_states': 1, 'transitions_checked': 1,
+                'violations': [] if verified else [{'trace': ['test'], 'problems': ['injected']}],
+                'verified': verified, 'seconds': 0.0}
+
+    def test_checker_reports_base_violation_with_nonzero_status(self):
+        with patch.object(verify_institution, 'check', return_value=self.result(False)), \
+                contextlib.redirect_stdout(io.StringIO()) as output:
+            result = verify_institution.main(['--depth', '1', '--json'])
+        self.assertEqual(result, 1)
+        data = json.loads(output.getvalue())
+        self.assertFalse(data['passed'])
+
+    def test_checker_reports_uncaught_mutant_with_nonzero_status(self):
+        def fake_check(depth, mutations=frozenset(), **kwargs):
+            return self.result(not mutations or 'skip_audit' in mutations)
+        with patch.object(verify_institution, 'check', side_effect=fake_check), \
+                contextlib.redirect_stdout(io.StringIO()) as output:
+            result = verify_institution.main(['--depth', '1', '--mutants', '--json'])
+        self.assertEqual(result, 1)
+        data = json.loads(output.getvalue())
+        self.assertTrue(data['mutants']['skip_audit']['verified'])
+        self.assertFalse(data['passed'])
+
+    def test_checker_rejects_nonpositive_depth(self):
+        for depth in ('0', '-1'):
+            with self.subTest(depth=depth), contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as result:
+                    verify_institution.main(['--depth', depth])
+                self.assertNotEqual(result.exception.code, 0)
+                with self.assertRaises(ValueError):
+                    check(depth=int(depth))
+
+    def test_checker_closes_all_connections_on_normal_early_and_exception_paths(self):
+        original_connect = sqlite3.connect
+        for mode in ('normal', 'violation', 'exception'):
+            with self.subTest(mode=mode):
+                created = []
+                class TrackedConnection(sqlite3.Connection):
+                    closed = False
+                    def close(self):
+                        self.closed = True
+                        super().close()
+                def connect(*args, **kwargs):
+                    conn = original_connect(*args, **kwargs, factory=TrackedConnection)
+                    created.append(conn)
+                    return conn
+                with patch.object(verify_institution.sqlite3, 'connect', side_effect=connect):
+                    if mode == 'violation':
+                        with patch.object(verify_institution, '_global_violations', return_value=['injected']):
+                            result = check(depth=2)
+                        self.assertFalse(result['verified'])
+                        self.assertEqual(result['violations'][0]['problems'], ['injected'])
+                    elif mode == 'exception':
+                        with patch.object(verify_institution, '_apply', side_effect=RuntimeError('injected')):
+                            with self.assertRaisesRegex(RuntimeError, 'injected'):
+                                check(depth=2)
+                    else:
+                        self.assertTrue(check(depth=2)['verified'])
+                self.assertTrue(created)
+                self.assertTrue(all(conn.closed for conn in created))
+
+    def test_checker_does_not_emit_unclosed_database_warnings(self):
+        env = {**os.environ, 'PYTHONDONTWRITEBYTECODE': '1'}
+        result = subprocess.run([sys.executable, '-W', 'always::ResourceWarning', '-c',
+            'import gc; from fleet_witness.verify_institution import check; check(depth=2); gc.collect()'],
+            env=env, text=True, capture_output=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn('ResourceWarning', result.stderr)
+
     def test_kernel_verified_and_every_mutant_caught(self):
         for majority in (True, False):
             self.assertTrue(check(depth=4, require_majority=majority)['verified'])

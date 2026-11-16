@@ -1,5 +1,17 @@
 # Current acceptance gates
 
+The November 16 assurance integration candidate passed 446 Python tests, five
+viewer tests and fresh bounded reconstruction; independent review approved its
+corrected code. See the [source-bound report](experiments/2026-11-16-assurance-integration.md)
+and its PR for hosted results. Deployment and provider qualification remain
+separate. Aggregate attestation admission and rate control remain open; the
+32 KiB per-submission bound does not prevent a flood of smaller submissions.
+
+Issue #17 is closed by the owner, while its private-original inventory,
+second-human reproduction and historical evidence limitations remain documented.
+Issue #18 is still open because its historical failing host is unavailable.
+The table below retains the dated November 9 gate snapshot.
+
 Updated for the editorial checkpoint on **2026-11-09**. The completed pilot,
 publication and offline tests have source-bound evidence. Current cloud inventory
 and account balances were not refreshed during this pass. See

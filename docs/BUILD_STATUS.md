@@ -1,3 +1,26 @@
+# Assurance integration candidate — November 16, 2026
+
+The preserved assurance/provenance work is integrated with main `206fc99` on
+`fix/assurance-integration-20261116`. Code commit
+`4ef98144d8395e4268159c3bac9ff6ad4bde5b43` passed 446 Python tests, five viewer
+tests, fleet/submission/freshness checks and a scripted demo. Independent review
+approved the corrected code after a failing resume-configuration regression and
+68 passing focused tests. All failed attempts remain in the retained packet.
+
+Fresh historical reconstruction passed with unchanged source and inputs. The
+depth-six checker explored 23,376 hybrid states / 105,708 transitions and 27,636
+committee-only states / 120,456 transitions, with no invariant violations; all
+seven deliberately broken variants were caught. These are bounded local checks,
+not historical-signature authentication or new model observations.
+
+The [dated report](experiments/2026-11-16-assurance-integration.md) binds exact
+commands, hashes, limitations and evidence. Hosted candidate results belong to
+the PR; deployment/provider/human-reproduction gates remain separate. Issue #17
+is closed by its owner, with historical evidence limits still documented;
+issue #18's unavailable-host TLS discrepancy remains open.
+
+---
+
 # Experiment 2 publication successor — November 16, 2026
 
 PR #20 merged as `e48a75a331b61cfa7f0b861805f485a0e5c47bc5`.
@@ -184,6 +207,41 @@ cloud mutation, external message or event submission was performed. Missing raw
 Experiment 2 records remain unavailable; passing arithmetic checks cannot
 authenticate the original collection. Future paid runs still need applicable
 operator qualification, and visual model review remains unqualified.
+
+---
+
+# Local assurance candidate — November 10, 2026
+
+Task `local-assurance-20261110`, local branch `fix/local-assurance-20261110`,
+based on `416cc81f4c4d840089ff1fef59b2dc01184e97ba`. This entry is part of the
+candidate; its containing commit identifies the documentation revision. Exact
+final code, review and local verification identities belong in the retained
+artifact packet, not a self-referential commit field.
+
+The candidate hardens malformed institution attestations/evidence, makes bounded
+checker failures visible to automation, introduces strict versioned swarm parsing,
+protects run artifacts and avoids pooling distinct treatments. The checker closes
+its explored SQLite connections. Attestations remain subject to a 32 KiB
+per-submission limit but no aggregate rate/quota policy; do not expose the API to
+untrusted submitters on that basis. Same-user compromise remains out of scope.
+
+Observed during development on Python 3.15.0 and Node 26.11.1: red/green
+regressions and independent review findings are retained; the pre-documentation
+candidate passed 344 Python tests and five viewer tests. A separate local
+depth-six run checked 23,376 hybrid states / 105,708 transitions and caught all
+seven mutants. Historical archive reconstruction with `--skip-checker` preserved
+input hashes and the published main denominators; this is not a new checker run
+or verification of historical signatures. The package verifier passed offline.
+Some other fixtures still produced SQLite ResourceWarnings.
+
+Evidence and failed checks are in
+`/home/neo/Projects/fleet-witness-artifacts/local-assurance-20261110-8iVLoWbb/`.
+No hosted CI, deployment, cloud or provider operation, paid inference, publication,
+or integration to `main` was performed. Current cloud, provider and runtime
+freshness gates remain separate; a final exact-source review is still required.
+An automated reviewer stopped during the final follow-up after flagging its
+content as a possible cybersecurity risk. Its earlier findings and the local
+regressions for them are retained; that interruption is not a completed review.
 
 ---
 

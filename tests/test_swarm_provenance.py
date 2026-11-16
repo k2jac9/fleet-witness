@@ -109,6 +109,92 @@ class RunProvenanceTest(SyntheticSourceTestCase):
             self.assertTrue(manifest.get('runtime', {}).get('python_version'))
             self.assertIn('temperature', manifest.get('model_config', {}))
             self.assertEqual(manifest.get('scheduled_logical_requests'), 14)
+            self.assertEqual(manifest.get('parser_treatment'), 'swarm-strict-v1')
+
+    def test_interrupted_run_retains_parser_identity_before_model_call(self):
+        class Interrupted(FakeClient):
+            def complete(self, system, user, meta=None):
+                raise KeyboardInterrupt('synthetic interruption')
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            with self.assertRaises(KeyboardInterrupt):
+                self.run_fixture(root, Interrupted())
+            run = root / 'run'
+            start = json.loads((run / 'run-start.json').read_text())
+            manifest = json.loads((run / 'manifest.json').read_text())
+            self.assertEqual(start['parser_treatment'], 'swarm-strict-v1')
+            self.assertEqual(manifest['parser_treatment'], start['parser_treatment'])
+            self.assertEqual(manifest['source'], start['source'])
+            self.assertTrue(manifest['incomplete'])
+            self.assertEqual(manifest['interruption']['type'], 'KeyboardInterrupt')
+            self.assertFalse((run / 'decisions.json').exists())
+            self.assertEqual(stat.S_IMODE((run / 'manifest.json').stat().st_mode), 0o600)
+
+    def test_run_artifacts_are_private_under_permissive_umask(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            root.chmod(0o755)
+            old = os.umask(0o022)
+            try:
+                self.run_fixture(root, FakeClient())
+            finally:
+                os.umask(old)
+            run = root / 'run'
+            for path in (run, run / 'private'):
+                self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o700, str(path))
+            for path in ('truth.json', 'events.jsonl', 'manifest.json', 'decisions.json',
+                         'institution.sqlite3', 'run-start.json', 'private/requests.jsonl'):
+                self.assertEqual(stat.S_IMODE((run / path).stat().st_mode), 0o600, path)
+
+    def test_unsafe_run_directories_are_refused_before_calls(self):
+        class Counting(FakeClient):
+            count = 0
+            def complete(self, *args, **kwargs):
+                self.count += 1
+                return super().complete(*args, **kwargs)
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            existing = root / 'permissive'
+            existing.mkdir(mode=0o755)
+            existing.chmod(0o755)
+            real = root / 'real'
+            real.mkdir(mode=0o700)
+            link = root / 'link'
+            link.symlink_to(real, target_is_directory=True)
+            nonempty = root / 'nonempty'
+            nonempty.mkdir(mode=0o700)
+            (nonempty / 'keep').write_text('preserve')
+            client = Counting()
+            for path in (existing, link, link / 'child', nonempty):
+                with self.subTest(path=path), self.assertRaises((ValueError, OSError)):
+                    run_swarm(path, client, agents=7, cases=1, conditions=['hidden-clean'])
+            self.assertEqual(client.count, 0)
+            self.assertEqual((nonempty / 'keep').read_text(), 'preserve')
+
+    def test_replaced_run_directory_is_refused_before_any_call(self):
+        from fleet_witness.swarm import runner
+        class Counting(FakeClient):
+            calls = 0
+            def complete(self, *args, **kwargs):
+                self.calls += 1
+                return super().complete(*args, **kwargs)
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            decoy = root / 'decoy'
+            decoy.mkdir(mode=0o700)
+            original = runner._prepare_run_directory
+            def swap(path):
+                result = original(path)
+                path = Path(path)
+                path.rename(root / 'moved')
+                path.symlink_to(decoy, target_is_directory=True)
+                return result
+            client = Counting()
+            with patch.object(runner, '_prepare_run_directory', side_effect=swap):
+                with self.assertRaises((ValueError, OSError)):
+                    run_swarm(root / 'run', client, agents=7, cases=1, conditions=['hidden-clean'])
+            self.assertEqual(client.calls, 0)
+            self.assertFalse(list(decoy.iterdir()))
 
     def test_new_run_executes_gated_majority_without_a_committee(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -131,8 +217,8 @@ class RunProvenanceTest(SyntheticSourceTestCase):
             def transport(url, key, body, timeout, **kwargs):
                 import time
                 time.sleep(.005)  # Exercise overlapping runner submissions.
-                answer = ('{"sign":true}' if 'audit committee' in body['messages'][0]['content']
-                          else '{"vote":"approve"}')
+                answer = ('{"sign":true,"reason":"ok"}' if 'audit committee' in body['messages'][0]['content']
+                          else '{"vote":"approve","reason":"ok"}')
                 return json.dumps({'id': 'synthetic', 'choices': [{'message': {'content': answer},
                                     'finish_reason': 'stop'}],
                                    'usage': {'prompt_tokens': 10, 'completion_tokens': 10}}).encode()

@@ -1,5 +1,6 @@
 """Boundary tests use real SQLite state; expectations are hand-derived."""
 import concurrent.futures
+from contextlib import closing
 from pathlib import Path
 import sqlite3
 import tempfile
@@ -29,7 +30,7 @@ class ControllerTests(unittest.TestCase):
             recommendation, 'scripted proposal', [self.receipt] if receipts is None else receipts)
 
     def count(self, table):
-        with sqlite3.connect(self.db) as conn:
+        with closing(sqlite3.connect(self.db)) as conn, conn:
             return conn.execute('SELECT count(*) FROM ' + table).fetchone()[0]
 
     def test_valid_release_commits_one_release_and_matching_audit(self):
@@ -38,7 +39,7 @@ class ControllerTests(unittest.TestCase):
         self.assertTrue(attempt['execution_authorized_at_attempt'])
         self.assertTrue(attempt['effect_occurred'])
         self.assertEqual(self.count('releases'), 1)
-        with sqlite3.connect(self.db) as conn:
+        with closing(sqlite3.connect(self.db)) as conn, conn:
             self.assertEqual(conn.execute("SELECT count(*) FROM events WHERE kind='release_committed'").fetchone()[0], 1)
 
     def test_receipt_failures_deny_even_approved_proposals(self):
@@ -70,7 +71,7 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(self.count('releases'), 0)
 
     def test_missing_policy_denies(self):
-        with sqlite3.connect(self.db) as conn:
+        with closing(sqlite3.connect(self.db)) as conn, conn:
             conn.execute('DELETE FROM policies')
         self.decide()
         result = self.controller.execute('decision-1', 'attempt-1')
@@ -114,7 +115,7 @@ class ControllerTests(unittest.TestCase):
 
     def test_audit_insert_failure_rolls_back_effect_and_attempt(self):
         self.decide()
-        with sqlite3.connect(self.db) as conn:
+        with closing(sqlite3.connect(self.db)) as conn, conn:
             conn.execute("CREATE TRIGGER reject_audit BEFORE INSERT ON events WHEN NEW.kind='release_committed' BEGIN SELECT RAISE(ABORT, 'audit unavailable'); END")
         with self.assertRaises(sqlite3.IntegrityError):
             self.controller.execute('decision-1', 'attempt-1')

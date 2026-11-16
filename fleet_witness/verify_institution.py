@@ -24,6 +24,7 @@ which breaks the independence assumption; the swarm experiments measure that gap
 """
 import argparse
 from collections import deque
+import json
 from math import comb
 import sqlite3
 import time
@@ -45,21 +46,29 @@ MUTANTS = ['skip_policy_recheck', 'skip_integrity', 'skip_seat_check', 'skip_bin
 
 def _new_kernel(intact: bool, mutations=frozenset(), require_majority=True):
     conn = sqlite3.connect(':memory:', isolation_level=None)
-    kernel = Institution(conn, evidence_key=EVIDENCE_KEY, auditor_keys=AUDITORS, quorum=QUORUM,
-                         committee_size=len(SEATS), require_majority=require_majority, mutations=mutations)
-    receipt = issue_receipt(EVIDENCE_KEY, issuer='build-issuer', claim='build_succeeded', scope='build',
-                            artifact_digest=DIGEST, run_id=RUN)
-    if not intact:
-        receipt['signature'] = '0' * 64
-    kernel.open_case('C', RUN, DIGEST, [receipt], SEATS)
-    return kernel
+    try:
+        kernel = Institution(conn, evidence_key=EVIDENCE_KEY, auditor_keys=AUDITORS, quorum=QUORUM,
+                             committee_size=len(SEATS), require_majority=require_majority, mutations=mutations)
+        receipt = issue_receipt(EVIDENCE_KEY, issuer='build-issuer', claim='build_succeeded', scope='build',
+                                artifact_digest=DIGEST, run_id=RUN)
+        if not intact:
+            receipt['signature'] = '0' * 64
+        kernel.open_case('C', RUN, DIGEST, [receipt], SEATS)
+        return kernel
+    except BaseException:
+        conn.close()
+        raise
 
 
 def _clone(kernel, mutations):
     conn = sqlite3.connect(':memory:', isolation_level=None)
-    conn.deserialize(kernel.conn.serialize())
-    return Institution(conn, evidence_key=EVIDENCE_KEY, auditor_keys=AUDITORS, quorum=QUORUM,
-                       committee_size=len(SEATS), require_majority=kernel.require_majority, mutations=mutations)
+    try:
+        conn.deserialize(kernel.conn.serialize())
+        return Institution(conn, evidence_key=EVIDENCE_KEY, auditor_keys=AUDITORS, quorum=QUORUM,
+                           committee_size=len(SEATS), require_majority=kernel.require_majority, mutations=mutations)
+    except BaseException:
+        conn.close()
+        raise
 
 
 def _apply(kernel, spec: dict, action: str):
@@ -122,38 +131,59 @@ def _fingerprint(kernel, spec) -> tuple:
 
 
 def check(depth: int = 6, mutations=frozenset(), stop_at_first: bool = True, require_majority: bool = True) -> dict:
+    if type(depth) is not int or depth < 1:
+        raise ValueError('depth must be a positive integer')
     started = time.monotonic()
     queue, seen, violations, transitions = deque(), set(), [], 0
-    for intact in (True, False):
-        kernel = _new_kernel(intact, mutations, require_majority)
-        spec = {'intact': intact, 'proposal': None, 'policy': None, 'attesters': frozenset(),
-                'attempts': frozenset(), 'released': False}
-        queue.append((kernel, spec, ('evidence-intact' if intact else 'evidence-tampered',)))
-        seen.add(_fingerprint(kernel, spec))
-    while queue:
-        kernel, spec, trace = queue.popleft()
-        if len(trace) - 1 >= depth:
-            continue
-        for action in ACTIONS:
-            child = _clone(kernel, mutations)
-            new_spec, outcome = _apply(child, spec, action)
-            transitions += 1
-            new_trace = trace + (action,)
-            problems = _global_violations(child)
-            if outcome and outcome[0] and not outcome[1]:
-                problems.append('S1 violated: kernel released when the specification forbids it')
-            if outcome and not outcome[0] and outcome[1]:
-                problems.append('S2 violated: kernel refused a release the specification allows')
-            if problems:
-                violations.append({'trace': list(new_trace), 'problems': problems})
-                if stop_at_first:
-                    return _summary(depth, mutations, seen, transitions, violations, started)
-                continue
-            key = _fingerprint(child, new_spec)
-            if key not in seen:
-                seen.add(key)
-                queue.append((child, new_spec, new_trace))
-    return _summary(depth, mutations, seen, transitions, violations, started)
+    try:
+        for intact in (True, False):
+            kernel = _new_kernel(intact, mutations, require_majority)
+            try:
+                spec = {'intact': intact, 'proposal': None, 'policy': None, 'attesters': frozenset(),
+                        'attempts': frozenset(), 'released': False}
+                fingerprint = _fingerprint(kernel, spec)
+                queue.append((kernel, spec, ('evidence-intact' if intact else 'evidence-tampered',)))
+                kernel = None  # ownership transferred to the queue
+                seen.add(fingerprint)
+            finally:
+                if kernel is not None:
+                    kernel.conn.close()
+        while queue:
+            kernel, spec, trace = queue.popleft()
+            try:
+                if len(trace) - 1 >= depth:
+                    continue
+                for action in ACTIONS:
+                    child = _clone(kernel, mutations)
+                    try:
+                        new_spec, outcome = _apply(child, spec, action)
+                        transitions += 1
+                        new_trace = trace + (action,)
+                        problems = _global_violations(child)
+                        if outcome and outcome[0] and not outcome[1]:
+                            problems.append('S1 violated: kernel released when the specification forbids it')
+                        if outcome and not outcome[0] and outcome[1]:
+                            problems.append('S2 violated: kernel refused a release the specification allows')
+                        if problems:
+                            violations.append({'trace': list(new_trace), 'problems': problems})
+                            if stop_at_first:
+                                return _summary(depth, mutations, seen, transitions, violations, started)
+                            continue
+                        key = _fingerprint(child, new_spec)
+                        if key not in seen:
+                            seen.add(key)
+                            queue.append((child, new_spec, new_trace))
+                            child = None  # ownership transferred to the queue
+                    finally:
+                        if child is not None:
+                            child.conn.close()
+            finally:
+                kernel.conn.close()
+        return _summary(depth, mutations, seen, transitions, violations, started)
+    finally:
+        while queue:
+            kernel, _, _ = queue.popleft()
+            kernel.conn.close()
 
 
 def _summary(depth, mutations, seen, transitions, violations, started):
@@ -180,28 +210,45 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description='Bounded exhaustive check of the institution kernel')
     parser.add_argument('--depth', type=int, default=6)
     parser.add_argument('--mutants', action='store_true', help='also check deliberately broken kernels')
+    parser.add_argument('--json', action='store_true', help='emit a machine-readable result')
     args = parser.parse_args(argv)
+    if args.depth < 1:
+        parser.error('depth must be at least 1')
+    bases = {}
     for majority in (True, False):
         result = check(args.depth, require_majority=majority)
         label = 'hybrid (majority + quorum)' if majority else 'committee-only (quorum)'
-        print(f"Kernel {label}: depth {result['depth']}, {result['distinct_states']} distinct states, "
-              f"{result['transitions_checked']} transitions, {result['seconds']}s -> "
-              + ('ALL INVARIANTS HOLD' if result['verified'] else f"VIOLATION {result['violations'][0]}"))
+        bases['hybrid' if majority else 'committee_only'] = result
+        if not args.json:
+            print(f"Kernel {label}: depth {result['depth']}, {result['distinct_states']} distinct states, "
+                  f"{result['transitions_checked']} transitions, {result['seconds']}s -> "
+                  + ('ALL INVARIANTS HOLD' if result['verified'] else f"VIOLATION {result['violations'][0]}"))
+    mutants = {}
     if args.mutants:
         for mutant in MUTANTS:
             found = check(args.depth, frozenset({mutant}))
+            mutants[mutant] = found
+            if args.json:
+                continue
             if found['verified']:
                 print(f'  mutant {mutant:<20} NOT caught within depth {args.depth}')
             else:
                 v = found['violations'][0]
                 print(f"  mutant {mutant:<20} caught: {v['problems'][0]}  trace={' > '.join(v['trace'])}")
+    passed = all(result['verified'] for result in bases.values()) and all(
+        not result['verified'] for result in mutants.values())
+    if args.json:
+        print(json.dumps({'schema_version': 'institution-check-v1', 'depth': args.depth,
+                          'base': bases, 'mutants': mutants, 'passed': passed}, allow_nan=False))
+        return 0 if passed else 1
     print('\nCapture probability, N=100 agents, by colluder share (honest error 0):')
     print('  share   1-of-1   2-of-3   3-of-5   4-of-7   7-of-7')
     for share in (0.05, 0.1, 0.2, 0.3, 0.4, 0.5):
         c = round(100 * share)
         row = [capture_probability(100, c, m, k) for m, k in ((1, 1), (3, 2), (5, 3), (7, 4), (7, 7))]
         print(f'  {share:>5.0%}  ' + '  '.join(f'{p:7.4f}' for p in row))
+    return 0 if passed else 1
 
 
 if __name__ == '__main__':
-    main()
+    raise SystemExit(main())

@@ -12,6 +12,24 @@ from unittest.mock import patch
 from fleet_witness.swarm import providers as p
 
 
+class StrictSwarmParserTest(unittest.TestCase):
+    def test_strict_vote_and_attestation_schemas(self):
+        self.assertEqual(p.parse_vote_strict('{"vote":"approve","reason":"ok"}'), ('approve', 'ok'))
+        self.assertEqual(p.parse_sign_strict('{"sign":true,"reason":"ok"}'), ('sign', 'ok'))
+        bad_votes = ('I do not approve this release.', '{"vote":"approve","reason":"ok"} trailing',
+                     '{"vote":"deny","vote":"approve","reason":"ok"}',
+                     '{"vote":"approve","reason":"ok","extra":1}', '{"vote":"approve"}',
+                     '{"vote":"approve","reason":2}', '{"vote":"approve","reason":"\\ud800"}',
+                     '{"vote":"approve","reason":"' + 'x' * 33000 + '"}', '{' * 100)
+        for value in bad_votes:
+            with self.subTest(value=value[:80]):
+                self.assertEqual(p.parse_vote_strict(value)[0], 'abstain')
+        for value in ('{"sign":"true","reason":"ok"}', '{"sign":true}',
+                      '{"sign":true,"reason":"ok","extra":0}', 'please sign'):
+            with self.subTest(value=value):
+                self.assertEqual(p.parse_sign_strict(value)[0], 'abstain')
+
+
 class SyntheticSourceTestCase(unittest.TestCase):
     """Git-free offline workers use a synthetic test identity, never paid authority."""
     def setUp(self):

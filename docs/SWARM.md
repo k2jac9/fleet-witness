@@ -52,6 +52,33 @@ The extractor normalizes the archive's Windows separators and refuses traversal,
 links, collisions, unsafe sizes and overwrites. Reproduction writes separately,
 checks input hashes before/after, and emits strict JSON (`null` for undefined
 statistics). The default reproduction includes the depth-six checker and mutants.
+The checker returns nonzero if a base invariant fails or a requested mutant is
+not caught; `--json` emits a structured result for automation. Reproduction
+validates that result and retains both its JSON and stderr. A skipped checker is
+reported as skipped, not as a pass.
+The reproduction receipt records SHA-256 hashes for Python files under
+`fleet_witness/` and `scripts/`; reproduction rejects a changed file map or Git
+commit between its start and end. Outputs already written remain available for
+inspection if this check fails. These snapshots do not prove which bytes were
+loaded into a long-lived Python process, or exclude a change that was reverted
+between checks. Use a fresh process and stable checkout for reproduction.
+
+New swarm runs use `swarm-strict-v1`: votes and signatures require bounded JSON
+with exactly the expected fields and types. Invalid output is an abstention.
+`run-start.json` records the treatment before any model call, and a completed
+manifest records it again. Analysis refuses unknown or mixed treatments.
+Strict analysis also requires matching, well-formed source records and verifies
+the recorded file-map digest. This checks consistency, not the authenticity of
+the records or proof of what was executed. Legacy
+archive runs are identified by the pinned archive and exact hashes of the four
+raw input files at their expected run paths; this preserves recorded outcomes
+and does not authenticate the original model requests or signatures. A partial
+legacy sweep cannot be resumed with the new parser. Start a separate run and
+retain the old one. Strict sweep resume also requires the recorded source,
+model/authorization settings and experiment configuration to match, including
+the six recent comments exposed by new sweep fractions. A mismatch stops before
+new calls. Interruption retains an incomplete manifest with the start record's
+source and parser identity.
 
 ## Paid execution remains gated
 
@@ -115,13 +142,24 @@ known liabilities are preserved even when they exceed a cap.
 
 New `swarm-run-2` manifests distinguish logical completions, provider attempts,
 settled costs, held liabilities and ledger snapshots. They bind source files,
-Python runtime, model configuration and authorization identity. Public events
-contain allowlisted accounting metadata and prompt hashes. Raw bounded prompts,
-responses and failures are retained in owner-private `private/requests.jsonl`;
-the ledger retains private provider request/response receipts. Neither belongs in
-the dashboard or a public archive. Ground truth and keys remain outside detector
-inputs. Review and speed-test scripts also retain private receipts and refuse
-existing outputs.
+Python runtime, model configuration and authorization identity. New run
+directories and their files are owner-private, including events, model reasons,
+sealed truth and the institution database. Raw bounded prompts, responses and
+failures are retained in `private/requests.jsonl`; the ledger retains private
+provider request/response receipts. Do not treat event logs as sanitized public
+exports. Ground truth and keys remain outside detector inputs. Review and
+speed-test scripts also retain private receipts and refuse existing outputs.
+The new swarm-run path anchors its output through Linux `/proc/self/fd`; it
+requires a mounted procfs. This path has not been qualified on non-Linux POSIX
+hosts. The baseline controller and scripted replay are separate paths.
+
+Institution attestations are limited to 32 KiB per submitted JSON value, and
+malformed entries do not count toward quorum. This is not an aggregate submission
+or rate limit: an adversary with repeated access could still consume storage or
+CPU. A quota could itself starve valid attestations; a separately reviewed
+admission and liveness policy is required before exposing that API to untrusted
+submitters. Same-user and compromised-host access remain outside these in-process
+and filesystem protections.
 
 ## Limits
 

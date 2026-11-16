@@ -34,8 +34,12 @@ def load(dirs):
     """Per (seed, fraction, condition, case): reviewer votes and committee signatures by seat (honest only)."""
     cases = {}
     model = None
+    treatment = None
     for d in dirs:
         run = load_run(d)
+        if treatment is not None and treatment != run['parser_treatment']:
+            raise ValueError('mixed parser treatments in independence dataset')
+        treatment = run['parser_treatment']
         truth, manifest = run['truth'], run['manifest']
         if manifest.get('case_mode') != 'ambiguous':
             raise ValueError(f'not an ambiguous-mode run: {d}')
@@ -51,7 +55,8 @@ def load(dirs):
             info = truth['cases'][e['case_id']]
             key = (manifest['seed'], manifest['cell_fraction'], e['condition'], e['case_id'])
             c = cases.setdefault(key, {'kind': info['kind'], 'valid': info['valid'], 'votes': [], 'seats': {},
-                                       'committee': truth['committees'][e['case_id']], 'cell': cell})
+                                       'committee': truth['committees'][e['case_id']], 'cell': cell,
+                                       'parser_treatment': treatment})
             honest = not (e['condition'].endswith('-cell') and e['agent_id'] in cell)
             if e['type'] == 'vote' and honest and e.get('vote') in ('approve', 'deny'):
                 c['votes'].append(e['vote'] == 'approve')
@@ -110,6 +115,9 @@ def analyze(name, cases, fraction=0.0):
 
 
 def mixed(cases_a, cases_b, fraction=0.0):
+    treatments = {case.get('parser_treatment') for case in (*cases_a.values(), *cases_b.values())}
+    if len(treatments) != 1 or None in treatments:
+        raise ValueError('mixed or missing parser treatment in model splice')
     """Alternate seats: even seats from model A, odd seats from model B, same case and seat identities."""
     if cases_a.keys() != cases_b.keys():
         raise ValueError('mixed-model datasets have different case identities')
