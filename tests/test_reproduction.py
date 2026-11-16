@@ -3,6 +3,7 @@ import hashlib
 import io
 import json
 from pathlib import Path
+import shutil
 import stat
 import subprocess
 import sys
@@ -323,6 +324,96 @@ class ReproductionTest(unittest.TestCase):
         (self.run / 'analysis.json').write_text('historical analysis')
         summarize([self.root])
         self.assertEqual((self.run / 'analysis.json').read_text(), 'historical analysis')
+
+    def test_strict_summary_rejects_missing_and_malformed_source_identities(self):
+        paths = [self.run / 'manifest.json', self.run / 'run-start.json']
+        originals = [json.loads(path.read_text()) for path in paths]
+        malformed = [None, {}, {'source_sha256': 'not-a-digest'},
+                     {**originals[0]['source'], 'source_sha256': '0' * 64},
+                     {**originals[0]['source'], 'source_files': {}},
+                     {**originals[0]['source'], 'digest_algorithm': 'other'}]
+        try:
+            for index, source in enumerate(malformed):
+                with self.subTest(case=index):
+                    for path, original in zip(paths, originals):
+                        path.write_text(json.dumps({**original, 'source': source}))
+                    with self.assertRaisesRegex(ValueError, 'source|treatment'):
+                        summarize([self.root])
+            for path, original in zip(paths, originals):
+                record = dict(original)
+                record.pop('source')
+                path.write_text(json.dumps(record))
+            with self.assertRaisesRegex(ValueError, 'source|treatment'):
+                summarize([self.root])
+        finally:
+            for path, original in zip(paths, originals):
+                path.write_text(json.dumps(original))
+        self.assertEqual(summarize([self.root])['parser_treatment'], 'swarm-strict-v1')
+
+    def test_strict_summary_accepts_well_formed_source_outside_git(self):
+        for path in (self.run / 'manifest.json', self.run / 'run-start.json'):
+            record = json.loads(path.read_text())
+            record['source']['source_commit'] = None
+            path.write_text(json.dumps(record))
+        self.assertEqual(summarize([self.root])['parser_treatment'], 'swarm-strict-v1')
+
+    def test_reproduction_receipt_identifies_transitive_source_files(self):
+        from scripts import reproduce_tables
+        inputs = Path(self.tmp.name) / 'empty-input'
+        inputs.mkdir()
+        output = Path(self.tmp.name) / 'derived'
+        with patch.object(reproduce_tables, 'MAIN_ROOTS', ()), \
+                patch.object(reproduce_tables, 'AMBIG_ROOTS', {}), \
+                patch.object(reproduce_tables.independence, 'mixed'), \
+                contextlib.redirect_stdout(io.StringIO()):
+            receipt = reproduce_tables.reproduce(inputs, output, skip_checker=True)
+        for name in ('fleet_witness/swarm/run_records.py', 'fleet_witness/swarm/providers.py'):
+            self.assertEqual(receipt['source_files_sha256'][name],
+                             hashlib.sha256((reproduce_tables.REPO / name).read_bytes()).hexdigest())
+        self.assertEqual(json.loads((output / 'reproduction-provenance.json').read_text()), receipt)
+
+    def test_reproduction_rejects_source_change_during_run(self):
+        from scripts import reproduce_tables
+        base = Path(self.tmp.name)
+        source = base / 'source'
+        source.mkdir()
+        for name in ('scripts', 'fleet_witness'):
+            shutil.copytree(reproduce_tables.REPO / name, source / name,
+                            ignore=shutil.ignore_patterns('__pycache__'))
+        inputs = base / 'empty-input'
+        inputs.mkdir()
+        output = base / 'derived'
+        def modify_source(*args):
+            (source / 'fleet_witness/swarm/run_records.py').write_text('# changed during run\n')
+        with patch.object(reproduce_tables, 'REPO', source), \
+                patch.object(reproduce_tables, 'MAIN_ROOTS', ()), \
+                patch.object(reproduce_tables, 'AMBIG_ROOTS', {}), \
+                patch.object(reproduce_tables.independence, 'mixed', side_effect=modify_source), \
+                patch.object(reproduce_tables.subprocess, 'check_output', return_value='test\n'), \
+                contextlib.redirect_stdout(io.StringIO()):
+            with self.assertRaisesRegex(ValueError, 'source.*changed'):
+                reproduce_tables.reproduce(inputs, output, skip_checker=True)
+        self.assertTrue(output.exists())
+
+    def test_reproduction_rejects_commit_change_during_run(self):
+        from scripts import reproduce_tables
+        inputs = Path(self.tmp.name) / 'empty-input'
+        inputs.mkdir()
+        output = Path(self.tmp.name) / 'derived'
+        def git(command, **kwargs):
+            if command[1:3] == ['rev-parse', 'HEAD']:
+                git.count += 1
+                return ('a' if git.count == 1 else 'b') * 40 + '\n'
+            return ''
+        git.count = 0
+        with patch.object(reproduce_tables, 'MAIN_ROOTS', ()), \
+                patch.object(reproduce_tables, 'AMBIG_ROOTS', {}), \
+                patch.object(reproduce_tables.independence, 'mixed'), \
+                patch.object(reproduce_tables.subprocess, 'check_output', side_effect=git), \
+                contextlib.redirect_stdout(io.StringIO()):
+            with self.assertRaisesRegex(ValueError, 'source.*changed'):
+                reproduce_tables.reproduce(inputs, output, skip_checker=True)
+        self.assertTrue(output.exists())
 
     def test_summary_refuses_unknown_and_mixed_parser_treatments(self):
         manifest = self.run / 'manifest.json'

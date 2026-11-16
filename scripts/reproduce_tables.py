@@ -110,8 +110,17 @@ def _run_checker(output_root):
     return result
 
 
+def _source_files():
+    """Identify the package and script Python files present in this checkout."""
+    return {str(path.relative_to(REPO)): hashlib.sha256(path.read_bytes()).hexdigest()
+            for root in ('fleet_witness', 'scripts')
+            for path in sorted((REPO / root).rglob('*.py')) if path.is_file()}
+
+
 def reproduce(input_root, output_root, *, skip_checker=False):
     input_root, output_root = Path(input_root).resolve(), Path(output_root).absolute()
+    source_files = _source_files()
+    source_commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=REPO, text=True).strip()
     if output_root.exists() or output_root.is_symlink():
         raise ValueError('output root must be fresh')
     if any(parent.is_symlink() for parent in output_root.parents):
@@ -170,17 +179,15 @@ def reproduce(input_root, output_root, *, skip_checker=False):
              for p in input_root.rglob('*') if p.is_file()}
     if after != input_hashes:
         raise ValueError('input evidence changed during reproduction')
-    source_paths = ['scripts/baselines.py', 'scripts/independence.py', 'scripts/report_stats.py',
-                    'scripts/reproduce_tables.py', 'scripts/extract_run_archive.py', 'fleet_witness/institution.py',
-                    'fleet_witness/swarm/sweep.py', 'fleet_witness/swarm/world.py',
-                    'fleet_witness/swarm/detect.py', 'fleet_witness/verify_institution.py',
-                    'fleet_witness/evidence.py', 'fleet_witness/swarm/runner.py']
+    if (_source_files() != source_files or
+            subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=REPO, text=True).strip() != source_commit):
+        raise ValueError('source files or commit changed during reproduction')
     provenance = {**baselines.PROVENANCE, 'generated_at': datetime.now(timezone.utc).isoformat(),
                   'python': platform.python_version(), 'executable': sys.executable, 'platform': platform.platform(),
-                  'source_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=REPO, text=True).strip(),
+                  'source_commit': source_commit,
                   'source_worktree_dirty': bool(subprocess.check_output(
                       ['git', 'status', '--porcelain'], cwd=REPO, text=True).strip()),
-                  'source_files_sha256': {p: hashlib.sha256((REPO / p).read_bytes()).hexdigest() for p in source_paths},
+                  'source_files_sha256': source_files,
                   'dataset_identities': identities,
                   'input_root': str(input_root), 'input_files_sha256': input_hashes,
                   'inputs_unchanged': True, 'checker': checker,

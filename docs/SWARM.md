@@ -56,11 +56,20 @@ The checker returns nonzero if a base invariant fails or a requested mutant is
 not caught; `--json` emits a structured result for automation. Reproduction
 validates that result and retains both its JSON and stderr. A skipped checker is
 reported as skipped, not as a pass.
+The reproduction receipt records SHA-256 hashes for Python files under
+`fleet_witness/` and `scripts/`; reproduction rejects a changed file map or Git
+commit between its start and end. Outputs already written remain available for
+inspection if this check fails. These snapshots do not prove which bytes were
+loaded into a long-lived Python process, or exclude a change that was reverted
+between checks. Use a fresh process and stable checkout for reproduction.
 
 New swarm runs use `swarm-strict-v1`: votes and signatures require bounded JSON
 with exactly the expected fields and types. Invalid output is an abstention.
 `run-start.json` records the treatment before any model call, and a completed
-manifest records it again. Analysis refuses unknown or mixed treatments. Legacy
+manifest records it again. Analysis refuses unknown or mixed treatments.
+Strict analysis also requires matching, well-formed source records and verifies
+the recorded file-map digest. This checks consistency, not the authenticity of
+the records or proof of what was executed. Legacy
 archive runs are identified by the pinned archive and exact hashes of the four
 raw input files at their expected run paths; this preserves recorded outcomes
 and does not authenticate the original model requests or signatures. A partial

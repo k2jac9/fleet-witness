@@ -6,6 +6,7 @@ import math
 import os
 from pathlib import Path
 import platform
+import re
 import sys
 import threading
 import zipfile
@@ -21,6 +22,30 @@ ATTEMPT_FIELDS = frozenset({
 MAX_PRIVATE_TEXT_BYTES = 65536
 HISTORICAL_ARCHIVE_SHA256 = 'c55e8acf07ed8dd3c11bc3dc8f70269adebaac6bfa14727642cca7314d1f821a'
 RUN_INPUTS = ('manifest.json', 'truth.json', 'events.jsonl', 'decisions.json')
+
+
+def _valid_source_identity(source):
+    """Check the recorded file map is well formed and internally consistent."""
+    if not isinstance(source, dict) or set(source) != {
+            'source_commit', 'source_sha256', 'source_files', 'digest_algorithm'}:
+        return False
+    commit = source['source_commit']
+    if commit is not None and (not isinstance(commit, str) or
+                               re.fullmatch(r'(?:[0-9a-f]{40}|[0-9a-f]{64})', commit) is None):
+        return False
+    if source['digest_algorithm'] != 'sha256-canonical-json-file-map-v1':
+        return False
+    files = source['source_files']
+    if not isinstance(files, dict) or not files:
+        return False
+    for name, digest in files.items():
+        if (not isinstance(name, str) or not name.startswith('fleet_witness/') or
+                not name.endswith('.py') or '\\' in name or
+                any(part in ('', '.', '..') for part in name.split('/')) or
+                not isinstance(digest, str) or re.fullmatch(r'[0-9a-f]{64}', digest) is None):
+            return False
+    encoded = json.dumps(files, sort_keys=True, separators=(',', ':'), ensure_ascii=True, allow_nan=False).encode()
+    return source['source_sha256'] == hashlib.sha256(encoded).hexdigest()
 
 
 @lru_cache(maxsize=2)
@@ -55,7 +80,10 @@ def classify_run_treatment(directory):
         if treatment == STRICT_SWARM_PARSER:
             start = json.loads((directory / 'run-start.json').read_text(encoding='utf-8'))
             if (not isinstance(start, dict) or start.get('schema_version') != 'swarm-run-start-v1' or
-                    start.get('parser_treatment') != treatment or start.get('source') != manifest.get('source')):
+                    start.get('parser_treatment') != treatment or
+                    not _valid_source_identity(start.get('source')) or
+                    not _valid_source_identity(manifest.get('source')) or
+                    start['source'] != manifest['source']):
                 raise ValueError('run start and parser treatment mismatch')
             return treatment
         if treatment is None:
