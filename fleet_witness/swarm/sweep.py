@@ -48,7 +48,7 @@ def run_sweep(root: Path, client, *, fractions=DEFAULT_FRACTIONS, agents=50, cas
             manifest = json.loads((output / 'manifest.json').read_text(encoding='utf-8'))
             fraction = expected[output.name]
             wanted = {'agents': agents, 'cases': cases, 'seed': seed + int(fraction * 1000),
-                      'conditions': list(conditions), 'waves': waves, 'case_mode': case_mode,
+                      'conditions': list(conditions), 'waves': waves, 'recent_comments': 6, 'case_mode': case_mode,
                       'cell_fraction': fraction, 'model': client.label, 'incomplete': False,
                       'max_output_tokens': client.max_output_tokens}
             if any(manifest.get(key) != value for key, value in wanted.items()):
@@ -65,7 +65,7 @@ def run_sweep(root: Path, client, *, fractions=DEFAULT_FRACTIONS, agents=50, cas
         if output.exists():
             raise ValueError(f'{output} exists but is unfinished; move it aside and rerun')
         manifest = run_swarm(output, client, agents=agents, cases=cases, conditions=list(conditions),
-                             cell_fraction=fraction, waves=waves, seed=seed + int(fraction * 1000),
+                             cell_fraction=fraction, waves=waves, recent_comments=6, seed=seed + int(fraction * 1000),
                              case_mode=case_mode)
         print(f"{output}: calls={manifest['calls']} errors={manifest['errors']} cost=${manifest['cost_usd']:.4f}"
               + (f"  INCOMPLETE: {manifest['abort_reason']}" if manifest['incomplete'] else ''))

@@ -42,7 +42,7 @@ def response(text='{"vote":"approve","sign":true,"reason":"synthetic"}', *, fini
 class OfflineTransport:
     """Only external I/O is replaced; ledger, clients, scripts and files remain real."""
     def __init__(self, replies=None, *, error=None):
-        self.replies = list(replies or [response()])
+        self.replies = None if replies is None else list(replies)
         self.error = error
         self.requests = []
         self.timeouts = []
@@ -61,7 +61,13 @@ class OfflineTransport:
                 raise self.error
             # Allow a concurrent dispatch to become observable without any network I/O.
             time.sleep(.002)
-            return json.dumps(self.replies[min(index, len(self.replies) - 1)]).encode()
+            if self.replies is None:
+                system = next(message['content'] for message in body['messages'] if message['role'] == 'system')
+                result = response('{"sign":true,"reason":"synthetic"}' if '"sign":' in system
+                                  else '{"vote":"approve","reason":"synthetic"}')
+            else:
+                result = self.replies[min(index, len(self.replies) - 1)]
+            return json.dumps(result).encode()
         finally:
             with self.lock:
                 self.active -= 1
@@ -323,6 +329,28 @@ class ResearchRequestsTest(SyntheticSourceTestCase):
             self.assertEqual(len(attempted), 1)
             self.assertEqual(attempted[0]['attempts'][0]['provider_attempts'], 1)
             self.assertEqual(attempted[0]['status'], 'unresolved')
+
+    def test_combined_legacy_response_abstains_and_retains_charges(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            ledger, path = fixture_authorizations(root, ['fixture-model'])
+            transport = OfflineTransport([response()])
+            with offline(transport):
+                code = invoke(experiment, experiment_args(root, path))
+            self.assertNotEqual(code, 0)
+            run = root / 'runs/fixture/f00'
+            manifest = json.loads((run / 'manifest.json').read_text())
+            self.assertEqual(manifest['parser_treatment'], 'swarm-strict-v1')
+            self.assertEqual(manifest['abstentions'], 14)
+            self.assertEqual(manifest['provider_attempts'], 14)
+            self.assertEqual(ledger.calls, 14)
+            self.assertAlmostEqual(ledger.run_spent, .000070)
+            self.assertEqual(ledger.run_reserved, 0)
+            events = [json.loads(line) for line in (run / 'events.jsonl').read_text().splitlines()]
+            self.assertTrue(all(row['vote'] == 'abstain' for row in events if row['type'] == 'vote'))
+            self.assertTrue(all(not row['sign'] for row in events if row['type'] == 'attestation'))
+            receipts = (run / 'private/requests.jsonl').read_text().splitlines()
+            self.assertEqual(len(receipts), 14)
 
     def test_small_budget_denies_before_any_provider_dispatch(self):
         with tempfile.TemporaryDirectory() as temp:

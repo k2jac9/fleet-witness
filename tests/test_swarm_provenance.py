@@ -120,8 +120,15 @@ class RunProvenanceTest(SyntheticSourceTestCase):
             with self.assertRaises(KeyboardInterrupt):
                 self.run_fixture(root, Interrupted())
             run = root / 'run'
-            self.assertEqual(json.loads((run / 'run-start.json').read_text())['parser_treatment'], 'swarm-strict-v1')
-            self.assertFalse((run / 'manifest.json').exists())
+            start = json.loads((run / 'run-start.json').read_text())
+            manifest = json.loads((run / 'manifest.json').read_text())
+            self.assertEqual(start['parser_treatment'], 'swarm-strict-v1')
+            self.assertEqual(manifest['parser_treatment'], start['parser_treatment'])
+            self.assertEqual(manifest['source'], start['source'])
+            self.assertTrue(manifest['incomplete'])
+            self.assertEqual(manifest['interruption']['type'], 'KeyboardInterrupt')
+            self.assertFalse((run / 'decisions.json').exists())
+            self.assertEqual(stat.S_IMODE((run / 'manifest.json').stat().st_mode), 0o600)
 
     def test_run_artifacts_are_private_under_permissive_umask(self):
         with tempfile.TemporaryDirectory() as temp:

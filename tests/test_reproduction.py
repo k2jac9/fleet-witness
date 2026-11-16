@@ -129,6 +129,25 @@ class CheckerReportingTest(unittest.TestCase):
 
 
 class TreatmentBoundaryReviewTest(unittest.TestCase):
+    def test_partial_strict_sweep_refuses_changed_visible_comments_before_dispatch(self):
+        from fleet_witness.swarm.sweep import run_sweep
+        class Counting(FakeClient):
+            calls = 0
+            def complete(self, *args, **kwargs):
+                self.calls += 1
+                return super().complete(*args, **kwargs)
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / 'sweep'
+            client = Counting()
+            run_swarm(root / 'f00', client, agents=7, cases=1, conditions=['visible-cell'],
+                      cell_fraction=0.0, seed=0, recent_comments=0)
+            client.calls = 0
+            with self.assertRaisesRegex(ValueError, 'configuration'):
+                run_sweep(root, client, fractions=(0.0, 0.1), agents=7, cases=1,
+                          conditions=('visible-cell',))
+            self.assertEqual(client.calls, 0)
+            self.assertFalse((root / 'f10').exists())
+
     def extract_historical_run(self, root, relative='sweep-deepseek2k/f00'):
         archive = Path(__file__).resolve().parents[1] / 'data/fleet-witness-runs-2026-11-08.zip'
         run = root / relative
