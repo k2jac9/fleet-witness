@@ -12,7 +12,7 @@ byte-for-byte, and maps all prior members in `SANITIZATION.json`. Original archi
 aggregates, accepted ADRs and existing verifier assertions remain unchanged.
 The successor comparison and source verifier pass: 14 runs, 41,995 bound recorded
 calls, 46 frozen-count comparisons and no mismatches. Local Python 3.15.2 passes
-all 412 tests (33 focused archive tests); five viewer tests, fleet validation and
+all 415 tests (36 focused archive tests); five viewer tests, fleet validation and
 planning, submission verification and runtime freshness also pass. Hosted checks
 and independent review for this successor are reported in its PR separately.
 

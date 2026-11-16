@@ -60,7 +60,14 @@ actual and JSON-escaped UNC paths remain refused. The failed log and partial ZIP
 are retained outside the repository. No experimental record was edited to make
 the scanner pass.
 
-Local Python 3.15.2 validation passed all 412 tests, including 33 focused archive
+Independent review found that extra bytes before or after a ZIP could evade
+member-only comparison. Regression tests first demonstrated that defect, plus
+local-only extra fields and unused compressed-stream tails. Verification now
+requires a contiguous ZIP32 container with matching local headers, no hidden
+metadata/gaps/trailers, and fully consumed bounded compressed streams. The
+published successor's bytes and hash did not change.
+
+Local Python 3.15.2 validation passed all 415 tests, including 36 focused archive
 tests; the five viewer tests, fleet validation/planning, submission verifier and
 runtime-freshness check also passed. Full-suite generated scratch used bounded
 tmpfs under the owner's expiring task storage exception; retained outputs stayed

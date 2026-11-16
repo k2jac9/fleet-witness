@@ -68,7 +68,7 @@ git status --porcelain > "$record_dir/final-status.txt"
 Expected results: 11 changed manifests, 66 byte-identical data members, three
 explicitly superseded metadata members, 78 successor members, 14 runs, 41,995
 bound recorded calls, and 46 frozen-count comparisons with an empty mismatch
-list. All 33 focused tests should pass. Read the emitted limitations too.
+list. All 36 focused tests should pass. Read the emitted limitations too.
 The committed artifact's exact hash is required. ZIP compression bytes may vary
 across zlib versions when rebuilding; the rebuilt archive must still pass the
 complete member-byte and mapping comparison. Record its hash and any byte-level

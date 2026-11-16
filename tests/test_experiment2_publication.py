@@ -3,6 +3,7 @@ import hashlib
 import io
 import json
 from pathlib import Path
+import struct
 import tempfile
 import unittest
 import zipfile
@@ -153,6 +154,61 @@ class Experiment2PublicationTests(unittest.TestCase):
             z.comment = b'private metadata'
         with self.assertRaisesRegex(ValueError, 'ZIP metadata'):
             self.compare(source, target, source_hash)
+
+    def test_rejects_unlisted_bytes_before_or_after_zip(self):
+        for prefix, suffix in ((b'/home/private-user/secret', b''),
+                               (b'', b'/home/private-user/secret')):
+            with self.subTest(prefix=bool(prefix)):
+                source, target, source_hash = self.make_successor()
+                altered = io.BytesIO(prefix + target.getvalue() + suffix)
+                with self.assertRaises(ValueError):
+                    self.compare(source, altered, source_hash)
+
+    def test_rejects_local_only_extra_field(self):
+        source, target, source_hash = self.make_successor()
+        with zipfile.ZipFile(target) as z:
+            item = z.infolist()[0]
+            central_offset = z.start_dir
+        raw = bytearray(target.getvalue())
+        hidden = b'\xfe\xca\x04\x00hide'
+        insertion = 30 + len(item.filename.encode('utf-8'))
+        struct.pack_into('<H', raw, 28, len(hidden))
+        raw[insertion:insertion] = hidden
+        # Shift later local offsets and the EOCD central-directory offset,
+        # leaving the central extra field empty: ZipFile accepts this archive.
+        position = central_offset + len(hidden)
+        while raw[position:position+4] == b'PK\x01\x02':
+            offset = struct.unpack_from('<I', raw, position+42)[0]
+            if offset:
+                struct.pack_into('<I', raw, position+42, offset+len(hidden))
+            name_len, extra_len, comment_len = struct.unpack_from('<HHH', raw, position+28)
+            position += 46 + name_len + extra_len + comment_len
+        struct.pack_into('<I', raw, len(raw)-6, central_offset+len(hidden))
+        with self.assertRaises(ValueError):
+            self.compare(source, io.BytesIO(raw), source_hash)
+
+    def test_rejects_unused_bytes_after_deflate_stream(self):
+        source, target, source_hash = self.make_successor()
+        with zipfile.ZipFile(target) as z:
+            item = z.infolist()[0]
+            central_offset = z.start_dir
+        raw = bytearray(target.getvalue())
+        hidden = b'/home/private-user/secret'
+        insertion = 30 + len(item.filename.encode('utf-8')) + item.compress_size
+        struct.pack_into('<I', raw, 18, item.compress_size+len(hidden))
+        raw[insertion:insertion] = hidden
+        position = central_offset + len(hidden)
+        while raw[position:position+4] == b'PK\x01\x02':
+            offset = struct.unpack_from('<I', raw, position+42)[0]
+            if offset:
+                struct.pack_into('<I', raw, position+42, offset+len(hidden))
+            else:
+                struct.pack_into('<I', raw, position+20, item.compress_size+len(hidden))
+            name_len, extra_len, comment_len = struct.unpack_from('<HHH', raw, position+28)
+            position += 46 + name_len + extra_len + comment_len
+        struct.pack_into('<I', raw, len(raw)-6, central_offset+len(hidden))
+        with self.assertRaises(ValueError):
+            self.compare(source, io.BytesIO(raw), source_hash)
 
 
 if __name__ == '__main__':

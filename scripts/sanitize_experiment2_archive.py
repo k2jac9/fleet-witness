@@ -10,8 +10,10 @@ import os
 from pathlib import Path
 import re
 import stat
+import struct
 import sys
 import zipfile
+import zlib
 
 try:
     from scripts import verify_experiment2_archive as original
@@ -111,6 +113,56 @@ def write_successor(source, destination, source_hash):
         destination.writestr(info, data, compresslevel=9)
 
 
+def check_envelope(archive, entries):
+    """Require a contiguous ZIP32 envelope with no hidden metadata or stream tail."""
+    stream = archive.fp
+    position = stream.tell()
+    try:
+        stream.seek(0)
+        raw = stream.read(MAX_COMPRESSED + 1)
+    finally:
+        stream.seek(position)
+    original.require(22 <= len(raw) <= MAX_COMPRESSED, 'ZIP envelope size limit')
+    end = struct.unpack('<4s4H2IH', raw[-22:])
+    original.require(end[:3] == (b'PK\x05\x06', 0, 0)
+                     and end[3] == end[4] == len(entries) and end[7] == 0,
+                     'unsupported ZIP envelope or trailing bytes')
+    offset = 0
+    central_size = 0
+    for entry in sorted(entries, key=lambda item: item.header_offset):
+        original.require(entry.header_offset == offset and offset + 30 <= len(raw),
+                         'unlisted ZIP bytes or overlapping members')
+        header = struct.unpack_from('<4s5H3I2H', raw, offset)
+        signature, _, flags, method, _, _, crc, compressed, expanded, name_size, extra_size = header
+        original.require(signature == b'PK\x03\x04' and not extra_size
+                         and flags in (0, 0x800) and flags == entry.flag_bits
+                         and method == entry.compress_type and method in (0, 8)
+                         and (crc, compressed, expanded) == (entry.CRC, entry.compress_size, entry.file_size),
+                         'unsupported local ZIP metadata')
+        name = entry.filename.encode('utf-8' if flags & 0x800 else 'cp437')
+        original.require(name_size == len(name) and raw[offset+30:offset+30+name_size] == name,
+                         'local ZIP name mismatch')
+        begin = offset + 30 + name_size
+        offset = begin + compressed
+        original.require(offset <= len(raw) - 22, 'truncated ZIP member')
+        payload = raw[begin:offset]
+        if method == 8:
+            decoder = zlib.decompressobj(-15)
+            try:
+                decoded = decoder.decompress(payload, expanded + 1)
+            except zlib.error as exc:
+                raise ValueError('invalid compressed ZIP member') from exc
+            original.require(len(decoded) == expanded and decoder.eof
+                             and not decoder.unused_data and not decoder.unconsumed_tail,
+                             'unused or excessive compressed ZIP bytes')
+        else:
+            original.require(compressed == expanded, 'invalid stored ZIP member size')
+        central_size += 46 + len(name)
+    original.require(end[5] == central_size and end[6] == offset
+                     and offset + central_size + 22 == len(raw),
+                     'unlisted ZIP directory or envelope bytes')
+
+
 def compare_successor(source, successor, source_hash):
     """Compare all bytes to the allowed transform; do not trust supplied hashes."""
     entries = successor.infolist()
@@ -131,6 +183,7 @@ def compare_successor(source, successor, source_hash):
         original.require(entry.file_size <= 32 * 1024 * 1024, 'archive member size limit')
         if name == PREFIX + METADATA:
             original.require(entry.file_size <= 1024 * 1024, 'archive metadata size limit')
+    check_envelope(successor, entries)
     expected_names = set()
     manifest = None
     for name, expected in members(source, source_hash):
