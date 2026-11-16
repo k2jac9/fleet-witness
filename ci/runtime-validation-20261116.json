@@ -1,0 +1,274 @@
+{
+  "schema": 1,
+  "recorded_at": "2026-11-16T08:40:24.108460+00:00",
+  "status": "all twelve lanes passed locally; hosted CI and promotion not performed",
+  "source_base_commit": "2160a55324404d6bf9d35d5c7f7132607bbe590f",
+  "tested_source_manifest_sha256": "7fe4aadb8ef9c90234cf74caedf54a3208842a42f2307099147882defed7cad0",
+  "matrix_sha256": "50d43459e86ff5af114fa0835a121cce3872bfc1ef3ed8955307880a4f42fbc9",
+  "environment": "NixOS x86_64; Ubuntu Python archives and official Node archives; retained Nix glibc/OpenSSL dependencies; generated test scratch on tmpfs",
+  "local_library_manifest_sha256": "f4a43663e20e696e47d7b47f9c4ae4df8920043cf3be0458c8cd42f3c6d96ed1",
+  "changed_execution_files": {
+    "scripts/verify_experiment2_archive.py": "e2f32c84261e2af73b60725abcba0e551f1ab46050982bb49092956ba763adcf",
+    "scripts/diagnose_tls_roots.py": "1805b34f5f036d04fe0b7d80ea482975fb851d17ea447cafdbeef550b2f3645d",
+    "tests/test_experiment2_archive.py": "a2e9a71c072d0ec219d1c52407e8f0f660cb9a5b4f7d27b298738e177743a537",
+    "ci/runtime-matrix.json": "50d43459e86ff5af114fa0835a121cce3872bfc1ef3ed8955307880a4f42fbc9"
+  },
+  "current_host": {
+    "python": "3.15.2",
+    "executable_sha256": "7f7f9b35ee0ca35d3dbd073bd34e37e1364fae5570ab027f20dfbcb5e6787001",
+    "tests": 399,
+    "status": "passed-local",
+    "completed_at": "2026-11-16T08:37:35.228626+00:00",
+    "full_test_log_sha256": "8e0510d1b61522a5a2b4e75c549fc4bc428b7e4fab0b81b8d7c0ea0ca7c8037a"
+  },
+  "lanes": [
+    {
+      "id": "python-3.16.0-alpha.2",
+      "family": "python",
+      "role": "upcoming",
+      "version": "3.16.0a2",
+      "archive_sha256": "8d208fb0642afe87727cdda2f9cb013dc9dc779937468d3a3d283fa47391a903",
+      "executable_sha256": "5a9625f04a458f43351cba0d3519028f81ff1d8c53f0b4108722ce67ac576d89",
+      "tests": 399,
+      "status": "passed-local",
+      "completed_at": "2026-11-16T08:37:35.308399+00:00",
+      "checks": [
+        "identity",
+        "subprocess-identity",
+        "python-full",
+        "submission",
+        "fleet-validate",
+        "fleet-plan",
+        "scripted-demo"
+      ],
+      "full_test_log_sha256": "088e45e97377eec17fecdf1300b9657f886fa5cbf9f4824795515ca9203e0b19"
+    },
+    {
+      "id": "python-3.15.2",
+      "family": "python",
+      "role": "stable",
+      "version": "3.15.2",
+      "archive_sha256": "a945ca657bf4efeac7483c0c82381448d3b651a8d0e49be421c71fd53085cd01",
+      "executable_sha256": "2c54590c63d1ccaed1fdb78b62a413b7af41361eecbf45eb61698562e0f59e17",
+      "tests": 399,
+      "status": "passed-local",
+      "completed_at": "2026-11-16T08:38:17.387821+00:00",
+      "checks": [
+        "identity",
+        "subprocess-identity",
+        "python-full",
+        "submission",
+        "fleet-validate",
+        "fleet-plan",
+        "scripted-demo"
+      ],
+      "full_test_log_sha256": "b209118a5a4c1e4400a43b85a4b6df4bea1d7f269cda344e1020fb8fdaf56d72"
+    },
+    {
+      "id": "python-3.14.10",
+      "family": "python",
+      "role": "previous",
+      "version": "3.14.10",
+      "archive_sha256": "d67d217db8480fd474bac19db80f6b956362432cca30ed6ac6fbe5a2bba6b4cd",
+      "executable_sha256": "ee456eb76dd1a7a1b86a41a8002901f24a7b7ae9ca89ea8ceae77dc5a9f94cba",
+      "tests": 399,
+      "status": "passed-local",
+      "completed_at": "2026-11-16T08:38:18.166572+00:00",
+      "checks": [
+        "identity",
+        "subprocess-identity",
+        "python-full",
+        "submission",
+        "fleet-validate",
+        "fleet-plan",
+        "scripted-demo"
+      ],
+      "full_test_log_sha256": "cde786734e6d961ecb90951d9505f40a2fb51a6f4acc462f3265d0bcff9939f4"
+    },
+    {
+      "id": "python-3.13.18",
+      "family": "python",
+      "role": "consumer-3.13",
+      "version": "3.13.18",
+      "archive_sha256": "683005a1465d94d40045f6a1a6eb316885b5f08d3360f7922b44ef58a14a9eed",
+      "executable_sha256": "5d782b88e6d48cc376d3e4b890539876ccaf7235acb1a265b7880ba471432cba",
+      "tests": 399,
+      "status": "passed-local",
+      "completed_at": "2026-11-16T08:38:59.753792+00:00",
+      "checks": [
+        "identity",
+        "subprocess-identity",
+        "python-full",
+        "submission",
+        "fleet-validate",
+        "fleet-plan",
+        "scripted-demo"
+      ],
+      "full_test_log_sha256": "8d51585a5ea75036da310b89bb4a495b508845c2482cdec3250f0b015eec6a39"
+    },
+    {
+      "id": "python-3.13.17",
+      "family": "python",
+      "role": "retained-host",
+      "version": "3.13.17",
+      "archive_sha256": "f0b66c1cb0614c6ab2b8ff7500e93c3b34bf3691eb5073050f9e4e56a513e932",
+      "executable_sha256": "104655eaac3e30166d621d3a4437a7cdee5e2250874ae680322f13a42360be12",
+      "tests": 399,
+      "status": "passed-local",
+      "completed_at": "2026-11-16T08:39:00.876880+00:00",
+      "checks": [
+        "identity",
+        "subprocess-identity",
+        "python-full",
+        "submission",
+        "fleet-validate",
+        "fleet-plan",
+        "scripted-demo"
+      ],
+      "full_test_log_sha256": "43108669bbefa1b6ed8c70fe9bba3a21453834bba11977821e241fdc052eb937"
+    },
+    {
+      "id": "python-3.12.16",
+      "family": "python",
+      "role": "consumer-3.12",
+      "version": "3.12.16",
+      "archive_sha256": "dec61ed20cd3e71143f1642ef9966945dea8ae4f3e96b306205a710da4f2191a",
+      "executable_sha256": "a9daa2903823e8bc0ce562bcf07be5a9ae27cf5d9d6dccf492438f0a310c0982",
+      "tests": 399,
+      "status": "passed-local",
+      "completed_at": "2026-11-16T08:39:43.778000+00:00",
+      "checks": [
+        "identity",
+        "subprocess-identity",
+        "python-full",
+        "submission",
+        "fleet-validate",
+        "fleet-plan",
+        "scripted-demo"
+      ],
+      "full_test_log_sha256": "d6bde472ec81f2cecd92c54fd68078a3fcea1c2735ca4ee48ee296b4fdaab45a"
+    },
+    {
+      "id": "python-3.11.18",
+      "family": "python",
+      "role": "consumer-3.11",
+      "version": "3.11.18",
+      "archive_sha256": "099ef30fc27f0d7067a67be5a5fb7fd66154cfa1e4186c88f71c3a3070c81abc",
+      "executable_sha256": "f85c83d76e58e52cc231fe99afe152ff8030a0c92aa0899af995fce839e2e044",
+      "tests": 399,
+      "status": "passed-local",
+      "completed_at": "2026-11-16T08:39:40.894214+00:00",
+      "checks": [
+        "identity",
+        "subprocess-identity",
+        "python-full",
+        "submission",
+        "fleet-validate",
+        "fleet-plan",
+        "scripted-demo"
+      ],
+      "full_test_log_sha256": "53d7b06073ae7691b09ddf38c3e1b160bb558bfccc2068d4c31acfd9ee8b908e"
+    },
+    {
+      "id": "node-26.13.1",
+      "family": "node",
+      "role": "stable",
+      "version": "26.13.1",
+      "archive_sha256": "5c063e46bab0fbc1c17cc445d7ff129cbdcd0471be6ed83b6ab864f8143bc864",
+      "executable_sha256": "d931c649850ffa7155b8ceffb400dc916ef325866e509cc52ae36e33e8fbb9a9",
+      "tests": 5,
+      "status": "passed-local",
+      "completed_at": "2026-11-16T08:33:13.133918+00:00",
+      "checks": [
+        "identity",
+        "viewer"
+      ],
+      "full_test_log_sha256": "724144d5e70e53bbf9099f94e49826dbe6f438fa1bfadaf24fe708126067c499"
+    },
+    {
+      "id": "node-24.22.3",
+      "family": "node",
+      "role": "previous",
+      "version": "24.22.3",
+      "archive_sha256": "4f2b175a6d53a5c617a80dba2676238a0688cef28c6da4eba35c7d844e66fcfb",
+      "executable_sha256": "a7ec1b37e6ff9d187e4198c5b6df9a4eb1c74dd31804fb3bac55cc4ceca1ac01",
+      "tests": 5,
+      "status": "passed-local",
+      "completed_at": "2026-11-16T08:33:13.024661+00:00",
+      "checks": [
+        "identity",
+        "viewer"
+      ],
+      "full_test_log_sha256": "dc043c275f93558f124984f2a5e4a535ec44fad50e185e1ccc0b4a6d2e962818"
+    },
+    {
+      "id": "node-27.0.0-alpha.0.1.0",
+      "family": "node",
+      "role": "upcoming",
+      "version": "27.0.0-alpha.0.1.0",
+      "archive_sha256": "44aadb38d36e21d13f98c27986d2cad281ab65ea054d645c54763ed9017e31fb",
+      "executable_sha256": "261fcd66aaacc131438706f9fa17252458bd4c1725bce8319b8f42d551a6b6e2",
+      "tests": 5,
+      "status": "passed-local",
+      "completed_at": "2026-11-16T08:33:16.649267+00:00",
+      "checks": [
+        "identity",
+        "viewer"
+      ],
+      "full_test_log_sha256": "7c0526b94afce601b7e5f3c4f1949c0967bedc526c5d34faa3617b7d2da84477"
+    },
+    {
+      "id": "node-24.22.1",
+      "family": "node",
+      "role": "retained-viewer",
+      "version": "24.22.1",
+      "archive_sha256": "6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6",
+      "executable_sha256": "e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb",
+      "tests": 5,
+      "status": "passed-local",
+      "completed_at": "2026-11-16T08:33:16.581239+00:00",
+      "checks": [
+        "identity",
+        "viewer"
+      ],
+      "full_test_log_sha256": "ddfbe80adf20d44b62a9babc0e76627d65ada02dbde0c671768957b5aa70cc26"
+    },
+    {
+      "id": "node-26.13.0",
+      "family": "node",
+      "role": "retained-stable",
+      "version": "26.13.0",
+      "archive_sha256": "d28a96af6c38596f6d9d97c0ee531c13d238d757742387d1928de822d959e997",
+      "executable_sha256": "0adde40d1b7dfa57c8bc83cbc319758c3ec6ebba21363bb2fa752ea6b267ad1b",
+      "tests": 5,
+      "status": "passed-local",
+      "completed_at": "2026-11-16T08:33:20.547420+00:00",
+      "checks": [
+        "identity",
+        "viewer"
+      ],
+      "full_test_log_sha256": "588938db5ca23d347c0085044e987fb46e060c5187bd8e541a24163106b50858"
+    }
+  ],
+  "retained_failed_attempts": [
+    "initial disk-backed host run timed out after 600 seconds without an assertion failure",
+    "first matrix stopped after disk-wait diagnosis",
+    "explicit Node loader changed process.execPath; direct runtime invocation passes",
+    "missing local bin/python alias selected host subprocess runtime; matching the existing CI alias and checking subprocess identity resolves failures",
+    "tmpfs lacks disk UUID; physical disk admission retained, generated RAM scratch separately declared and monitored"
+  ],
+  "limits": [
+    "local execution is not the Ubuntu GitHub workflow",
+    "existing unclosed SQLite ResourceWarnings retained",
+    "no paid calls or cloud activation",
+    "no historical TLS root attribution or private-original evidence recovery",
+    "no deployment or rollback qualification"
+  ],
+  "storage_override": {
+    "expires_at_utc": "2026-11-17T05:00:00Z",
+    "disk_emergency_floor_gib": 16,
+    "global_policy_modified": false,
+    "generated_memory_scratch_cap_gib": 1
+  },
+  "documentation_only_updates_follow_checks": true
+}
